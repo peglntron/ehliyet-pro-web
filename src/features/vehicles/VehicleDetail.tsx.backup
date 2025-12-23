@@ -1,0 +1,927 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box, Typography, Button, Paper, Chip, Snackbar, Alert, CircularProgress,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, FormControl,
+  InputLabel, Select, MenuItem, Avatar
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Edit as EditIcon,
+  DirectionsCar as DirectionsCarIcon,
+  Speed as SpeedIcon,
+  CalendarToday as CalendarTodayIcon,
+  Person as PersonIcon,
+  Add as AddIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Build as BuildIcon
+} from '@mui/icons-material';
+import { useNavigate, useParams } from 'react-router-dom';
+import PageBreadcrumb from '../../components/PageBreadcrumb';
+import { getVehicleById, addKmRecord } from './api/useVehicles';
+import type { Vehicle } from './types/types';
+import MaintenanceModal from './components/MaintenanceModal';
+
+const VehicleDetail: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [kmModalOpen, setKmModalOpen] = useState(false);
+  const [maintenanceModalOpen, setMaintenanceModalOpen] = useState(false);
+  
+  // Snackbar
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+  
+  // Km kayıt formu
+  const [newKmRecord, setNewKmRecord] = useState({
+    km: 0,
+    date: new Date().toISOString().split('T')[0],
+    recordType: 'manual' as const,
+    description: '',
+    recordedBy: 'Kullanıcı'
+  });
+
+  // Düzenleme formu
+  const [editFormData, setEditFormData] = useState({
+    licensePlate: '',
+    brand: '',
+    model: '',
+    year: new Date().getFullYear(),
+    currentKm: 0,
+    assignedInstructor: '',
+    status: 'available'
+  });
+
+  useEffect(() => {
+    const fetchVehicle = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const vehicleData = await getVehicleById(id);
+        setVehicle(vehicleData);
+        
+        // Edit form data'yı set et
+        setEditFormData({
+          licensePlate: vehicleData.licensePlate,
+          brand: vehicleData.brand,
+          model: vehicleData.model,
+          year: vehicleData.year,
+          currentKm: vehicleData.currentKm,
+          assignedInstructor: vehicleData.assignedInstructor || '',
+          status: vehicleData.status
+        });
+      } catch (err) {
+        console.error('Araç yüklenirken hata:', err);
+        setError('Araç bilgileri yüklenemedi');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicle();
+  }, [id]);
+
+  const getStatusInfo = (status: string) => {
+    switch (status) {
+      case 'available':
+        return { color: 'success', text: 'Müsait' };
+      case 'in-use':
+        return { color: 'info', text: 'Kullanımda' };
+      case 'maintenance':
+        return { color: 'warning', text: 'Bakımda' };
+      case 'inactive':
+        return { color: 'error', text: 'Pasif' };
+      default:
+        return { color: 'default', text: status };
+    }
+  };
+
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  };
+
+  const handleEditModalOpen = () => {
+    setEditModalOpen(true);
+  };
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+  };
+
+  const handleEditSave = () => {
+    // Burada API çağrısı yapılacak
+    console.log('Araç güncelleniyor:', editFormData);
+    
+    // Simülasyon için vehicle state'ini güncelle
+    if (vehicle) {
+      setVehicle({
+        ...vehicle,
+        licensePlate: editFormData.licensePlate,
+        brand: editFormData.brand,
+        model: editFormData.model,
+        year: editFormData.year,
+        currentKm: editFormData.currentKm,
+        assignedInstructor: editFormData.assignedInstructor,
+        status: editFormData.status as 'available' | 'in-use' | 'maintenance' | 'inactive'
+      });
+    }
+  };
+
+  const handleMaintenanceSave = (maintenanceData: any) => {
+    // Burada API çağrısı yapılacak - bakım kaydı ekleme
+    console.log('Bakım kaydı ekleniyor:', maintenanceData);
+    
+    // Simülasyon için vehicle state'ini güncelle
+    if (vehicle) {
+      setVehicle({
+        ...vehicle,
+        currentKm: maintenanceData.currentKm,
+        lastServiceKm: maintenanceData.currentKm,
+        nextServiceKm: maintenanceData.nextServiceKm
+      });
+
+      // Success message
+      setSnackbarMessage('Bakım kaydı başarıyla eklendi');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    }
+    
+    setSnackbarMessage('Araç bilgileri başarıyla güncellendi!');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+    setEditModalOpen(false);
+  };
+
+  const handleKmModalOpen = () => {
+    setKmModalOpen(true);
+  };
+
+  const handleKmModalClose = () => {
+    setKmModalOpen(false);
+    setNewKmRecord({
+      km: 0,
+      date: new Date().toISOString().split('T')[0],
+      recordType: 'manual',
+      description: '',
+      recordedBy: 'Kullanıcı'
+    });
+  };
+
+  const handleKmSave = async () => {
+    try {
+      if (!vehicle) return;
+      
+      await addKmRecord({
+        ...newKmRecord,
+        vehicleId: vehicle.id
+      });
+      
+      setSnackbarMessage('Kilometre kaydı başarıyla eklendi!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      handleKmModalClose();
+      
+      // Araç bilgilerini yenile
+      const updatedVehicle = await getVehicleById(vehicle.id);
+      setVehicle(updatedVehicle);
+    } catch (error) {
+      console.error('Km kaydı eklenirken hata:', error);
+      setSnackbarMessage('Kilometre kaydı eklenirken hata oluştu!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100%',
+          width: '100%',
+          p: 3
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error || !vehicle) {
+    return (
+      <Box
+        sx={{
+          height: '100%',
+          width: '100%',
+          p: 3
+        }}
+      >
+        <PageBreadcrumb />
+        <Paper
+          elevation={0}
+          sx={{ 
+            p: 3,
+            mt: 3,
+            textAlign: 'center',
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'error.light',
+            bgcolor: 'error.lighter',
+            color: 'error.main'
+          }}
+        >
+          <Typography variant="h6" gutterBottom>{error || 'Araç bulunamadı'}</Typography>
+          <Button
+            variant="contained"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/vehicles')}
+            sx={{
+              mt: 2,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600
+            }}
+          >
+            Araç Listesine Dön
+          </Button>
+        </Paper>
+      </Box>
+    );
+  }
+
+  const statusInfo = getStatusInfo(vehicle.status);
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        overflow: 'auto',
+        bgcolor: '#f8fafc',
+        p: { xs: 2, md: 3 }
+      }}
+    >
+      {/* Standardized Header */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        mb: 4,
+        pb: 2,
+        borderBottom: '1px solid',
+        borderBottomColor: 'divider'
+      }}>
+        <Box sx={{ flex: 1 }}>
+          <PageBreadcrumb />
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 2 }}>
+            <DirectionsCarIcon color="primary" sx={{ fontSize: 32 }} />
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'primary.main'
+              }}
+            >
+              Araç Detayları
+            </Typography>
+            <Chip 
+              label={statusInfo.text} 
+              color={statusInfo.color as any} 
+              sx={{ borderRadius: 2, fontWeight: 600, ml: 1 }}
+            />
+          </Box>
+          
+          <Typography variant="body1" color="text.secondary">
+            {vehicle.brand} {vehicle.model} ({vehicle.licensePlate}) - {vehicle.year}
+          </Typography>
+        </Box>
+        
+        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, ml: 3 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/vehicles')}
+            sx={{
+              py: 1.2,
+              px: 2.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+            }}
+          >
+            Geri Dön
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<EditIcon />}
+            onClick={() => setEditModalOpen(true)}
+            sx={{
+              py: 1.2,
+              px: 2.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+            }}
+          >
+            Düzenle
+          </Button>
+        </Box>
+      </Box>
+      
+      {/* İçerik - Bilgi Kartları */}
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', lg: 'row' }, 
+          gap: 3,
+          mb: 3
+        }}
+      >
+        {/* Sol Kolon */}
+        <Box sx={{ 
+          flex: 1, 
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3
+        }}>
+          {/* Genel Bilgiler - Salt Okunur */}
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden'
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                p: 2,
+                bgcolor: 'primary.main',
+                color: 'white'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <DirectionsCarIcon />
+                <Typography variant="h6" fontWeight={600}>
+                  Genel Bilgiler
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<EditIcon />}
+                onClick={handleEditModalOpen}
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.15)',
+                  color: 'white',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.25)',
+                  }
+                }}
+              >
+                Düzenle
+              </Button>
+            </Box>
+            
+            <Box sx={{ p: 3 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <DirectionsCarIcon color="primary" sx={{ mt: 0.5 }} />
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600}>Plaka</Typography>
+                    <Typography variant="body2">{vehicle.licensePlate}</Typography>
+                  </Box>
+                </Box>
+                
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <DirectionsCarIcon color="primary" sx={{ mt: 0.5 }} />
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600}>Marka/Model</Typography>
+                    <Typography variant="body2">{vehicle.brand} {vehicle.model}</Typography>
+                  </Box>
+                </Box>
+                
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <CalendarTodayIcon color="primary" sx={{ mt: 0.5 }} />
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600}>Model Yılı</Typography>
+                    <Typography variant="body2">{vehicle.year}</Typography>
+                  </Box>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'flex-start'
+                  }}
+                >
+                  <SpeedIcon color="primary" sx={{ mt: 0.5 }} />
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600}>Mevcut Kilometre</Typography>
+                    <Typography variant="body2">{vehicle.currentKm.toLocaleString()} km</Typography>
+                  </Box>
+                </Box>
+
+                {vehicle.assignedInstructorName && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 2,
+                      alignItems: 'flex-start'
+                    }}
+                  >
+                    <PersonIcon color="primary" sx={{ mt: 0.5 }} />
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={600}>Zimmetli Eğitmen</Typography>
+                      <Typography variant="body2">{vehicle.assignedInstructorName}</Typography>
+                      {vehicle.assignmentDate && (
+                        <Typography variant="caption" color="text.secondary">
+                          {formatDate(vehicle.assignmentDate)} tarihinden beri
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </Paper>
+
+          {/* Bakım Bilgileri Kartı */}
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 3, 
+              borderRadius: 2
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: 'warning.main' }}>
+                  <CalendarTodayIcon />
+                </Avatar>
+                <Typography variant="h6" fontWeight={600}>
+                  Bakım Bilgileri
+                </Typography>
+              </Box>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<EditIcon />}
+                onClick={() => setMaintenanceModalOpen(true)}
+                sx={{ borderRadius: 2 }}
+              >
+                Bakım Ekle
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Son Bakım */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, bgcolor: 'warning.50', borderRadius: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={600} color="warning.main">
+                    Son Bakım KM
+                  </Typography>
+                  <Typography variant="h5" fontWeight={700}>
+                    {vehicle.lastServiceKm ? `${vehicle.lastServiceKm.toLocaleString()} km` : 'Henüz bakım yapılmamış'}
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: 'warning.main' }}>
+                  <BuildIcon />
+                </Avatar>
+              </Box>
+
+              {/* Sonraki Bakım */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, bgcolor: 'success.50', borderRadius: 2 }}>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={600} color="success.main">
+                    Sonraki Bakım KM
+                  </Typography>
+                  <Typography variant="h5" fontWeight={700}>
+                    {vehicle.nextServiceKm ? `${vehicle.nextServiceKm.toLocaleString()} km` : 'Belirlenmemiş'}
+                  </Typography>
+                  {vehicle.currentKm && vehicle.nextServiceKm && (
+                    <Typography 
+                      variant="body2" 
+                      fontWeight={600}
+                      color={vehicle.currentKm > vehicle.nextServiceKm ? 'error.main' : 'success.main'}
+                      sx={{ mt: 0.5 }}
+                    >
+                      {vehicle.nextServiceKm - vehicle.currentKm > 0 
+                        ? `${(vehicle.nextServiceKm - vehicle.currentKm).toLocaleString()} km kaldı`
+                        : `${(vehicle.currentKm - vehicle.nextServiceKm).toLocaleString()} km gecikmiş`
+                      }
+                    </Typography>
+                  )}
+                </Box>
+                <Avatar sx={{ bgcolor: 'success.main' }}>
+                  <SpeedIcon />
+                </Avatar>
+              </Box>
+
+              {/* Bakım Durumu */}
+              {vehicle.currentKm && vehicle.nextServiceKm && (
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: vehicle.currentKm > vehicle.nextServiceKm ? 'error.50' : 'info.50', 
+                  borderRadius: 2,
+                  textAlign: 'center'
+                }}>
+                  <Typography 
+                    variant="subtitle1" 
+                    fontWeight={600}
+                    color={vehicle.currentKm > vehicle.nextServiceKm ? 'error.main' : 'info.main'}
+                  >
+                    {vehicle.currentKm > vehicle.nextServiceKm ? '⚠️ Bakım Gerekli' : '✅ Bakım Zamanında'}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Paper>
+        </Box>
+        
+        {/* Sağ Kolon */}
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3
+          }}
+        >
+          {/* Kilometre Geçmişi */}
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden'
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                p: 2,
+                bgcolor: 'success.main',
+                color: 'white'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <SpeedIcon />
+                <Typography variant="h6" fontWeight={600}>
+                  Kilometre Geçmişi
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={handleKmModalOpen}
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.15)',
+                  color: 'white',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.25)',
+                  }
+                }}
+              >
+                Kilometre Ekle
+              </Button>
+            </Box>
+            
+            <Box sx={{ p: 3 }}>
+              {vehicle.kmRecords && vehicle.kmRecords.length > 0 ? (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Tarih</TableCell>
+                        <TableCell>Kilometre</TableCell>
+                        <TableCell>Tür</TableCell>
+                        <TableCell>Açıklama</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {vehicle.kmRecords.slice(0, 5).map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell>
+                            {new Intl.DateTimeFormat('tr-TR').format(new Date(record.date))}
+                          </TableCell>
+                          <TableCell>
+                            {new Intl.NumberFormat('tr-TR').format(record.km)} km
+                          </TableCell>
+                          <TableCell>
+                            {record.recordType === 'manual' ? 'Manuel' :
+                             record.recordType === 'service' ? 'Servis' :
+                             record.recordType === 'assignment' ? 'Zimmet' : 'İade'}
+                          </TableCell>
+                          <TableCell>{record.description}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 2 }}>
+                  <SpeedIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Henüz kilometre kaydı yok
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Paper>
+        </Box>
+      </Box>
+
+      {/* Düzenleme Modalı */}
+      <Dialog 
+        open={editModalOpen} 
+        onClose={handleEditModalClose} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Typography variant="h6" fontWeight={600}>
+            Araç Bilgilerini Düzenle
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <TextField
+              fullWidth
+              label="Plaka"
+              value={editFormData.licensePlate}
+              onChange={(e) => setEditFormData(prev => ({ ...prev, licensePlate: e.target.value }))}
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Marka"
+                value={editFormData.brand}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, brand: e.target.value }))}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              />
+              <TextField
+                fullWidth
+                label="Model"
+                value={editFormData.model}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, model: e.target.value }))}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Model Yılı"
+                type="number"
+                value={editFormData.year}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              />
+              <TextField
+                fullWidth
+                label="Mevcut Kilometre"
+                type="number"
+                value={editFormData.currentKm}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, currentKm: parseInt(e.target.value) || 0 }))}
+                InputProps={{
+                  endAdornment: <Typography color="text.secondary">km</Typography>
+                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              />
+            </Box>
+
+            <FormControl fullWidth>
+              <InputLabel>Zimmetli Eğitmen</InputLabel>
+              <Select
+                value={editFormData.assignedInstructor}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, assignedInstructor: e.target.value }))}
+                label="Zimmetli Eğitmen"
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="">Zimmetli değil</MenuItem>
+                <MenuItem value="1">Mehmet Öğretmen</MenuItem>
+                <MenuItem value="2">Ali Öğretmen</MenuItem>
+                <MenuItem value="3">Zeynep Öğretmen</MenuItem>
+                <MenuItem value="4">Mustafa Öğretmen</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Durum</InputLabel>
+              <Select
+                value={editFormData.status}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, status: e.target.value }))}
+                label="Durum"
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="available">Müsait</MenuItem>
+                <MenuItem value="in-use">Kullanımda</MenuItem>
+                <MenuItem value="maintenance">Bakımda</MenuItem>
+                <MenuItem value="inactive">Pasif</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
+            onClick={handleEditModalClose}
+            startIcon={<CancelIcon />}
+            sx={{ textTransform: 'none', borderRadius: 2 }}
+          >
+            İptal
+          </Button>
+          <Button 
+            onClick={handleEditSave}
+            variant="contained"
+            startIcon={<SaveIcon />}
+            sx={{ textTransform: 'none', borderRadius: 2 }}
+          >
+            Kaydet
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Kilometre Ekleme Modalı */}
+      <Dialog 
+        open={kmModalOpen} 
+        onClose={handleKmModalClose} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 2 }}>
+          <Typography variant="h6" fontWeight={600}>
+            Kilometre Kaydı Ekle
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Kilometre"
+                type="number"
+                value={newKmRecord.km}
+                onChange={(e) => setNewKmRecord(prev => ({ ...prev, km: parseInt(e.target.value) || 0 }))}
+                InputProps={{
+                  endAdornment: <Typography color="text.secondary">km</Typography>
+                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              />
+              <TextField
+                fullWidth
+                label="Tarih"
+                type="date"
+                value={newKmRecord.date}
+                onChange={(e) => setNewKmRecord(prev => ({ ...prev, date: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+              />
+            </Box>
+            <FormControl fullWidth>
+              <InputLabel>Kayıt Türü</InputLabel>
+              <Select
+                value={newKmRecord.recordType}
+                onChange={(e) => setNewKmRecord(prev => ({ ...prev, recordType: e.target.value as any }))}
+                label="Kayıt Türü"
+                sx={{ borderRadius: 2 }}
+              >
+                <MenuItem value="manual">Manuel</MenuItem>
+                <MenuItem value="service">Servis</MenuItem>
+                <MenuItem value="assignment">Zimmet</MenuItem>
+                <MenuItem value="return">İade</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Açıklama"
+              multiline
+              rows={2}
+              value={newKmRecord.description}
+              onChange={(e) => setNewKmRecord(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Kayıt açıklaması..."
+              sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
+            onClick={handleKmModalClose}
+            startIcon={<CancelIcon />}
+            sx={{ textTransform: 'none', borderRadius: 2 }}
+          >
+            İptal
+          </Button>
+          <Button 
+            onClick={handleKmSave}
+            variant="contained"
+            startIcon={<SaveIcon />}
+            sx={{ textTransform: 'none', borderRadius: 2 }}
+          >
+            Kaydet
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Bakım Modal */}
+      {vehicle && (
+        <MaintenanceModal
+          open={maintenanceModalOpen}
+          onClose={() => setMaintenanceModalOpen(false)}
+          vehiclePlate={vehicle.licensePlate}
+          currentKm={vehicle.currentKm}
+          lastServiceKm={vehicle.lastServiceKm}
+          onSave={handleMaintenanceSave}
+        />
+      )}
+      
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+};
+
+export default VehicleDetail;

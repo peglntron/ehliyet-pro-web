@@ -1,0 +1,822 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box, Typography, Button, Paper, Divider, Grid,
+  Chip, Snackbar, Alert,
+  CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Payment as PaymentIcon,
+  Notifications as NotificationsIcon,
+  Lock as LockIcon,
+  LockOpen as LockOpenIcon
+} from '@mui/icons-material';
+import { useNavigate, useParams } from 'react-router-dom';
+import PageBreadcrumb from '../../components/PageBreadcrumb';
+import { getStudentById } from './api/useStudentsReal';
+import { studentAPI } from '../../api/students';
+import type { Student, Payment } from './types/types';
+import NotificationModal from './components/NotificationModal';
+import EditPersonalInfoModal from './components/EditPersonalInfoModal';
+import EditExamInfoModal from './components/EditExamInfoModal';
+import AddPaymentModal from './components/AddPaymentModal';
+import { ReceivePaymentModal } from './components/ReceivePaymentModal';
+import StudentPersonalInfoCard from './components/detail/StudentPersonalInfoCard';
+import StudentExamInfoCard from './components/detail/StudentExamInfoCard';
+import StudentPaymentInfoCard from './components/detail/StudentPaymentInfoCard';
+
+const StudentDetail: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  
+  // State tanımlamaları
+  const [student, setStudent] = useState<Student | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Modal durumları
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [personalInfoModalOpen, setPersonalInfoModalOpen] = useState(false);
+  const [examInfoModalOpen, setExamInfoModalOpen] = useState(false);
+  const [addPaymentModalOpen, setAddPaymentModalOpen] = useState(false);
+  const [paymentModalMode, setPaymentModalMode] = useState<'payment' | 'debt'>('payment'); // YENİ
+  const [installmentPaymentModalOpen, setInstallmentPaymentModalOpen] = useState(false);
+  const [selectedInstallment, setSelectedInstallment] = useState<any>(null);
+  const [receivePaymentModalOpen, setReceivePaymentModalOpen] = useState(false);
+  const [selectedDebt, setSelectedDebt] = useState<Payment | null>(null);
+  
+  // Snackbar durumları
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+  
+  // Kursiyer verilerini yükle
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      getStudentById(id)
+        .then(data => {
+          setStudent(data);
+          setLoading(false);
+        })
+        .catch(error => {
+          console.error('Kursiyer yüklenirken hata:', error);
+          setSnackbarMessage('Kursiyer bilgileri yüklenirken hata oluştu!');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+          setLoading(false);
+        });
+    }
+  }, [id]);
+  
+  // Bildirim gönderme işlemi başarılı olduğunda
+  const handleNotificationSent = () => {
+    setSnackbarMessage('Bildirim başarıyla gönderildi!');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+  };
+  
+  // Kursiyer durumunu değiştir (aktif/pasif)
+  const handleToggleStatus = async () => {
+    if (!student) return;
+    
+    try {
+      const newStatus = student.status === 'active' ? 'INACTIVE' : 'ACTIVE';
+      
+      // Backend API çağrısı
+      await studentAPI.update(student.id, { status: newStatus });
+      
+      // Başarılı işlemden sonra bildiri göster
+      setSnackbarMessage(`Kursiyer ${newStatus === 'ACTIVE' ? 'aktif' : 'pasif'} hale getirildi!`);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      
+      // State'i güncelle
+      setStudent(prev => prev ? { ...prev, status: newStatus === 'ACTIVE' ? 'active' : 'inactive' } : null);
+    } catch (error) {
+      console.error('Durum değiştirme hatası:', error);
+      setSnackbarMessage('Kursiyer durumu değiştirilirken hata oluştu!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+  
+  // Kişisel bilgileri güncelleme işlemi başarılı olduğunda
+  const handlePersonalInfoUpdated = async (updatedStudent: Partial<Student>) => {
+    if (!student || !id) return;
+    
+    // API'den güncel student verisini çek (adapter'dan geçmiş haliyle)
+    try {
+      const freshStudent = await getStudentById(id);
+      setStudent(freshStudent);
+      setSnackbarMessage('Kişisel bilgiler başarıyla güncellendi!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Student yenileme hatası:', error);
+      // Hata olursa en azından gelen veriyi kullan
+      setStudent(updatedStudent as Student);
+      setSnackbarMessage('Kişisel bilgiler başarıyla güncellendi!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    }
+  };
+  
+  // Helper: Ödenen toplam tutar (YENİ SİSTEM)
+  const calculatePaidAmount = (student: Student | null): number => {
+    if (!student?.payments) return 0;
+    return student.payments
+      .filter(p => 
+        (p.type === 'PAYMENT' && p.status === 'PAID') || 
+        (p.type === 'INSTALLMENT' && p.status === 'PAID') ||
+        (p.type === 'DEBT' && p.status === 'PAID')
+      )
+      .reduce((total, payment) => total + payment.amount, 0);
+  };
+  
+  // Helper: Toplam borç hesaplama (type='DEBT' olan kayıtlar)
+  const calculateTotalDebt = (student: Student | null): number => {
+    if (!student?.payments) return 0;
+    return student.payments
+      .filter(p => p.type === 'DEBT')
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+  };
+
+  // Helper: Kalan borç hesaplama (YENİ SİSTEM: type='DEBT' - ödenenler)
+  const calculateRemainingDebt = (student: Student | null): number => {
+    if (!student || !student.payments) return 0;
+    
+    // Toplam borç = type='DEBT' olan kayıtların toplamı
+    const totalDebt = student.payments
+      .filter(p => p.type === 'DEBT')
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+    
+    // Ödenen miktar = type='PAYMENT' veya type='INSTALLMENT' ve status='PAID' olanların toplamı
+    // VEYA type='DEBT' ama status='PAID' olanlar (taksitli borç ödendiğinde)
+    const paidAmount = student.payments
+      .filter(p => 
+        (p.type === 'PAYMENT' && p.status === 'PAID') || 
+        (p.type === 'INSTALLMENT' && p.status === 'PAID') ||
+        (p.type === 'DEBT' && p.status === 'PAID')
+      )
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+    
+    return Math.max(0, totalDebt - paidAmount);
+  };
+  
+  // Sınav bilgilerini güncelleme işlemi başarılı olduğunda
+  const handleExamInfoUpdated = async (updatedStudent: Partial<Student>) => {
+    if (!student || !id) return;
+    
+    // API'den güncel student verisini çek (adapter'dan geçmiş haliyle)
+    try {
+      const freshStudent = await getStudentById(id);
+      setStudent(freshStudent);
+      setSnackbarMessage('Sınav bilgileri başarıyla güncellendi!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Student yenileme hatası:', error);
+      // Hata olursa en azından gelen veriyi kullan
+      setStudent(updatedStudent as Student);
+      setSnackbarMessage('Sınav bilgileri başarıyla güncellendi!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    }
+  };
+  
+  // Ödeme ekleme işlemi başarılı olduğunda
+  const handlePaymentAdded = async (payment: any) => {
+    if (!student || !id) return;
+    
+    // API'den güncel student verisini çek (adapter'dan geçmiş haliyle)
+    try {
+      const freshStudent = await getStudentById(id);
+      setStudent(freshStudent);
+      
+      // Mesajı payment tipine göre belirle
+      if (payment.status === 'PENDING') {
+        setSnackbarMessage('Borç başarıyla eklendi!');
+      } else {
+        setSnackbarMessage('Ödeme başarıyla eklendi!');
+      }
+      
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Student yenileme hatası:', error);
+      
+      // Hata olursa manuel güncelleme yap
+      const newPayments = [...(student.payments || []), payment];
+      
+      if (payment.status === 'PENDING') {
+        const updatedStudent = {
+          ...student,
+          payments: newPayments,
+          totalPayment: (Number(student.totalPayment) || 0) + Number(payment.amount)
+        };
+        setStudent(updatedStudent);
+        setSnackbarMessage('Borç başarıyla eklendi!');
+      } else {
+        const updatedStudent = {
+          ...student,
+          payments: newPayments
+        };
+        setStudent(updatedStudent);
+        setSnackbarMessage('Ödeme başarıyla eklendi!');
+      }
+      
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    }
+  };
+  
+  // Snackbar kapatma işlevi
+  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+  
+  // Formatlı tarih
+  const formatDate = (dateString?: string): string => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  };
+  
+  // Durum bilgisine göre renk ve metin belirleme (StudentListItem ile uyumlu)
+  const getStatusInfo = (status: string) => {
+    if (status === 'driving-passed' || status === 'both-passed') {
+      return { color: 'success', text: 'Direksiyon Sınavını Geçti' };
+    } else if (status === 'written-passed') {
+      return { color: 'info', text: 'Yazılı Sınavı Geçti' };
+    } else {
+      // active, inactive veya diğer durumlar
+      return { color: 'default', text: 'Yeni Kayıt' };
+    }
+  };
+  
+  // Ödeme durumuna göre renk ve metin belirleme
+  const getPaymentStatusInfo = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'PAID':
+        return { color: 'success', text: 'Ödendi' };
+      case 'PENDING':
+        return { color: 'warning', text: 'Beklemede' };
+      case 'CANCELLED':
+        return { color: 'error', text: 'İptal' };
+      default:
+        return { color: 'default', text: status };
+    }
+  };
+  
+  // Ödeme yöntemine göre metin belirleme
+  const getPaymentMethodText = (method: string) => {
+    switch (method) {
+      case 'cash':
+        return 'Nakit';
+      case 'credit':
+        return 'Kredi Kartı';
+      case 'bank':
+        return 'Banka Havalesi';
+      case 'pos':
+        return 'POS';
+      default:
+        return method;
+    }
+  };
+
+  // Taksit durumu için metin belirleme
+  const getInstallmentStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Bekliyor';
+      case 'paid':
+        return 'Ödendi';
+      case 'overdue':
+        return 'Gecikmiş';
+      default:
+        return status;
+    }
+  };
+
+  // Taksit durumu için renk belirleme
+  const getInstallmentStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'warning';
+      case 'paid':
+        return 'success';
+      case 'overdue':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  // Taksit ödeme modalını açma işlemi
+  const handleInstallmentPayment = (installment: any) => {
+    setSelectedInstallment(installment);
+    setInstallmentPaymentModalOpen(true);
+  };
+
+  // Gerçek taksit ödeme işlemi
+  const processInstallmentPayment = (installment: any, paymentMethod: 'cash' | 'credit' | 'bank' | 'pos') => {
+    if (!student) return;
+    
+    // Öğrenci verisini güncelle
+    const updatedStudent = {
+      ...student,
+      installments: student.installments?.map(inst => 
+        inst.id === installment.id 
+          ? { 
+              ...inst, 
+              status: 'paid' as const,
+              paymentDate: new Date().toISOString().split('T')[0],
+              paymentMethod: paymentMethod
+            }
+          : inst
+      ),
+      // Yeni ödeme kaydı ekle
+      payments: [
+        ...(student.payments || []),
+        {
+          id: `payment_${Date.now()}`,
+          amount: installment.amount,
+          date: new Date().toISOString().split('T')[0],
+          method: paymentMethod,
+          status: 'PAID',
+          type: 'INSTALLMENT',
+          description: `${installment.installmentNumber}. Taksit Ödemesi`,
+          installmentId: installment.id,
+          isInstallment: true
+        } as Payment
+      ],
+      lastUpdated: new Date().toISOString()
+    } as Student;
+    
+    // Kalan borç hesapla
+    const updatedPaidAmount = calculatePaidAmount(updatedStudent);
+    const updatedRemainingDebt = calculateRemainingDebt(updatedStudent);
+    
+    // Eğer tüm borç ödendiyse durumu güncelle
+    if (updatedRemainingDebt <= 0) {
+      updatedStudent.status = 'completed';
+    }
+
+    // API'ya güncelleme gönder (şimdilik mock)
+    console.log('Taksit ödeme tamamlandı:', {
+      installmentId: installment.id,
+      amount: installment.amount,
+      newPaidAmount: updatedPaidAmount,
+      remainingDebt: updatedRemainingDebt
+    });
+    
+    // State'i güncelle
+    setStudent(updatedStudent);
+    
+    // Başarı mesajı göster
+    setSnackbarMessage(`${installment.installmentNumber}. taksit (${installment.amount} TL) başarıyla ödendi!`);
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+  };
+  
+  // Ödemeyi gerçekleşti olarak işaretle - Modal aç
+  const handleMarkPaymentPaid = async (paymentId: string) => {
+    // Borç bilgisini bul
+    const debt = student?.payments?.find(p => p.id === paymentId);
+    if (!debt) {
+      setSnackbarMessage('Borç bulunamadı');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+    
+    setSelectedDebt(debt);
+    setReceivePaymentModalOpen(true);
+  };
+  
+  const handleReceivePaymentSuccess = async () => {
+    // Başarılı - öğrenci verisini yenile
+    if (id) {
+      const updatedStudent = await getStudentById(id);
+      setStudent(updatedStudent);
+    }
+    
+    setSnackbarMessage('Ödeme başarıyla kaydedildi!');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true);
+  };
+  
+  if (!student && !loading) {
+    return (
+      <Box sx={{ 
+        height: '100%',
+        width: '100%',
+        overflow: 'auto',
+        bgcolor: '#f8fafc',
+        boxSizing: 'border-box',
+        p: { xs: 2, md: 3 },
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 4, 
+            textAlign: 'center',
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <Typography variant="h5" gutterBottom color="error">
+            Kursiyer Bulunamadı
+          </Typography>
+          <Typography variant="body1" color="text.secondary" paragraph>
+            Aradığınız kursiyer bilgisi bulunamadı veya silinmiş olabilir.
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/students')}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              py: 1.2
+            }}
+          >
+            Kursiyer Listesine Dön
+          </Button>
+        </Paper>
+      </Box>
+    );
+  }
+  
+  if (loading) {
+    return (
+      <Box sx={{ 
+        height: '100%',
+        width: '100%',
+        overflow: 'auto',
+        bgcolor: '#f8fafc',
+        boxSizing: 'border-box',
+        p: { xs: 2, md: 3 },
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <Typography>Yükleniyor...</Typography>
+      </Box>
+    );
+  }
+  
+  // Hesaplanan değerler
+  const statusInfo = getStatusInfo(student?.status || '');
+  const paidAmount = calculatePaidAmount(student);
+  const totalDebt = calculateTotalDebt(student);
+  const remainingAmount = calculateRemainingDebt(student);
+  
+  return (
+    <Box sx={{ 
+      height: '100vh',
+      width: '100%',
+      bgcolor: '#f8fafc',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
+      <Box sx={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        p: { xs: 2, md: 3 }
+      }}>
+      {/* Başlık ve Geri Butonu */}
+      <Box mb={3}>
+        <PageBreadcrumb />
+        
+        <Box 
+          mt={2} 
+          display="flex" 
+          flexDirection={{ xs: 'column', sm: 'row' }} 
+          justifyContent="space-between" 
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          gap={2}
+        >
+          <Box>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  fontWeight: 800, 
+                  color: 'primary.main'
+                }}
+              >
+                {student?.name} {student?.surname}
+              </Typography>
+              <Chip 
+                label={statusInfo.text} 
+                color={statusInfo.color as any} 
+                sx={{ borderRadius: 2, fontWeight: 600 }}
+              />
+            </Box>
+            <Typography variant="body1" color="text.secondary">
+              {student?.licenseType ? `${student.licenseType} Sınıfı Ehliyet Adayı` : 'Ehliyet Adayı'}
+            </Typography>
+          </Box>
+          
+          <Box display="flex" gap={2} flexWrap="wrap">
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<NotificationsIcon />}
+              onClick={() => setNotificationModalOpen(true)}
+              sx={{
+                py: 1.2,
+                px: 2.5,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+              }}
+            >
+              Bildirim Gönder
+            </Button>
+            
+            <Button
+              variant="outlined"
+              color={student?.status === 'active' ? 'error' : 'success'}
+              startIcon={student?.status === 'active' ? <LockIcon /> : <LockOpenIcon />}
+              onClick={handleToggleStatus}
+              sx={{
+                py: 1.2,
+                px: 2.5,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+              }}
+            >
+              {student?.status === 'active' ? 'Pasif Yap' : 'Aktif Yap'}
+            </Button>
+            
+            <Button
+              variant="contained"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/students')}
+              sx={{
+                py: 1.2,
+                px: 2.5,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+              }}
+            >
+              Listeye Dön
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+      
+      {/* İçerik - İki Sütunlu Layout */}
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          gap: 3,
+          minHeight: 0,
+          flex: 1
+        }}
+      >
+        {/* Üst Satır - Kişisel ve Sınav Bilgileri Yan Yana */}
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3, minWidth: 0 }}>
+          {/* Kişisel Bilgiler */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <StudentPersonalInfoCard
+              student={student}
+              onEdit={() => setPersonalInfoModalOpen(true)}
+              formatDate={formatDate}
+            />
+          </Box>
+          
+          {/* Sınav Bilgileri */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <StudentExamInfoCard
+              student={student}
+              onEdit={() => setExamInfoModalOpen(true)}
+              formatDate={formatDate}
+            />
+          </Box>
+        </Box>
+        
+        {/* Alt Satır - Ödeme Bilgileri Tam Genişlik */}
+        <Box sx={{ minWidth: 0 }}>
+          <StudentPaymentInfoCard
+            student={student}
+            totalDebt={totalDebt}
+            paidAmount={paidAmount}
+            remainingAmount={remainingAmount}
+            onAddPayment={() => {
+              setPaymentModalMode('payment');
+              setAddPaymentModalOpen(true);
+            }}
+            onAddDebt={() => {
+              setPaymentModalMode('debt');
+              setAddPaymentModalOpen(true);
+            }}
+            onInstallmentPayment={handleInstallmentPayment}
+            onMarkPaymentPaid={handleMarkPaymentPaid}
+            formatDate={formatDate}
+            getInstallmentStatusText={getInstallmentStatusText}
+            getInstallmentStatusColor={getInstallmentStatusColor}
+            getPaymentStatusInfo={getPaymentStatusInfo}
+            getPaymentMethodText={getPaymentMethodText}
+          />
+        </Box>
+      </Box>
+      
+      {/* Bildirim Gönderme Modalı */}
+      <NotificationModal 
+        open={notificationModalOpen}
+        onClose={() => setNotificationModalOpen(false)}
+        onSuccess={handleNotificationSent}
+        student={student}
+      />
+      
+      {/* Kişisel Bilgiler Düzenleme Modalı */}
+      <EditPersonalInfoModal
+        open={personalInfoModalOpen}
+        onClose={() => setPersonalInfoModalOpen(false)}
+        onSuccess={handlePersonalInfoUpdated}
+        student={student}
+      />
+      
+      {/* Sınav Bilgileri Düzenleme Modalı */}
+      <EditExamInfoModal
+        open={examInfoModalOpen}
+        onClose={() => setExamInfoModalOpen(false)}
+        onSuccess={handleExamInfoUpdated}
+        student={student}
+      />
+      
+      {/* Ödeme/Borç Ekleme Modalı */}
+      <AddPaymentModal
+        open={addPaymentModalOpen}
+        onClose={() => setAddPaymentModalOpen(false)}
+        onSuccess={handlePaymentAdded}
+        student={student}
+        remainingAmount={remainingAmount}
+        mode={paymentModalMode}
+      />
+      
+      {/* Taksit Ödeme Modalı */}
+      {selectedInstallment && (
+        <Dialog 
+          open={installmentPaymentModalOpen} 
+          onClose={() => setInstallmentPaymentModalOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            <Typography variant="h6" fontWeight={600}>
+              {selectedInstallment.installmentNumber}. Taksit Ödemesi
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Tutar: {selectedInstallment.amount?.toLocaleString('tr-TR')} ₺
+            </Typography>
+          </DialogTitle>
+          
+          <DialogContent>
+            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+              Ödeme Yöntemini Seçin:
+            </Typography>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => {
+                  processInstallmentPayment(selectedInstallment, 'cash');
+                  setInstallmentPaymentModalOpen(false);
+                }}
+                sx={{ 
+                  justifyContent: 'flex-start', 
+                  textTransform: 'none',
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                💵 Nakit
+              </Button>
+              
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => {
+                  processInstallmentPayment(selectedInstallment, 'credit');
+                  setInstallmentPaymentModalOpen(false);
+                }}
+                sx={{ 
+                  justifyContent: 'flex-start', 
+                  textTransform: 'none',
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                💳 Kredi Kartı
+              </Button>
+              
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => {
+                  processInstallmentPayment(selectedInstallment, 'pos');
+                  setInstallmentPaymentModalOpen(false);
+                }}
+                sx={{ 
+                  justifyContent: 'flex-start', 
+                  textTransform: 'none',
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                🏪 POS
+              </Button>
+              
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => {
+                  processInstallmentPayment(selectedInstallment, 'bank');
+                  setInstallmentPaymentModalOpen(false);
+                }}
+                sx={{ 
+                  justifyContent: 'flex-start', 
+                  textTransform: 'none',
+                  py: 1.5,
+                  borderRadius: 2
+                }}
+              >
+                🏦 Havale/EFT
+              </Button>
+            </Box>
+          </DialogContent>
+          
+          <DialogActions>
+            <Button 
+              onClick={() => setInstallmentPaymentModalOpen(false)}
+              sx={{ textTransform: 'none' }}
+            >
+              İptal
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+      
+      {/* Ödeme Al Modal */}
+      {selectedDebt && (
+        <ReceivePaymentModal
+          open={receivePaymentModalOpen}
+          onClose={() => {
+            setReceivePaymentModalOpen(false);
+            setSelectedDebt(null);
+          }}
+          debtId={selectedDebt.id}
+          debtAmount={selectedDebt.amount}
+          debtDescription={selectedDebt.description || 'Borç'}
+          onSuccess={handleReceivePaymentSuccess}
+        />
+      )}
+      
+      {/* Snackbar */}
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={4000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbarSeverity} 
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+      </Box>
+    </Box>
+  );
+};
+
+export default StudentDetail;

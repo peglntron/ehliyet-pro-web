@@ -1,0 +1,389 @@
+/* Focus outline'ı kaldır - sadece mouse tıklamaları için */
+*:focus {
+  outline: none !important;
+}
+
+/* Klavye navigasyonu için focus'u koru */
+*:focus-visible {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px;
+}
+
+/* Button focus durumlarını özelleştir */
+button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button:focus-visible {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px;
+}
+
+/* Material-UI butonları için özel düzenleme */
+.MuiButton-root:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.MuiIconButton-root:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.MuiMenuItem-root:focus {
+  outline: none !important;
+}
+
+/* TextField ve Input alanları için focus düzenlemesi - Daha spesifik kurallar */
+.MuiTextField-root .MuiOutlinedInput-root {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Normal durumda border */
+.MuiTextField-root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-width: 1px !important;
+  border-color: rgba(0, 0, 0, 0.23) !important;
+}
+
+/* Focus durumunda sadece border rengi değişsin, kalınlık normal kalsın */
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-width: 1px !important;
+  border-color: #1976d2 !important;
+  box-shadow: none !important;
+}
+
+/* Hover durumunda */
+.MuiTextField-root .MuiOutlinedInput-root:hover:not(.Mui-disabled):not(.Mui-error) .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0, 0, 0, 0.87) !important;
+  border-width: 1px !important;
+}
+
+/* Input elementi için */
+.MuiTextField-root .MuiOutlinedInput-root input {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* En güçlü TextField kuralları - Extra border'ı tamamen engelle */
+div[class*="MuiTextField-root"] div[class*="MuiOutlinedInput-root"] {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+div[class*="MuiTextField-root"] div[class*="MuiOutlinedInput-root"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+div[class*="MuiTextField-root"] div[class*="MuiOutlinedInput-root"]:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+div[class*="MuiTextField-root"] div[class*="MuiOutlinedInput-root"] input {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+div[class*="MuiTextField-root"] div[class*="MuiOutlinedInput-root"] input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Sadece fieldset border'ını kontrol et */
+div[class*="MuiTextField-root"] div[class*="MuiOutlinedInput-root"] fieldset {
+  border-width: 1px !important;
+  border-color: rgba(0, 0, 0, 0.23) !important;
+}
+
+div[class*="MuiTextField-root"] div[class*="MuiOutlinedInput-root"].Mui-focused fieldset {
+  border-width: 1px !important;
+  border-color: #1976d2 !important;
+}
+
+div[class*="MuiTextField-root"] div[class*="MuiOutlinedInput-root"]:hover:not(.Mui-disabled) fieldset {
+  border-color: rgba(0, 0, 0, 0.87) !important;
+  border-width: 1px !important;
+}
+
+/* HTML İçerik Önizleme Stilleri */
+.question-content-preview {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+.question-content-preview h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 1rem 0;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.question-content-preview h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2a2a2a;
+  margin: 0.8rem 0;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.3rem;
+}
+
+.question-content-preview h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #3a3a3a;
+  margin: 0.6rem 0;
+}
+
+.question-content-preview p {
+  margin: 0.5rem 0;
+  text-align: justify;
+}
+
+.question-content-preview ul, .question-content-preview ol {
+  margin: 0.5rem 0;
+  padding-left: 2rem;
+}
+
+.question-content-preview ul li, .question-content-preview ol li {
+  margin: 0.25rem 0;
+}
+
+.question-content-preview .roman-list {
+  list-style-type: upper-roman;
+}
+
+.question-content-preview a {
+  color: #1976d2;
+  text-decoration: none;
+  border-bottom: 1px dotted #1976d2;
+}
+
+.question-content-preview a:hover {
+  background-color: #e3f2fd;
+  border-bottom: 1px solid #1976d2;
+}
+
+.question-content-preview blockquote {
+  border-left: 4px solid #e0e0e0;
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background-color: #f9f9f9;
+  font-style: italic;
+  color: #666;
+}
+
+.question-content-preview code {
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  padding: 0.2rem 0.4rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+  color: #d63384;
+}
+
+.question-content-preview pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.question-content-preview pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #333;
+  font-size: 0.875rem;
+}
+
+.question-content-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+  margin: 0.5rem 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.question-content-preview strong {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.question-content-preview em {
+  font-style: italic;
+  color: #2a2a2a;
+}
+
+.question-content-preview u {
+  text-decoration: underline;
+  text-decoration-color: #666;
+}
+
+.question-content-preview br {
+  line-height: 2;
+}
+
+/* Number input scroll engelleme - Mouse wheel ile sayı değişimini engelle */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield; /* Firefox'ta okları gizle */
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* Chrome/Safari'de okları gizle */
+  appearance: none;
+  margin: 0;
+}
+
+/* Tüm number inputlarda scroll engellemesi */
+input[type="number"]:focus {
+  pointer-events: auto;
+}

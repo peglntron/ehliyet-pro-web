@@ -1,0 +1,337 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress
+} from '@mui/material';
+import {
+  Add as AddIcon
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import type { SavedMatching } from '../types/savedMatchingTypes';
+import { fetchSavedMatchings, deleteMatching } from '../api/savedMatchingApi';
+import PageBreadcrumb from '../../../components/PageBreadcrumb';
+
+const SavedMatchingsList: React.FC = () => {
+  const [matchings, setMatchings] = useState<SavedMatching[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedMatching, setSelectedMatching] = useState<SavedMatching | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadMatchings();
+  }, []);
+
+  const loadMatchings = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await fetchSavedMatchings();
+      setMatchings(data.sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()));
+    } catch (err) {
+      setError('Eşleştirme kayıtları yüklenirken hata oluştu');
+      console.error('Error loading matchings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  };
+
+  const handleDelete = async () => {  const generatePDF = (matches: MatchingResult[], matchingName: string, licenseType: string) => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      putOnlyUsedFonts: true,
+      compress: true
+    });
+    
+    doc.setFont('helvetica');
+
+    // Eğitmen bazında gruplama
+    const instructorGroups = new Map<string, MatchingResult[]>();
+    matches.forEach(match => {
+      if (!instructorGroups.has(match.instructorId)) {
+        instructorGroups.set(match.instructorId, []);
+      }
+      instructorGroups.get(match.instructorId)!.push(match);
+    });
+
+    let isFirstPage = true;
+
+    // Her eğitmen için ayrı sayfa oluştur
+    instructorGroups.forEach((instructorMatches, instructorId) => {
+      if (!isFirstPage) {
+        doc.addPage();
+      }
+      isFirstPage = false;
+
+      let currentY = 20;
+
+      // Eğitmen bilgisi
+      const instructor = instructors.find(i => i.id === instructorId);
+      const instructorName = instructor ? `${instructor.firstName} ${instructor.lastName}` : 'Eğitmen Bulunamadı';
+
+      // Sayfa başlığı
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(fixTurkishChars('Öğrenci-Eğitmen Eşleştirme Listesi'), 20, currentY);
+      
+      currentY += 10;
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(fixTurkishChars(`Eşleştirme: ${matchingName}`), 20, currentY);
+      
+      currentY += 8;
+      doc.text(fixTurkishChars(`Eğitmen: ${instructorName}`), 20, currentY);
+      
+      currentY += 8;
+      doc.text(fixTurkishChars(`Ehliyet Türü: ${licenseType} Sınıfı`), 20, currentY);
+      
+      currentY += 15;
+
+      // Tablo verileri hazırla
+      const tableData = instructorMatches.map((match, index) => [
+        (index + 1).toString(),
+        fixTurkishChars(match.studentName),
+        match.studentGender === 'male' ? 'E' : 'K',
+        match.vehiclePlate || '-',
+        new Date().toLocaleDateString('tr-TR')
+      ]);
+
+      // Tablo oluştur
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Sıra', 'Öğrenci Adı', 'Cinsiyet', 'Araç Plaka', 'Tarih'].map(h => fixTurkishChars(h))],
+        body: tableData,
+        styles: {
+          fontSize: 10,
+          cellPadding: 3
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        }
+      });
+    });
+
+    // PDF'i indir
+    doc.save(fixTurkishChars(`${matchingName}_Eslestirilme_Listesi.pdf`));
+  };
+
+  const handleDelete = async () => {
+    if (!selectedMatching) return;
+    
+    try {
+      setDeleting(true);
+      await deleteMatching(selectedMatching.id);
+      await loadMatchings(); // Listeyi yenile
+      setDeleteDialogOpen(false);
+      setSelectedMatching(null);
+    } catch (err) {
+      setError('Eşleştirme silinirken hata oluştu');
+      console.error('Error deleting matching:', err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'success';
+      case 'archived': return 'default';
+      case 'draft': return 'warning';
+      default: return 'default';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'active': return 'Aktif';
+      case 'archived': return 'Arşivlendi';
+      case 'draft': return 'Taslak';
+      default: return status;
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: 3 }}>
+      {/* Breadcrumb */}
+      <Box mb={3}>
+        <PageBreadcrumb />
+      </Box>
+      
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+        <Box>
+          <Typography variant="h4" component="h1" fontWeight={800} color="primary.main" gutterBottom>
+            Eşleştirme
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            Kayıtlı eşleştirmeleri görüntüleyin, düzenleyin ve yeni eşleştirmeler oluşturun
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/matching')}
+          sx={{ bgcolor: 'primary.main', mt: 1 }}
+        >
+          Yeni Eşleştirme
+        </Button>
+      </Box>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Table */}
+      <TableContainer component={Paper} elevation={2}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'grey.50' }}>
+              <TableCell><strong>Ad</strong></TableCell>
+              <TableCell><strong>Ehliyet Türü</strong></TableCell>
+              <TableCell><strong>Öğrenci Sayısı</strong></TableCell>
+              <TableCell><strong>Eğitmen Sayısı</strong></TableCell>
+              <TableCell><strong>Oluşturma Tarihi</strong></TableCell>
+              <TableCell><strong>Durum</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {matchings.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    Henüz kayıtlı eşleştirme bulunmuyor.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={() => navigate('/matching')}
+                    sx={{ mt: 2 }}
+                  >
+                    İlk Eşleştirmenizi Oluşturun
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ) : (
+              matchings.map((matching) => (
+                <TableRow 
+                  key={matching.id} 
+                  hover
+                  onClick={() => navigate(`/matching/saved/${matching.id}`)}
+                  sx={{ 
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: 'action.hover'
+                    }
+                  }}
+                >
+                  <TableCell>
+                    <Box>
+                      <Typography variant="body2" fontWeight="medium">
+                        {matching.name}
+                      </Typography>
+                      {matching.description && (
+                        <Typography variant="caption" color="text.secondary">
+                          {matching.description}
+                        </Typography>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={`${matching.licenseType} Sınıfı`} 
+                      size="small" 
+                      variant="outlined" 
+                    />
+                  </TableCell>
+                  <TableCell>{matching.totalStudents}</TableCell>
+                  <TableCell>{matching.totalInstructors}</TableCell>
+                  <TableCell>
+                    {new Date(matching.createdDate).toLocaleDateString('tr-TR')}
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={getStatusLabel(matching.status)} 
+                      size="small" 
+                      color={getStatusColor(matching.status)} 
+                    />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Eşleştirmeyi Sil</DialogTitle>
+        <DialogContent>
+          <Typography>
+            <strong>{selectedMatching?.name}</strong> eşleştirmesini silmek istediğinizden emin misiniz?
+            Bu işlem geri alınamaz.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)} 
+            disabled={deleting}
+          >
+            İptal
+          </Button>
+          <Button 
+            onClick={handleDelete} 
+            color="error" 
+            variant="contained"
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={16} /> : null}
+          >
+            {deleting ? 'Siliniyor...' : 'Sil'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default SavedMatchingsList;

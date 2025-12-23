@@ -1,0 +1,200 @@
+import { useState, useEffect } from 'react';
+import type { StatItem, ActivityItem } from '../types/types';
+import { dashboardApi } from '../../../utils/api';
+import {
+  School,
+  QuestionAnswer,
+  People,
+  History,
+  Animation,
+  BusinessCenter,
+  Person,
+  Book,
+  Category,
+  HelpOutline,
+  Group,
+  Domain,
+  Traffic,
+  Badge,
+  Article
+} from '@mui/icons-material';
+
+export const useDashboardStats = (): StatItem[] => {
+  const [stats, setStats] = useState<StatItem[]>([]);
+  
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await dashboardApi.getStats();
+        if (response.success && response.data) {
+          const data = response.data;
+          
+          // Ana kartlar
+          const mainStats: StatItem[] = [
+            { 
+              id: '1',
+              title: data.main.examQuestions.title,
+              value: data.main.examQuestions.value,
+              iconComponent: History,
+              color: '#2e7d32',
+              description: data.main.examQuestions.description
+            },
+            { 
+              id: '2',
+              title: data.main.animatedQuestions.title,
+              value: data.main.animatedQuestions.value,
+              iconComponent: Animation,
+              color: '#9c27b0',
+              description: data.main.animatedQuestions.description
+            },
+            { 
+              id: '3',
+              title: data.main.courseStudents.title,
+              value: data.main.courseStudents.value,
+              iconComponent: BusinessCenter,
+              color: '#1976d2',
+              description: data.main.courseStudents.description
+            },
+            { 
+              id: '4',
+              title: data.main.independentStudents.title,
+              value: data.main.independentStudents.value,
+              iconComponent: Person,
+              color: '#f44336',
+              description: data.main.independentStudents.description
+            },
+            { 
+              id: '5',
+              title: data.main.activeCourses.title,
+              value: data.main.activeCourses.value,
+              iconComponent: School,
+              color: '#ff9800',
+              description: data.main.activeCourses.description
+            }
+          ];
+          
+          // Toplam kartlar
+          const totalStats: StatItem[] = [
+            {
+              id: 'total-1',     
+              title: data.totals.totalQuestions.title,
+              value: data.totals.totalQuestions.value,
+              iconComponent: HelpOutline,
+              color: '#00796b',
+              description: data.totals.totalLessons.description
+            },
+            {
+              id: 'total-2',
+              title: data.totals.totalLessons.title,
+              value: data.totals.totalLessons.value,
+              iconComponent: Book,
+              color: '#5e35b1',
+              description: data.totals.totalUnits.description
+            },
+            {
+              id: 'total-3',
+              title: data.totals.totalUnits.title,
+              value: data.totals.totalUnits.value,
+              iconComponent: Category,
+              color: '#0288d1',
+              description: data.totals.totalQuestions.description
+            },
+            {
+              id: 'total-4',
+              title: data.totals.totalStudents.title,
+              value: data.totals.totalStudents.value,
+              iconComponent: Group,
+              color: '#d81b60',
+              description: data.totals.totalStudents.description
+            },
+            {
+              id: 'total-5',
+              title: data.totals.totalCourses.title,
+              value: data.totals.totalCourses.value,
+              iconComponent: Domain,
+              color: '#f57c00',
+              description: data.totals.totalCourses.description
+            }
+          ];
+          
+          setStats([...mainStats, ...totalStats]);
+        }
+      } catch (error) {
+        console.error('Dashboard stats fetch error:', error);
+        // Hata durumunda boş array döndür
+        setStats([]);
+      }
+    };
+    
+    fetchStats();
+  }, []);
+  
+  return stats;
+};
+
+// Icon mapping helper
+const getIconComponent = (iconName: string) => {
+  const icons: Record<string, any> = {
+    domain: Domain,
+    person: Person,
+    business_center: BusinessCenter,
+    help_outline: HelpOutline,
+    book: Book,
+    category: Category,
+    article: Article,
+    traffic: Traffic,
+    badge: Badge,
+    school: School
+  };
+  return icons[iconName] || QuestionAnswer;
+};
+
+// Time ago helper
+const getTimeAgo = (timestamp: string): string => {
+  const now = new Date();
+  const activityTime = new Date(timestamp);
+  const diffMs = now.getTime() - activityTime.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Az önce';
+  if (diffMins < 60) return `${diffMins} dakika önce`;
+  if (diffHours < 24) return `${diffHours} saat önce`;
+  return `${diffDays} gün önce`;
+};
+
+export const useActivities = (limit?: number): ActivityItem[] => {
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await dashboardApi.getRecentActivities(limit);
+        if (response.success && response.data) {
+          const formattedActivities: ActivityItem[] = response.data.map(activity => ({
+            id: activity.id,
+            title: activity.title,
+            time: getTimeAgo(activity.timestamp),
+            iconComponent: getIconComponent(activity.icon),
+            color: activity.color,
+            isNew: getTimeAgo(activity.timestamp).includes('dakika') || getTimeAgo(activity.timestamp).includes('Az önce')
+          }));
+          setActivities(formattedActivities);
+        }
+      } catch (error) {
+        console.error('Activities fetch error:', error);
+        setActivities([]);
+      }
+    };
+    
+    fetchActivities();
+  }, [limit]);
+  
+  return activities;
+};
+
+// Backward compatibility - mock data yerine API kullan
+export const getActivities = (): ActivityItem[] => {
+  return [];
+};

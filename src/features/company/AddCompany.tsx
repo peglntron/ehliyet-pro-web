@@ -1,0 +1,486 @@
+import React, { useState } from 'react';
+import {
+  Box, Typography, Button, Snackbar, Alert, Paper, Tabs, Tab
+} from '@mui/material';
+import {
+  Save as SaveIcon,
+  ArrowBack as ArrowBackIcon,
+  Business as BusinessIcon,
+  Badge as BadgeIcon,
+  LocationOn as LocationOnIcon,
+  Person as PersonIcon
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import PageBreadcrumb from '../../components/PageBreadcrumb';
+import { createCompany } from './api/useCompanies';
+import LoadingIndicator from '../../components/LoadingIndicator';
+
+// Alt bileşenleri import ediyoruz
+import CompanyInfoForm from './components/CompanyInfoForm';
+import LicenseInfoForm from './components/LicenseInfoForm';
+import LocationInfoForm from './components/LocationInfoForm';
+import UserInfoForm from './components/UserInfoForm';
+import AddLicenseModal from './components/AddLicenseModal';
+
+const AddCompany: React.FC = () => {
+  const navigate = useNavigate();
+  
+  // State tanımlamaları
+  const [loading, setLoading] = useState(false);
+  const [licenseModalOpen, setLicenseModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  
+  // Form state
+  const [formData, setFormData] = useState<{
+    name: string;
+    province: string;
+    district: string;
+    address: string;
+    email?: string;
+    taxNumber?: string;
+    registrationDate: string;
+    licenseEndDate: string;
+    owner: string;
+    authorizedPerson?: string;
+    website?: string;
+    description?: string;
+    location: {
+      latitude: string;
+      longitude: string;
+      mapLink?: string;
+    };
+    // Kullanıcı bilgileri - ZORUNLU
+    userPhone: string;
+    userFirstName: string;
+    userLastName: string;
+    userRole: 'COMPANY_ADMIN' | 'COMPANY_USER';
+    isActive: boolean;
+  }>({
+    name: '',
+    province: '',
+    district: '',
+    address: '',
+    email: '',
+    taxNumber: '',
+    registrationDate: new Date().toISOString().split('T')[0],
+    licenseEndDate: '',
+    owner: '',
+    authorizedPerson: '',
+    website: '',
+    description: '',
+    location: {
+      latitude: '',
+      longitude: '',
+      mapLink: ''
+    },
+    userPhone: '',
+    userFirstName: '',
+    userLastName: '',
+    userRole: 'COMPANY_ADMIN',
+    isActive: true
+  });
+  
+  // Validation errors
+  const [errors, setErrors] = useState<{
+    name?: string;
+    province?: string;
+    district?: string;
+    address?: string;
+    email?: string;
+    taxNumber?: string;
+    licenseEndDate?: string;
+    owner?: string;
+    userPhone?: string;
+    userFirstName?: string;
+    userLastName?: string;
+  }>({});
+  
+  // Snackbar state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+  
+  // Tab değişimi
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+  
+  // Form alanları değişikliklerini yönet
+  const handleFormChange = (updatedData: Partial<typeof formData>) => {
+    setFormData(prev => ({
+      ...prev,
+      ...updatedData
+    }));
+  };
+  
+  // Hata durumlarını güncelle
+  const handleErrorChange = (updatedErrors: Partial<typeof errors>) => {
+    setErrors(prev => ({
+      ...prev,
+      ...updatedErrors
+    }));
+  };
+  
+  // Lisans ekleme modalını aç/kapat
+  const handleOpenLicenseModal = () => setLicenseModalOpen(true);
+  const handleCloseLicenseModal = () => setLicenseModalOpen(false);
+  
+  // Yeni lisans ekle
+  const handleAddLicense = (data: { packageId?: string; customDays?: number; amount?: number; description?: string }) => {
+    console.log('License data:', data);
+    
+    // Not: Bu modal sadece formdaki licenseEndDate'i göstermek için kullanılıyor
+    // Gerçek lisans kaydı company oluşturulduğunda backend'de yapılıyor
+    setSnackbarMessage('Lisans paketi seçildi! İşletme kaydedildiğinde uygulanacak.');
+    setSnackbarSeverity('info');
+    setSnackbarOpen(true);
+    handleCloseLicenseModal();
+  };
+  
+  // Form gönderim işlemi
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    // Eğer zaten loading ise, tekrar submit etme
+    if (loading) {
+      return;
+    }
+    
+    // Form doğrulama
+    const newErrors: typeof errors = {};
+    
+    // İşletme bilgileri
+    if (!formData.name) newErrors.name = 'Sürücü kursu adı gereklidir';
+    if (!formData.province) newErrors.province = 'İl seçimi gereklidir';
+    if (!formData.district) newErrors.district = 'İlçe seçimi gereklidir';
+    if (!formData.address) newErrors.address = 'Adres gereklidir';
+    if (!formData.owner) newErrors.owner = 'Yetkili kişi adı gereklidir';
+    
+    // Kullanıcı bilgileri - ZORUNLU
+    if (!formData.userPhone) newErrors.userPhone = 'Kullanıcı telefon numarası gereklidir';
+    if (!formData.userFirstName) newErrors.userFirstName = 'Kullanıcı adı gereklidir';
+    if (!formData.userLastName) newErrors.userLastName = 'Kullanıcı soyadı gereklidir';
+    
+    // Email formatı kontrolü (opsiyonel)
+    if (formData.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Geçerli bir email adresi girin';
+      }
+    }
+    
+    // Telefon formatı kontrolü
+    if (formData.userPhone) {
+      const phoneRegex = /^[5-9][0-9]{9}$/;
+      if (!phoneRegex.test(formData.userPhone.replace(/\s+/g, ''))) {
+        newErrors.userPhone = 'Geçerli bir telefon numarası girin (örn: 5551234567)';
+      }
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSnackbarMessage('Lütfen zorunlu alanları doldurunuz!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+    
+    // Loading state'i hemen set et
+    console.log('Setting loading to true');
+    setLoading(true);
+    
+    // State update için kısa bir bekleme
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Admin API ile işletme oluştur
+    const submitData = {
+      name: formData.name,
+      email: formData.email,
+      address: formData.address,
+      province: formData.province,
+      district: formData.district,
+      taxNumber: formData.taxNumber,
+      owner: formData.owner,
+      registrationDate: formData.registrationDate,
+      licenseEndDate: formData.licenseEndDate || undefined,
+      authorizedPerson: formData.authorizedPerson,
+      website: formData.website,
+      description: formData.description,
+      latitude: formData.location.latitude,
+      longitude: formData.location.longitude,
+      mapLink: formData.location.mapLink,
+      userPhone: formData.userPhone,
+      userFirstName: formData.userFirstName,
+      userLastName: formData.userLastName,
+      userRole: formData.userRole
+    };
+
+    console.log('Submit Data:', submitData);
+
+    try {
+      const result = await createCompany(submitData);
+      console.log('Success result:', result);
+      
+      setSnackbarMessage(`İşletme başarıyla oluşturuldu!`);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setLoading(false);
+      
+      // 2 saniye sonra Company listesine yönlendir
+      setTimeout(() => {
+        navigate('/company');
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Create error:', error);
+      setLoading(false);
+      setSnackbarMessage(error.message || 'İşletme oluşturulurken hata oluştu!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+  
+  // Snackbar kapatma işlevi
+  const handleCloseSnackbar = (_event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+  
+  return (
+    <Box sx={{ 
+      height: '100%',
+      width: '100%',
+      overflow: 'auto',
+      bgcolor: '#f8fafc',
+      boxSizing: 'border-box',
+      p: { xs: 2, md: 3 }
+    }}>
+      {/* Başlık ve Geri Butonu */}
+      <Box mb={3}>
+        <PageBreadcrumb />
+        
+        <Box 
+          mt={2} 
+          display="flex" 
+          flexDirection={{ xs: 'column', sm: 'row' }} 
+          justifyContent="space-between" 
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          gap={2}
+        >
+          <Box>
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 800, 
+                color: (theme) => theme.palette.primary.main,
+                mb: 1
+              }}
+            >
+              Yeni İşletme Ekle
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Yeni bir sürücü kursu işletmesi oluşturun. Otomatik kullanıcı oluşturulacak ve SMS gönderilecek.
+            </Typography>
+          </Box>
+          
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/company')}
+            sx={{
+              py: 1.2,
+              px: 2.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+            }}
+          >
+            Listeye Dön
+          </Button>
+        </Box>
+      </Box>
+      
+      {/* Yükleniyor göstergesi */}
+      {loading ? (
+        <LoadingIndicator 
+          text="İşletme oluşturuluyor ve SMS gönderiliyor..." 
+          size="medium" 
+          showBackground={true} 
+        />
+      ) : (
+        /* Form - form tag'i kaldırıldı */
+        <Box>
+          {/* Tab Navigasyon */}
+          <Paper 
+            elevation={0}
+            sx={{ 
+              mb: 3,
+              borderRadius: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'hidden'
+            }}
+          >
+            <Tabs 
+              value={activeTab} 
+              onChange={handleTabChange}
+              variant="fullWidth"
+              sx={{
+                borderBottom: 1,
+                borderColor: 'divider',
+                '& .MuiTab-root': {
+                  py: 2,
+                  textTransform: 'none',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  minHeight: 64
+                }
+              }}
+            >
+              <Tab 
+                icon={<BusinessIcon />} 
+                label="İşletme Bilgileri" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<PersonIcon />} 
+                label="Kullanıcı Bilgileri" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<BadgeIcon />} 
+                label="Lisans Bilgileri" 
+                iconPosition="start"
+              />
+              <Tab 
+                icon={<LocationOnIcon />} 
+                label="Konum Bilgileri" 
+                iconPosition="start"
+              />
+            </Tabs>
+            
+            {/* Tab Panels */}
+            <Box sx={{ p: 3, backgroundColor: '#f8fafc', minHeight: 400 }}>
+              {/* İşletme Bilgileri Tab */}
+              {activeTab === 0 && (
+                <CompanyInfoForm 
+                  formData={formData}
+                  errors={errors}
+                  onChange={handleFormChange}
+                  onErrorChange={handleErrorChange}
+                />
+              )}
+              
+              {/* Kullanıcı Bilgileri Tab */}
+              {activeTab === 1 && (
+                <UserInfoForm 
+                  formData={formData}
+                  errors={errors}
+                  onChange={handleFormChange}
+                  onErrorChange={handleErrorChange}
+                />
+              )}
+              
+              {/* Lisans Bilgileri Tab */}
+              {activeTab === 2 && (
+                <LicenseInfoForm 
+                  formData={formData}
+                  onChange={handleFormChange}
+                  onAddLicense={handleOpenLicenseModal}
+                  isEditMode={false}
+                />
+              )}
+              
+              {/* Konum Bilgileri Tab */}
+              {activeTab === 3 && (
+                <LocationInfoForm 
+                  formData={formData}
+                  onChange={handleFormChange}
+                />
+              )}
+            </Box>
+          </Paper>
+          
+          {/* Butonlar */}
+          <Box 
+            display="flex" 
+            justifyContent="space-between" 
+            gap={2} 
+            mb={4}
+          >
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/company')}
+              sx={{
+                py: 1.5,
+                px: 4,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '1rem'
+              }}
+            >
+              İptal
+            </Button>
+            <Button
+              type="button"
+              variant="contained"
+              startIcon={<SaveIcon />}
+              disabled={loading}
+              onClick={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              sx={{
+                py: 1.5,
+                px: 4,
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '1rem'
+              }}
+            >
+              {loading ? 'Oluşturuluyor...' : 'Kaydet ve SMS Gönder'}
+            </Button>
+          </Box>
+        </Box>
+      )}
+      
+      {/* Lisans Ekleme Modal */}
+      <AddLicenseModal 
+        open={licenseModalOpen}
+        onClose={handleCloseLicenseModal}
+        onSubmit={handleAddLicense}
+        registrationDate={formData.registrationDate}
+        currentLicenseEndDate={formData.licenseEndDate || undefined}
+      />
+      
+      {/* Snackbar Alert - Her zaman göster */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        sx={{ zIndex: 9999 }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbarSeverity}
+          variant="filled"
+          elevation={6}
+          sx={{ width: '100%', minWidth: 300 }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+};
+
+export default AddCompany;

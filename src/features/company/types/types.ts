@@ -1,0 +1,52 @@
+export interface PhoneInfo {
+  number: string;
+  description: string;
+}
+
+export interface IbanInfo {
+  iban: string;
+  bankName: string;
+  accountHolder: string; // Hesap sahibi adı soyadı
+  description: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  address: string;
+  district: string;
+  province: string;
+  phone: string;
+  phones?: PhoneInfo[]; // Birden fazla telefon numarası açıklamalı
+  owner: string;
+  registrationDate: string;
+  licenseEndDate: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  
+  // Yeni eklenen alanlar
+  logo?: string; // Logo URL'si
+  authorizedPerson?: string; // Yetkili kişi
+  ibans?: IbanInfo[]; // Birden fazla IBAN açıklamalı
+  email?: string;
+  website?: string;
+  description?: string;
+  
+  location?: {
+    latitude: string;
+    longitude: string;
+    mapLink?: string; // Google Maps linki için eklendi
+  };
+}
+
+export interface Province {
+  id: number;
+  name: string;
+}
+
+export interface District {
+  id: number;
+  provinceId: number;
+  name: string;
+}

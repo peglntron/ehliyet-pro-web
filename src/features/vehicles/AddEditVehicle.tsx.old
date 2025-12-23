@@ -1,0 +1,557 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box, Typography, Paper, TextField, Button, 
+  Accordion, AccordionSummary, AccordionDetails,
+  FormControl, InputLabel, Select, MenuItem,
+  Snackbar, Alert, CircularProgress,
+  Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Dialog, DialogTitle,
+  DialogContent, DialogActions
+} from '@mui/material';
+import {
+  ExpandMore as ExpandMoreIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  DirectionsCar as CarIcon,
+  Add as AddIcon,
+  Assessment as AssessmentIcon,
+  Person as PersonIcon
+} from '@mui/icons-material';
+import { useNavigate, useParams } from 'react-router-dom';
+import { vehicleAPI } from '../../api/vehicles';
+import type { Vehicle } from '../../api/vehicles';
+import PageBreadcrumb from '../../components/PageBreadcrumb';
+
+const AddEditVehicle: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEdit = Boolean(id);
+
+  // State tanımlamaları
+  const [loading, setLoading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+  
+  // Form verileri
+  const [formData, setFormData] = useState({
+    licensePlate: '',
+    brand: '',
+    model: '',
+    year: new Date().getFullYear(),
+    color: '',
+    transmissionType: 'MANUAL' as 'MANUAL' | 'AUTOMATIC',
+    fuelType: 'DIESEL' as 'DIESEL' | 'GASOLINE' | 'HYBRID' | 'ELECTRIC' | 'LPG',
+    currentKm: 0,
+    notes: ''
+  });
+
+  // Düzenleme modunda veriyi yükle
+  useEffect(() => {
+    if (isEdit && id) {
+      const loadVehicle = async () => {
+        try {
+          setLoading(true);
+          const vehicleData = await vehicleAPI.getById(id);
+          setVehicle(vehicleData);
+          setFormData({
+            licensePlate: vehicleData.licensePlate,
+            brand: vehicleData.brand,
+            model: vehicleData.model,
+            year: vehicleData.year,
+            color: vehicleData.color || '',
+            transmissionType: vehicleData.transmissionType,
+            fuelType: vehicleData.fuelType,
+            currentKm: vehicleData.currentKm,
+            notes: vehicleData.notes || ''
+          });
+        } catch (error) {
+          console.error('Araç verisi yüklenirken hata:', error);
+          setSnackbarMessage('Araç verisi yüklenirken hata oluştu!');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadVehicle();
+    }
+  }, [isEdit, id]);
+
+  // Form alanlarını güncelle
+  const handleInputChange = (field: string, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Form kaydetme
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      // Validasyon
+      if (!formData.licensePlate || !formData.brand || !formData.model) {
+        setSnackbarMessage('Lütfen zorunlu alanları doldurun!');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        setSaving(false);
+        return;
+      }
+
+      if (isEdit && id) {
+        await vehicleAPI.update(id, formData);
+      } else {
+        await vehicleAPI.create(formData);
+      }
+      
+      setSnackbarMessage(`Araç başarıyla ${isEdit ? 'güncellendi' : 'eklendi'}!`);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+
+      setTimeout(() => {
+        navigate('/vehicles');
+      }, 1500);
+
+    } catch (error: any) {
+      console.error('Araç kaydetme hatası:', error);
+      setSnackbarMessage(error.response?.data?.message || 'Araç kaydedilirken hata oluştu!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Km kaydı ekleme
+  const handleAddKmRecord = async () => {
+    try {
+      if (!id) return;
+      
+      const kmData = {
+        vehicleId: id,
+        ...newKmRecord
+      };
+
+      await addKmRecord(kmData);
+      
+      // Km kayıtlarını yeniden yükle
+      const updatedRecords = await getKmRecords(id);
+      setKmRecords(updatedRecords);
+      
+      // Form'u temizle
+      setNewKmRecord({
+        km: 0,
+        date: new Date().toISOString().split('T')[0],
+        description: '',
+        recordType: 'manual'
+      });
+      
+      setKmDialogOpen(false);
+      setSnackbarMessage('Kilometre kaydı eklendi!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      
+    } catch (error) {
+      console.error('Km kaydı ekleme hatası:', error);
+      setSnackbarMessage('Kilometre kaydı eklenirken hata oluştu!');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+
+  // İptal et
+  const handleCancel = () => {
+    navigate('/vehicles');
+  };
+
+  // Snackbar kapatma
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ 
+      height: '100%',
+      width: '100%',
+      overflow: 'auto',
+      bgcolor: '#f8fafc',
+      boxSizing: 'border-box',
+      p: { xs: 2, md: 3 }
+    }}>
+      {/* Standardized Header */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        mb: 4,
+        pb: 2,
+        borderBottom: '1px solid',
+        borderBottomColor: 'divider'
+      }}>
+        <Box sx={{ flex: 1 }}>
+          <PageBreadcrumb />
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1, mb: 2 }}>
+            <CarIcon color="primary" sx={{ fontSize: 32 }} />
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'primary.main'
+              }}
+            >
+              {isEdit ? 'Araç Düzenle' : 'Yeni Araç Ekle'}
+            </Typography>
+          </Box>
+          
+          <Typography variant="body1" color="text.secondary">
+            {isEdit 
+              ? `${vehicle?.licensePlate} - ${vehicle?.brand} ${vehicle?.model} bilgilerini düzenleyin` 
+              : 'Yeni araç bilgilerini girin ve kaydedin'
+            }
+          </Typography>
+        </Box>
+        
+        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, ml: 3 }}>
+          <Button
+            variant="outlined"
+            startIcon={<CancelIcon />}
+            onClick={handleCancel}
+            disabled={saving}
+            sx={{
+              py: 1.2,
+              px: 2.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+            }}
+          >
+            İptal
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={saving ? <CircularProgress size={16} color="inherit" /> : <SaveIcon />}
+            onClick={handleSave}
+            disabled={saving || !formData.licensePlate.trim() || !formData.brand.trim() || !formData.model.trim()}
+            sx={{
+              py: 1.2,
+              px: 2.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              fontSize: '0.95rem',
+            }}
+          >
+            {saving ? 'Kaydediliyor...' : (isEdit ? 'Güncelle' : 'Kaydet')}
+          </Button>
+        </Box>
+      </Box>
+
+      {/* Form */}
+      <Paper sx={{ 
+        borderRadius: 3,
+        overflow: 'hidden',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+      }}>
+        {/* 1. Genel Bilgiler */}
+        <Accordion defaultExpanded>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{ 
+              bgcolor: '#e3f2fd',
+              '& .MuiAccordionSummary-content': { 
+                alignItems: 'center', 
+                gap: 2 
+              }
+            }}
+          >
+            <CarIcon color="primary" />
+            <Box>
+              <Typography variant="h6" fontWeight={600} color="primary.main">
+                Genel Bilgiler
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Araç plaka, marka ve model bilgileri
+              </Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Plaka *"
+                  value={formData.licensePlate}
+                  onChange={(e) => handleInputChange('licensePlate', e.target.value)}
+                  placeholder="34 ABC 123"
+                />
+                <TextField
+                  fullWidth
+                  label="Model Yılı *"
+                  type="number"
+                  value={formData.year}
+                  onChange={(e) => handleInputChange('year', parseInt(e.target.value))}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Marka *"
+                  value={formData.brand}
+                  onChange={(e) => handleInputChange('brand', e.target.value)}
+                  placeholder="Toyota"
+                />
+                <TextField
+                  fullWidth
+                  label="Model *"
+                  value={formData.model}
+                  onChange={(e) => handleInputChange('model', e.target.value)}
+                  placeholder="Corolla"
+                />
+              </Box>
+              <TextField
+                fullWidth
+                label="Mevcut Kilometre"
+                type="number"
+                value={formData.currentKm}
+                onChange={(e) => handleInputChange('currentKm', parseInt(e.target.value) || 0)}
+                InputProps={{
+                  endAdornment: <Typography color="text.secondary">km</Typography>
+                }}
+              />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* 2. Kilometre Kayıtları (sadece edit modunda) */}
+        {isEdit && (
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ 
+                bgcolor: '#f3e5f5',
+                '& .MuiAccordionSummary-content': { 
+                  alignItems: 'center', 
+                  gap: 2 
+                }
+              }}
+            >
+              <AssessmentIcon color="secondary" />
+              <Box>
+                <Typography variant="h6" fontWeight={600} color="secondary.main">
+                  Kilometre Kayıtları
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Araç kilometre geçmişi ve kayıtları
+                </Typography>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" fontWeight={600}>
+                  Kilometre Geçmişi
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<AddIcon />}
+                  onClick={() => setKmDialogOpen(true)}
+                  sx={{ borderRadius: 2 }}
+                >
+                  Yeni Kayıt Ekle
+                </Button>
+              </Box>
+              
+              {kmRecords.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    Henüz kilometre kaydı yok
+                  </Typography>
+                </Box>
+              ) : (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Tarih</TableCell>
+                        <TableCell>Kilometre</TableCell>
+                        <TableCell>Tür</TableCell>
+                        <TableCell>Açıklama</TableCell>
+                        <TableCell>Kaydeden</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {kmRecords.map((record) => (
+                        <TableRow key={record.id}>
+                          <TableCell>
+                            {new Intl.DateTimeFormat('tr-TR').format(new Date(record.date))}
+                          </TableCell>
+                          <TableCell>
+                            {new Intl.NumberFormat('tr-TR').format(record.km)} km
+                          </TableCell>
+                          <TableCell>
+                            {record.recordType === 'manual' ? 'Manuel' :
+                             record.recordType === 'service' ? 'Servis' :
+                             record.recordType === 'assignment' ? 'Zimmet' : 'İade'}
+                          </TableCell>
+                          <TableCell>{record.description}</TableCell>
+                          <TableCell>{record.recordedBy}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </AccordionDetails>
+          </Accordion>
+        )}
+
+        {/* 3. Zimmet Bilgisi */}
+        <Accordion>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{ 
+              bgcolor: '#e8f5e8',
+              '& .MuiAccordionSummary-content': { 
+                alignItems: 'center', 
+                gap: 2 
+              }
+            }}
+          >
+            <PersonIcon color="success" />
+            <Box>
+              <Typography variant="h6" fontWeight={600} color="success.main">
+                Zimmet Bilgisi
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Eğitmen zimmetleme ve atama bilgileri
+              </Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <TextField
+                fullWidth
+                label="Notlar"
+                multiline
+                rows={3}
+                value={formData.notes}
+                onChange={(e) => handleInputChange('notes', e.target.value)}
+                placeholder="Araçla ilgili özel notlar..."
+              />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Action Buttons */}
+        <Box sx={{ p: 3, bgcolor: '#fafafa', display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+          <Button
+            variant="outlined"
+            color="inherit"
+            startIcon={<CancelIcon />}
+            onClick={handleCancel}
+            sx={{ borderRadius: 2, px: 3 }}
+          >
+            İptal
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            disabled={saving}
+            sx={{ borderRadius: 2, px: 3 }}
+          >
+            {saving ? 'Kaydediliyor...' : isEdit ? 'Güncelle' : 'Kaydet'}
+          </Button>
+        </Box>
+      </Paper>
+
+      {/* Km Kayıt Dialog */}
+      <Dialog open={kmDialogOpen} onClose={() => setKmDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Yeni Kilometre Kaydı</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Kilometre"
+                type="number"
+                value={newKmRecord.km}
+                onChange={(e) => setNewKmRecord(prev => ({ ...prev, km: parseInt(e.target.value) || 0 }))}
+                InputProps={{
+                  endAdornment: <Typography color="text.secondary">km</Typography>
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Tarih"
+                type="date"
+                value={newKmRecord.date}
+                onChange={(e) => setNewKmRecord(prev => ({ ...prev, date: e.target.value }))}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Box>
+            <FormControl fullWidth>
+              <InputLabel>Kayıt Türü</InputLabel>
+              <Select
+                value={newKmRecord.recordType}
+                onChange={(e) => setNewKmRecord(prev => ({ ...prev, recordType: e.target.value as any }))}
+                label="Kayıt Türü"
+              >
+                <MenuItem value="manual">Manuel</MenuItem>
+                <MenuItem value="service">Servis</MenuItem>
+                <MenuItem value="assignment">Zimmet</MenuItem>
+                <MenuItem value="return">İade</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Açıklama"
+              multiline
+              rows={2}
+              value={newKmRecord.description}
+              onChange={(e) => setNewKmRecord(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Kayıt açıklaması..."
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setKmDialogOpen(false)}>İptal</Button>
+          <Button onClick={handleAddKmRecord} variant="contained">Ekle</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar */}
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={4000} 
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbarSeverity}
+          sx={{ width: '100%' }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+};
+
+export default AddEditVehicle;
