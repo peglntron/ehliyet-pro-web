@@ -78,7 +78,7 @@ export const useInstructors = () => {
       try {
         setLoading(true);
         // Use company filter for company users
-        const companyId = user?.role !== 'SYSTEM_ADMIN' ? user?.companyId : undefined;
+        const companyId = user?.role !== 'ADMIN' ? user?.companyId ?? undefined : undefined;
         const data = await getInstructors(companyId);
         setInstructors(data);
         setError(null);
@@ -101,7 +101,7 @@ export const useInstructors = () => {
       const fetchInstructors = async () => {
         try {
           setLoading(true);
-          const companyId = user?.role !== 'SYSTEM_ADMIN' ? user?.companyId : undefined;
+          const companyId = user?.role !== 'ADMIN' ? user?.companyId ?? undefined : undefined;
           const data = await getInstructors(companyId);
           setInstructors(data);
           setError(null);

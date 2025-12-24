@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!!localStorage.getItem('token')); // Token varsa loading true
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = !!user && !!token;
@@ -36,11 +36,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     if (token) {
       fetchUserProfile();
+    } else {
+      setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   const fetchUserProfile = async () => {
     try {
+      setLoading(true);
       const data: ApiResponse<User> = await apiClient.get('/auth/profile');
       if (data.success) {
         setUser(data.data!);
@@ -50,6 +53,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
       logout();
+    } finally {
+      setLoading(false);
     }
   };
 

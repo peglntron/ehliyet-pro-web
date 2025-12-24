@@ -1,11 +1,12 @@
 import React from 'react';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
-import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import { useLocation, Link as RouterLink } from 'react-router-dom';
 import { Box, Chip } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { useAuth } from '../contexts/AuthContext';
+import { usePermissions } from '../contexts/PermissionsContext';
 
 interface PageBreadcrumbProps {
   className?: string;
@@ -35,6 +36,31 @@ const validRoutes = [
 const PageBreadcrumb: React.FC<PageBreadcrumbProps> = ({ className, skipHome = false }) => {
   const location = useLocation();
   const pathname = location.pathname;
+  const { user } = useAuth();
+  const { permissions } = usePermissions();
+
+  // Kullanıcının rolüne göre home URL'ini belirle
+  const getHomeUrl = () => {
+    if (!user) return '/';
+    
+    // ADMIN → Admin Dashboard
+    if (user.role === 'ADMIN') return '/admin';
+    
+    // INSTRUCTOR → Eğitmen Dashboard
+    if (user.role === 'INSTRUCTOR') return '/instructor';
+    
+    // COMPANY_ADMIN → İşletme Paneli (Dashboard)
+    if (user.role === 'COMPANY_ADMIN') return '/company/dashboard';
+    
+    // COMPANY_USER → Yetki varsa İşletme Paneli, yoksa İşletme Bilgileri
+    if (user.role === 'COMPANY_USER') {
+      return permissions.canViewDashboard ? '/company/dashboard' : '/company/info';
+    }
+    
+    return '/';
+  };
+
+  const homeUrl = getHomeUrl();
 
   const crumbs = pathname
     .split('/')
@@ -45,7 +71,7 @@ const PageBreadcrumb: React.FC<PageBreadcrumbProps> = ({ className, skipHome = f
         acc.push({ title: formatTitle(part), url });
         return acc;
       },
-      skipHome ? [] : [{ title: 'Ana Sayfa', url: '/' }]
+      skipHome ? [] : [{ title: 'Ana Sayfa', url: homeUrl }]
     );
 
   return (

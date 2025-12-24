@@ -15,6 +15,7 @@ interface Instructor {
   id: string;
   firstName: string;
   lastName: string;
+  licenseTypes?: string[];
 }
 
 interface EditPersonalInfoModalProps {
@@ -118,7 +119,7 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
         name: student.name || '',
         surname: student.surname || '',
         tcNo: student.tcNo || '',
-        phone: student.phone || '', // Direkt 5XXXXXXXXX olarak göster
+        phone: (student.phone || '').replace(/^\+?90/, ''), // +90'ı kaldırarak göster
         instructor: currentInstructorId,
         licenseType: student.licenseType || '',
         province: student.province || '',
@@ -261,8 +262,10 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
         updatePayload.tcNo = formData.tcNo;
       }
       
-      if (normalizedPhone !== student.phone) {
-        updatePayload.phone = normalizedPhone;
+      // Telefonu karşılaştırırken DB'deki +90'ı kaldır
+      const studentPhoneWithoutPrefix = (student.phone || '').replace(/^\+?90/, '');
+      if (normalizedPhone !== studentPhoneWithoutPrefix) {
+        updatePayload.phone = normalizedPhone; // Backend +90 ekleyecek
       }
       
       if (formData.licenseType !== student.licenseType) {

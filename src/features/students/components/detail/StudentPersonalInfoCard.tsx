@@ -83,7 +83,7 @@ const StudentPersonalInfoCard: React.FC<StudentPersonalInfoCardProps> = ({
           <Box>
             <Typography variant="subtitle2" fontWeight={600}>Telefon</Typography>
             <Typography variant="body2">
-              {student?.phone ? `+90 ${student.phone}` : '-'}
+              {student?.phone ? `+90 ${student.phone.replace(/^\+?90/, '').replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4')}` : '-'}
             </Typography>
           </Box>
         </Box>

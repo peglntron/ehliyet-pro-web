@@ -16,6 +16,7 @@ import {
   LinearProgress,
   Alert
 } from '@mui/material';
+import { useSnackbar } from '../../../contexts/SnackbarContext';
 import {
   Check as CheckIcon,
   Close as CloseIcon,
@@ -26,14 +27,13 @@ import {
 } from '@mui/icons-material';
 import type { Student } from '../types/types';
 import { getExamStatusDisplay, getStudentOverallStatus } from '../utils/examUtils';
-import { updateExamStatus } from '../utils/examStatusUpdater';
 import { updateWrittenExamStatus, updateDrivingExamStatus, resetExamStatus } from '../api/examService';
 
 interface NewExamStatusModalProps {
   open: boolean;
   onClose: () => void;
   student: Student | null;
-  onUpdateExamStatus: (studentId: string, examType: 'written' | 'driving', action: 'pass' | 'fail' | 'reset') => void;
+  onUpdateExamStatus: (updatedStudent: Student) => void;
   readOnly?: boolean;
 }
 
@@ -44,6 +44,7 @@ const NewExamStatusModal: React.FC<NewExamStatusModalProps> = ({
   onUpdateExamStatus,
   readOnly = false
 }) => {
+  const { showSnackbar } = useSnackbar();
   const [processing, setProcessing] = useState(false);
   const [localStudent, setLocalStudent] = useState<Student | null>(student);
 
@@ -61,40 +62,40 @@ const NewExamStatusModal: React.FC<NewExamStatusModalProps> = ({
 
     try {
       setProcessing(true);
-      console.log('Before update:', localStudent.writtenExam.attempts, localStudent.drivingExam.attempts);
       
-      // Önce local state'i güncelle (optimistic update)
-      const updatedStudent = updateExamStatus(localStudent, examType, action);
-      console.log('After update:', updatedStudent.writtenExam.attempts, updatedStudent.drivingExam.attempts);
-      setLocalStudent(updatedStudent);
-      
-      // Backend'e istek gönder
+      // Backend'e istek gönder ve sonucu al
       const currentDate = new Date().toISOString().split('T')[0];
-      let apiStudent: Student;
+      let updatedStudent: Student;
       
       if (action === 'reset') {
-        await resetExamStatus(localStudent.id, examType);
+        updatedStudent = await resetExamStatus(localStudent.id, examType);
       } else if (examType === 'written') {
-        apiStudent = await updateWrittenExamStatus(
+        updatedStudent = await updateWrittenExamStatus(
           localStudent.id, 
           action === 'pass' ? 'PASSED' : 'FAILED',
           currentDate
         );
       } else {
-        apiStudent = await updateDrivingExamStatus(
+        updatedStudent = await updateDrivingExamStatus(
           localStudent.id,
           action === 'pass' ? 'PASSED' : 'FAILED', 
           currentDate
         );
       }
       
-      // Parent callback'i çağır
-      onUpdateExamStatus(updatedStudent.id, examType, action);
+      // Önce local state'i güncelle (modal içinde anında görünsün)
+      setLocalStudent(updatedStudent);
+      
+      // Sonra parent'a bildir (liste güncellensin)
+      onUpdateExamStatus(updatedStudent);
+      
+      // Başarı mesajı göster
+      const examText = examType === 'written' ? 'yazılı sınav' : 'direksiyon sınav';
+      const actionText = action === 'pass' ? 'geçti' : action === 'fail' ? 'kaldı' : 'sıfırlandı';
+      showSnackbar(`${examText} ${actionText} olarak işaretlendi`, 'success');
     } catch (error) {
       console.error('Sınav durumu güncellenirken hata:', error);
-      alert(error instanceof Error ? error.message : 'Bir hata oluştu');
-      // Hata durumunda eski state'e geri dön
-      setLocalStudent(student);
+      showSnackbar(error instanceof Error ? error.message : 'Bir hata oluştu', 'error');
     } finally {
       setProcessing(false);
     }

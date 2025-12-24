@@ -159,9 +159,22 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
           const installmentAmount = Number(formData.amount) / installmentCount;
           const createdPayments = [];
           
+          const firstDate = new Date(formData.firstInstallmentDate);
+          const originalDay = firstDate.getDate(); // İlk taksit günü (ör: 31)
+          
           for (let i = 0; i < installmentCount; i++) {
-            const dueDate = new Date(formData.firstInstallmentDate);
-            dueDate.setMonth(dueDate.getMonth() + i);
+            // Her taksit için tamamen yeni tarih hesapla
+            const targetYear = firstDate.getFullYear() + Math.floor((firstDate.getMonth() + i) / 12);
+            const targetMonth = (firstDate.getMonth() + i) % 12;
+            
+            // Hedef ayın kaç günü olduğunu bul
+            const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+            
+            // Eğer orijinal gün (ör: 31) hedef ayda yoksa (ör: Şubat 28), ayın son gününü kullan
+            const dayToUse = Math.min(originalDay, lastDayOfTargetMonth);
+            
+            // Yeni tarihi oluştur
+            const dueDate = new Date(targetYear, targetMonth, dayToUse);
             
             const paymentResponse = await fetch(`${API_URL}/api/payments/students/${student.id}`, {
               method: 'POST',

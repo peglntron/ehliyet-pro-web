@@ -90,8 +90,10 @@ const CompanyInfo: React.FC = () => {
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
       refetch();
-    } catch (error) {
-      setSnackbarMessage('Silme sırasında hata oluştu!');
+    } catch (error: any) {
+      const errorMessage = error.message || 'Silme sırasında hata oluştu!';
+      console.error('Phone delete error:', error);
+      setSnackbarMessage(errorMessage);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
@@ -110,8 +112,10 @@ const CompanyInfo: React.FC = () => {
       setSnackbarOpen(true);
       setPhoneDialog(false);
       refetch();
-    } catch (error) {
-      setSnackbarMessage('İşlem sırasında hata oluştu!');
+    } catch (error: any) {
+      const errorMessage = error.message || 'İşlem sırasında hata oluştu!';
+      console.error('Phone save error:', error);
+      setSnackbarMessage(errorMessage);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
@@ -141,8 +145,10 @@ const CompanyInfo: React.FC = () => {
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
       refetch();
-    } catch (error) {
-      setSnackbarMessage('Silme sırasında hata oluştu!');
+    } catch (error: any) {
+      const errorMessage = error.message || 'Silme sırasında hata oluştu!';
+      console.error('IBAN delete error:', error);
+      setSnackbarMessage(errorMessage);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
@@ -161,8 +167,10 @@ const CompanyInfo: React.FC = () => {
       setSnackbarOpen(true);
       setIbanDialog(false);
       refetch();
-    } catch (error) {
-      setSnackbarMessage('İşlem sırasında hata oluştu!');
+    } catch (error: any) {
+      const errorMessage = error.message || 'İşlem sırasında hata oluştu!';
+      console.error('IBAN save error:', error);
+      setSnackbarMessage(errorMessage);
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
@@ -443,8 +451,9 @@ const CompanyInfo: React.FC = () => {
                 fullWidth
                 label="IBAN"
                 value={ibanForm.iban}
-                onChange={(e) => setIbanForm({...ibanForm, iban: e.target.value})}
-                placeholder="TR33 0006 1005 1978 6457 8413 26"
+                onChange={(e) => setIbanForm({...ibanForm, iban: e.target.value.toUpperCase()})}
+                placeholder="TR00 0000 0000 0000 0000 0000 00"
+                helperText="Boşluklarla veya boşluksuz girebilirsiniz"
               />
             </Grid>
             <Grid item xs={12} md={6}>

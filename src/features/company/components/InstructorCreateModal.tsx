@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -13,43 +13,47 @@ import {
   FormControl,
   InputLabel,
   Select,
-  OutlinedInput,
   Chip,
   InputAdornment,
   CircularProgress,
-  Typography
+  Typography,
+  FormControlLabel,
+  Checkbox,
+  Paper,
+  IconButton,
+  Avatar
 } from '@mui/material';
 import {
   Person as PersonIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
   LocationOn as LocationIcon,
-  School as SchoolIcon
+  School as SchoolIcon,
+  Close as CloseIcon,
+  PhotoCamera as PhotoCameraIcon
 } from '@mui/icons-material';
-import { createInstructor, type CreateInstructorData } from '../api/useInstructors';
+import { createInstructor, updateInstructor } from '../../instructors/api/useInstructors';
 import { useLocations, type District } from '../../../api/useLocations';
+import { useLicenseClassOptions } from '../../../hooks/useLicenseClassOptions';
+import { useSnackbar } from '../../../contexts/SnackbarContext';
 
 interface InstructorCreateModalProps {
   open: boolean;
   onClose: () => void;
   onInstructorCreated: () => void;
-  companyId: string;
+  companyId?: string;
+  editingInstructor?: any;
 }
-
-// Ehliyet sınıfları
-const LICENSE_TYPES = [
-  'M', 'A1', 'A2', 'A', 'B1', 'B', 'BE', 
-  'C1', 'C1E', 'C', 'CE', 'D1', 'D1E', 'D', 'DE', 
-  'F', 'G'
-];
 
 const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
   open,
   onClose,
   onInstructorCreated,
-  companyId
+  companyId,
+  editingInstructor
 }) => {
-  const [formData, setFormData] = useState<CreateInstructorData>({
+  const { showSnackbar } = useSnackbar();
+  const [formData, setFormData] = useState<any>({
     firstName: '',
     lastName: '',
     tcNo: '',
@@ -61,19 +65,30 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
     gender: 'MALE',
     licenseTypes: [],
     experience: 0,
-    vehicleId: undefined,
+    specialization: '',
+    maxStudentsPerPeriod: 10,
+    status: 'ACTIVE',
     startDate: '',
-    notes: ''
+    notes: '',
+    profilePhoto: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  
+  // Fotoğraf state'leri
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Lokasyon hook'u
   const { cities, fetchCities, fetchDistricts } = useLocations();
   const [districts, setDistricts] = useState<District[]>([]);
   const [selectedCityId, setSelectedCityId] = useState<number | null>(null);
+
+  // Ehliyet sınıfları hook'u
+  const { options: licenseOptions, loading: licenseLoading } = useLicenseClassOptions();
 
   // İlleri yükle
   useEffect(() => {
@@ -82,9 +97,38 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
     }
   }, [open, fetchCities]);
 
-  // Modal kapandığında formu sıfırla
+  // Editing instructor değiştiğinde formu doldur
   useEffect(() => {
-    if (!open) {
+    if (editingInstructor) {
+      setFormData({
+        firstName: editingInstructor.firstName,
+        lastName: editingInstructor.lastName,
+        tcNo: editingInstructor.tcNo,
+        phone: editingInstructor.phone,
+        email: editingInstructor.email || '',
+        gender: editingInstructor.gender || 'MALE',
+        province: editingInstructor.province || '',
+        district: editingInstructor.district || '',
+        address: editingInstructor.address || '',
+        specialization: editingInstructor.specialization || '',
+        experience: editingInstructor.experience || 0,
+        maxStudentsPerPeriod: editingInstructor.maxStudentsPerPeriod || 10,
+        licenseTypes: editingInstructor.licenseTypes || [],
+        status: editingInstructor.status || 'ACTIVE',
+        startDate: editingInstructor.startDate || '',
+        notes: editingInstructor.notes || '',
+        profilePhoto: editingInstructor.profilePhoto || ''
+      });
+      
+      // Mevcut fotoğrafı önizleme olarak ayarla
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+      if (editingInstructor.profilePhoto) {
+        setPhotoPreview(`${API_URL}${editingInstructor.profilePhoto}`);
+      } else {
+        setPhotoPreview('');
+      }
+      setPhotoFile(null);
+    } else {
       setFormData({
         firstName: '',
         lastName: '',
@@ -97,16 +141,62 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
         gender: 'MALE',
         licenseTypes: [],
         experience: 0,
-        vehicleId: undefined,
+        specialization: '',
+        maxStudentsPerPeriod: 10,
+        status: 'ACTIVE',
         startDate: '',
-        notes: ''
+        notes: '',
+        profilePhoto: ''
       });
-      setErrors({});
-      setSuccessMessage('');
+      setPhotoPreview('');
+      setPhotoFile(null);
+    }
+    setErrors({});
+    setSuccessMessage('');
+  }, [editingInstructor, open]);
+  
+  // Modal kapandığında formu sıfırla
+  useEffect(() => {
+    if (!open) {
       setSelectedCityId(null);
       setDistricts([]);
+      setPhotoFile(null);
+      setPhotoPreview('');
     }
   }, [open]);
+  
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Dosya boyutu kontrolü (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({ ...errors, photo: 'Fotoğraf boyutu 5MB\'dan küçük olmalıdır' });
+        return;
+      }
+      
+      // Dosya tipi kontrolü
+      if (!file.type.startsWith('image/')) {
+        setErrors({ ...errors, photo: 'Sadece resim dosyaları yüklenebilir' });
+        return;
+      }
+      
+      setPhotoFile(file);
+      
+      // Önizleme oluştur
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      // Hata varsa temizle
+      if (errors.photo) {
+        const newErrors = { ...errors };
+        delete newErrors.photo;
+        setErrors(newErrors);
+      }
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -127,8 +217,10 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
 
     if (!formData.phone?.trim()) {
       newErrors.phone = 'Telefon zorunludur';
+    } else if (formData.phone.length !== 10) {
+      newErrors.phone = 'Telefon 10 haneli olmalıdır';
     } else if (!/^5[0-9]{9}$/.test(formData.phone)) {
-      newErrors.phone = 'Telefon formatı: 5XXXXXXXXX';
+      newErrors.phone = 'Telefon 5 ile başlamalı ve 10 haneli olmalıdır';
     }
 
     if (!formData.gender) {
@@ -144,25 +236,66 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
 
     setLoading(true);
     try {
-      const result = await createInstructor(companyId, {
-        ...formData,
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+      const token = localStorage.getItem('token');
+      let profilePhotoUrl = formData.profilePhoto;
+      
+      // Önce fotoğrafı yükle (varsa)
+      if (photoFile) {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', photoFile);
+        
+        // folder'ı query parameter olarak gönder
+        const uploadResponse = await fetch(`${API_URL}/api/upload?folder=instructors`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: uploadFormData
+        });
+        
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Fotoğraf yüklenirken hata oluştu');
+        }
+        
+        const uploadResult = await uploadResponse.json();
+        profilePhotoUrl = uploadResult.data?.url || uploadResult.url;
+      }
+      
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        tcNo: formData.tcNo,
+        phone: formData.phone,
+        email: formData.email,
+        gender: formData.gender,
+        province: formData.province,
+        district: formData.district,
+        address: formData.address,
+        specialization: formData.specialization,
         experience: formData.experience || 0,
-        licenseTypes: formData.licenseTypes || []
-      });
+        maxStudentsPerPeriod: formData.maxStudentsPerPeriod || 10,
+        licenseTypes: formData.licenseTypes || [],
+        status: formData.status || 'ACTIVE',
+        startDate: formData.startDate,
+        notes: formData.notes,
+        profileImage: profilePhotoUrl  // Backend 'profileImage' bekliyor
+      };
+      
+      if (editingInstructor) {
+        await updateInstructor(editingInstructor.id, payload, companyId);
+        showSnackbar('Eğitmen başarıyla güncellendi', 'success');
+      } else {
+        await createInstructor(payload, companyId);
+        showSnackbar('Eğitmen başarıyla eklendi', 'success');
+      }
 
-      setSuccessMessage(
-        `Eğitmen başarıyla oluşturuldu! Geçici şifre: ${result.temporaryPassword}`
-      );
-
-      // 2 saniye sonra modalı kapat ve listeyi yenile
-      setTimeout(() => {
-        onInstructorCreated();
-        handleClose();
-      }, 2000);
+      onInstructorCreated();
+      handleClose();
     } catch (error: any) {
-      setErrors({
-        submit: error.response?.data?.message || 'Eğitmen oluşturulurken hata oluştu'
-      });
+      const errorMessage = error.response?.data?.message || error.message || 'Bir hata oluştu';
+      showSnackbar(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -174,10 +307,10 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
     }
   };
 
-  const handleChange = (field: keyof CreateInstructorData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
     // Hata mesajını temizle
-    if (errors[field]) {
+    if (errors[field as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
@@ -186,13 +319,18 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
     <Dialog 
       open={open} 
       onClose={handleClose}
-      maxWidth="md"
+      maxWidth="lg"
       fullWidth
     >
       <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <SchoolIcon color="primary" />
-          <Typography variant="h6">Yeni Eğitmen Ekle</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <SchoolIcon color="primary" />
+            <Typography variant="h6">{editingInstructor ? 'Eğitmen Düzenle' : 'Yeni Eğitmen Ekle'}</Typography>
+          </Box>
+          <IconButton onClick={handleClose} size="small">
+            <CloseIcon />
+          </IconButton>
         </Box>
       </DialogTitle>
 
@@ -208,8 +346,46 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
             {errors.submit}
           </Alert>
         )}
+        
+        {errors.photo && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {errors.photo}
+          </Alert>
+        )}
 
         <Grid container spacing={2}>
+          {/* Profil Fotoğrafı */}
+          <Grid item xs={12} display="flex" justifyContent="center" alignItems="center" flexDirection="column">
+            <Avatar
+              src={photoPreview}
+              sx={{ width: 120, height: 120, border: '3px solid', borderColor: 'primary.main', mb: 2 }}
+            >
+              {!photoPreview && <PhotoCameraIcon sx={{ fontSize: 50 }} />}
+            </Avatar>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handlePhotoChange}
+            />
+            
+            <Button
+              variant="outlined"
+              startIcon={<PhotoCameraIcon />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              sx={{ borderRadius: 2, textTransform: 'none' }}
+            >
+              Fotoğraf Seç
+            </Button>
+            
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
+              Maksimum dosya boyutu: 5MB
+            </Typography>
+          </Grid>
+          
           {/* Kişisel Bilgiler */}
           <Grid item xs={12}>
             <Typography variant="subtitle2" color="primary" gutterBottom>
@@ -301,12 +477,18 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
               value={formData.phone}
               onChange={(e) => {
                 let value = e.target.value.replace(/\D/g, '');
-                handleChange('phone', value.slice(0, 10));
+                if (value.length <= 10) {
+                  handleChange('phone', value);
+                }
               }}
               error={!!errors.phone}
-              helperText={errors.phone || '5XXXXXXXXX formatında'}
+              helperText={errors.phone || '5XXXXXXXXX formatında (10 hane)'}
               disabled={loading}
-              inputProps={{ maxLength: 10 }}
+              inputProps={{ 
+                maxLength: 10,
+                inputMode: 'numeric',
+                pattern: '[0-9]*'
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -428,29 +610,74 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
           </Grid>
 
           <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel>Ehliyet Sınıfları</InputLabel>
-              <Select
-                multiple
-                value={formData.licenseTypes || []}
-                onChange={(e) => handleChange('licenseTypes', e.target.value)}
-                input={<OutlinedInput label="Ehliyet Sınıfları" />}
-                disabled={loading}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {selected.map((value) => (
-                      <Chip key={value} label={value} size="small" />
-                    ))}
-                  </Box>
-                )}
-              >
-                {LICENSE_TYPES.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Paper 
+              variant="outlined" 
+              sx={{ 
+                p: 2,
+                backgroundColor: 'background.default'
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Ehliyet Sınıfları (Birden fazla seçebilirsiniz)
+              </Typography>
+              {licenseLoading ? (
+                <CircularProgress size={24} />
+              ) : (
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                  gap: 1,
+                  mt: 1
+                }}>
+                  {licenseOptions.map((option) => (
+                    <FormControlLabel
+                      key={option.value}
+                      control={
+                        <Checkbox
+                          checked={formData.licenseTypes?.includes(option.value) || false}
+                          onChange={(e) => {
+                            const currentTypes = formData.licenseTypes || [];
+                            if (e.target.checked) {
+                              handleChange('licenseTypes', [...currentTypes, option.value]);
+                            } else {
+                              handleChange('licenseTypes', currentTypes.filter((t: string) => t !== option.value));
+                            }
+                          }}
+                          disabled={loading}
+                          size="small"
+                        />
+                      }
+                      label={option.value}
+                      sx={{
+                        m: 0,
+                        '& .MuiFormControlLabel-label': {
+                          fontSize: '0.875rem'
+                        }
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+              {formData.licenseTypes && formData.licenseTypes.length > 0 && (
+                <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
+                    Seçilen sınıflar:
+                  </Typography>
+                  {formData.licenseTypes.map((type: string) => (
+                    <Chip
+                      key={type}
+                      label={type}
+                      size="small"
+                      color="primary"
+                      onDelete={() => {
+                        handleChange('licenseTypes', formData.licenseTypes?.filter((t: string) => t !== type));
+                      }}
+                      disabled={loading}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Paper>
           </Grid>
 
           <Grid item xs={12} sm={6}>

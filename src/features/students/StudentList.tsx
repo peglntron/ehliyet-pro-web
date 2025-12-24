@@ -10,7 +10,7 @@ import {
   PersonAdd as PersonAddIcon,
   Group as GroupIcon
 } from '@mui/icons-material';
-import { getActiveStudents, getCompletedStudents } from './api/useStudentsReal';
+import { getActiveStudents, getCompletedStudents, getInactiveStudents } from './api/useStudentsReal';
 import { updateWrittenExamStatus, updateDrivingExamStatus, resetExamStatus } from './api/examService';
 import { studentAPI } from '../../api/students';
 import type { Student, Notification } from './types/types';
@@ -50,6 +50,9 @@ const StudentList: React.FC = () => {
         if (filterStatus === 'completed') {
           // Tamamlananlar sekmesi için ayrı API
           data = await getCompletedStudents();
+        } else if (filterStatus === 'inactive') {
+          // Pasifler sekmesi için ayrı API
+          data = await getInactiveStudents();
         } else {
           // Tümü, Yazılı Sınav, Direksiyon Sınavı için aynı API (aktif öğrenciler)
           data = await getActiveStudents();
@@ -93,6 +96,9 @@ const StudentList: React.FC = () => {
         statusMatch = student.writtenExam.status === 'passed' && student.drivingExam.status !== 'passed';
       } else if (filterStatus === 'completed') {
         // Tamamlananlar (API'de zaten tamamlanmış öğrenciler geldi - her iki sınavı da geçmiş)
+        statusMatch = true;
+      } else if (filterStatus === 'inactive') {
+        // Pasifler (API'de zaten pasif öğrenciler geldi)
         statusMatch = true;
       }
       
@@ -140,58 +146,13 @@ const StudentList: React.FC = () => {
   };
 
   // Sınav durumu güncelleme
-  const handleUpdateExamStatus = async (studentId: string, examType: 'written' | 'driving', action: 'pass' | 'fail' | 'reset') => {
-    if (action === 'reset') {
-      try {
-        // Backend API'yi çağır
-        const updatedStudent = await resetExamStatus(studentId, examType);
-        
-        // State'i güncelle
-        setStudents(prevStudents => 
-          prevStudents.map(student => 
-            student.id === studentId ? updatedStudent : student
-          )
-        );
-        
-        setSnackbarMessage('Sınav durumu sıfırlandı');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
-      } catch (error: any) {
-        console.error('Sınav sıfırlama hatası:', error);
-        setSnackbarMessage(error.message || 'Sınav durumu sıfırlanırken hata oluştu');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      }
-      return;
-    }
-
-    try {
-      const apiStatus = action === 'pass' ? 'PASSED' : 'FAILED';
-      const currentDate = new Date().toISOString();
-      
-      let updatedStudent;
-      if (examType === 'written') {
-        updatedStudent = await updateWrittenExamStatus(studentId, apiStatus, currentDate);
-      } else {
-        updatedStudent = await updateDrivingExamStatus(studentId, apiStatus, currentDate);
-      }
-
-      // Listeyi güncelle
-      setStudents(prevStudents => 
-        prevStudents.map(student => 
-          student.id === studentId ? updatedStudent : student
-        )
-      );
-
-      setSnackbarMessage('Sınav durumu başarıyla güncellendi');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
-    } catch (error) {
-      console.error('Sınav durumu güncellenirken hata:', error);
-      setSnackbarMessage(error instanceof Error ? error.message : 'Sınav durumu güncellenemedi');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-    }
+  const handleUpdateExamStatus = (updatedStudent: Student) => {
+    // Modal zaten API çağrısı yaptı ve snackbar gösterdi, sadece state'i güncelle
+    setStudents(prevStudents => 
+      prevStudents.map(student => 
+        student.id === updatedStudent.id ? updatedStudent : student
+      )
+    );
   };
 
   // Bildirim gönder işlemi
@@ -343,6 +304,14 @@ const StudentList: React.FC = () => {
               variant={filterStatus === 'completed' ? "filled" : "outlined"}
               sx={{ borderRadius: 2, fontWeight: 600 }}
               onClick={() => setFilterStatus('completed')}
+              clickable
+            />
+            <Chip 
+              label="Pasifler" 
+              color={filterStatus === 'inactive' ? "error" : "default"}
+              variant={filterStatus === 'inactive' ? "filled" : "outlined"}
+              sx={{ borderRadius: 2, fontWeight: 600 }}
+              onClick={() => setFilterStatus('inactive')}
               clickable
             />
           </Box>

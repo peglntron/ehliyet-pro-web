@@ -212,11 +212,22 @@ export interface Instructor {
   maxStudentsPerPeriod?: number;    // Bir dönemde alabileceği max öğrenci sayısı
   notes?: string;
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING';
-  profilePhoto?: string;
+  profileImage?: string;
   companyId: string;
   company?: Company;
   createdAt: string;
   updatedAt: string;
+  // Dashboard İstatistikleri - Bu Dönem (Aylık)
+  monthlyTotalStudents?: number;
+  monthlyPassedStudents?: number;
+  monthlySuccessRate?: number;
+  // Dashboard İstatistikleri - Tüm Zamanlar
+  studentCount?: number;
+  passedStudents?: number;
+  totalAttempts?: number;
+  successRate?: number;
+  currentActiveStudents?: number;
+  firstAttemptSuccessRate?: number;
 }
 
 // Vehicle Types

@@ -11,11 +11,13 @@ import {
   Chip, 
   Avatar, 
   CircularProgress,
-  OutlinedInput, 
   Stack,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  FormControlLabel,
+  Checkbox,
+  Paper
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import {
@@ -59,7 +61,7 @@ const AddEditInstructor: React.FC = () => {
     specialization: '',
     experience: '',
     maxStudentsPerPeriod: '10', // Varsayılan değer
-    status: 'active',
+    status: 'ACTIVE',
     profileImage: '',
     startDate: new Date().toISOString().split('T')[0],
     notes: ''
@@ -81,7 +83,7 @@ const AddEditInstructor: React.FC = () => {
         specialization: instructor.specialization || '',
         experience: instructor.experience?.toString() || '',
         maxStudentsPerPeriod: instructor.maxStudentsPerPeriod?.toString() || '10',
-        status: instructor.status || 'active',
+        status: instructor.status || 'ACTIVE',
         profileImage: instructor.profileImage || '',
         startDate: instructor.startDate || new Date().toISOString().split('T')[0],
         notes: instructor.notes || ''
@@ -440,43 +442,92 @@ const AddEditInstructor: React.FC = () => {
                         label="Durum"
                         sx={{ borderRadius: 2 }}
                       >
-                        <MenuItem value="active">Aktif</MenuItem>
-                        <MenuItem value="inactive">Pasif</MenuItem>
-                        <MenuItem value="pending">Onay Bekliyor</MenuItem>
-                      </Select>
-                    </FormControl>
-                    
-                    <FormControl fullWidth>
-                      <InputLabel>Ehliyet Sınıfları</InputLabel>
-                      <Select
-                        multiple
-                        name="licenseTypes"
-                        value={formData.licenseTypes}
-                        onChange={handleSelectChange}
-                        input={<OutlinedInput label="Ehliyet Sınıfları" />}
-                        sx={{ borderRadius: 2 }}
-                        renderValue={(selected) => (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {(selected as string[]).map((value) => (
-                              <Chip 
-                                key={value} 
-                                label={value} 
-                                size="small"
-                                sx={{ borderRadius: 1 }}
-                              />
-                            ))}
-                          </Box>
-                        )}
-                      >
-                        {licenseOptions.map((option) => (
-                          <MenuItem key={option} value={option}>
-                            {option} Sınıfı
-                          </MenuItem>
-                        ))}
+                        <MenuItem value="ACTIVE">Aktif</MenuItem>
+                        <MenuItem value="INACTIVE">Pasif</MenuItem>
+                        <MenuItem value="PENDING">Onay Bekliyor</MenuItem>
                       </Select>
                     </FormControl>
                   </Box>
-                  
+
+                  {/* Ehliyet Sınıfları Checkbox */}
+                  <Paper 
+                    variant="outlined" 
+                    sx={{ 
+                      p: 2,
+                      backgroundColor: '#f8fafc',
+                      borderRadius: 2
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Ehliyet Sınıfları (Birden fazla seçebilirsiniz)
+                    </Typography>
+                    {licenseOptionsLoading ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <Box sx={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                        gap: 1,
+                        mt: 1
+                      }}>
+                        {licenseOptions.map((option) => (
+                          <FormControlLabel
+                            key={option}
+                            control={
+                              <Checkbox
+                                checked={formData.licenseTypes.includes(option)}
+                                onChange={(e) => {
+                                  const currentTypes = formData.licenseTypes;
+                                  if (e.target.checked) {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      licenseTypes: [...currentTypes, option]
+                                    }));
+                                  } else {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      licenseTypes: currentTypes.filter(t => t !== option)
+                                    }));
+                                  }
+                                }}
+                                size="small"
+                              />
+                            }
+                            label={option}
+                            sx={{
+                              m: 0,
+                              '& .MuiFormControlLabel-label': {
+                                fontSize: '0.875rem'
+                              }
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                    {formData.licenseTypes.length > 0 && (
+                      <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
+                          Seçilen sınıflar:
+                        </Typography>
+                        {formData.licenseTypes.map((type) => (
+                          <Chip
+                            key={type}
+                            label={type}
+                            size="small"
+                            color="primary"
+                            onDelete={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                licenseTypes: prev.licenseTypes.filter(t => t !== type)
+                              }));
+                            }}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  </Paper>
+
+                  {/* Notlar */}
                   <TextField
                     fullWidth
                     label="Notlar"

@@ -1074,24 +1074,17 @@ const SavedMatchingDetail: React.FC = () => {
         open={examStatusModalOpen}
         onClose={handleExamStatusModalClose}
         student={selectedStudentForStatus}
-        onUpdateExamStatus={(studentId, examType, action) => {
-          // Local state'i güncelle
-          const student = students.find(s => s.id === studentId);
-          if (student) {
-            const updatedStudent = updateExamStatus(student, examType, action);
-            
-            setStudents(prevStudents => 
-              prevStudents.map(s => 
-                s.id === studentId ? updatedStudent : s
-              )
-            );
-            
-            const actionText = action === 'pass' ? 'geçti' : action === 'fail' ? 'kaldı' : 'sıfırlandı';
-            const examText = examType === 'written' ? 'yazılı sınav' : 'direksiyon sınav';
-            setSnackbarMessage(`${student.name} ${student.surname}'in ${examText}ı ${actionText} olarak işaretlendi.`);
-            setSnackbarSeverity('success');
-            setSnackbarOpen(true);
-          }
+        onUpdateExamStatus={(updatedStudent) => {
+          // Modal zaten API çağrısı yaptı, sadece local state'i güncelle
+          setStudents(prevStudents => 
+            prevStudents.map(s => 
+              s.id === updatedStudent.id ? updatedStudent : s
+            )
+          );
+          
+          setSnackbarMessage(`${updatedStudent.firstName} ${updatedStudent.lastName}'in sınav durumu güncellendi.`);
+          setSnackbarSeverity('success');
+          setSnackbarOpen(true);
         }}
       />
 

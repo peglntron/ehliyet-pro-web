@@ -23,7 +23,7 @@ import {
   Lock
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { usePermissions } from '../contexts/PermissionsContext';
 import { getDefaultRouteForRole } from '../utils/navigation';
 
@@ -46,14 +46,16 @@ const LoginPage: React.FC = () => {
   const { user, loginAdmin, requestPasswordReset, resetPassword, loading, error } = useAuth();
   const { permissions, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Role-based yönlendirme (permissions yüklendikten sonra)
   useEffect(() => {
     if (user && !permissionsLoading) {
-      const route = getDefaultRouteForRole(user.role, permissions);
-      navigate(route);
+      // Eğer önceki sayfa varsa oraya dön, yoksa role-based default'a git
+      const from = (location.state as any)?.from?.pathname || getDefaultRouteForRole(user.role, permissions);
+      navigate(from, { replace: true });
     }
-  }, [user, permissions, permissionsLoading, navigate]);
+  }, [user, permissions, permissionsLoading, navigate, location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

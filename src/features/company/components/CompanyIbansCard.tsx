@@ -89,7 +89,7 @@ const CompanyIbansCard: React.FC<CompanyIbansCardProps> = ({ ibans, onAdd, onEdi
                       }}
                     >
                       <Typography variant="body1" fontWeight={500}>
-                        {iban.iban}
+                        {iban.iban.replace(/(.{2})(.{4})(.{4})(.{4})(.{4})(.{4})(.{4})(.{2})/, '$1$2 $3 $4 $5 $6 $7 $8')}
                       </Typography>
                     </Box>
                     <Grid container spacing={2}>

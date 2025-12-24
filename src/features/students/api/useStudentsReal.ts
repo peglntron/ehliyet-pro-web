@@ -26,6 +26,19 @@ export const getCompletedStudents = async (): Promise<Student[]> => {
   }
 };
 
+export const getInactiveStudents = async (): Promise<Student[]> => {
+  try {
+    // Backend'den pasif öğrencileri getir
+    const apiStudents = await studentAPI.getAll({ 
+      status: 'INACTIVE'
+    });
+    return apiStudents.map(mapApiStudentToUI);
+  } catch (error) {
+    console.error('Error fetching inactive students:', error);
+    throw error;
+  }
+};
+
 export const getAllStudents = async (): Promise<Student[]> => {
   try {
     const apiStudents = await studentAPI.getAll();

@@ -38,7 +38,11 @@ export const getExamStatusText = (
     case 'not-taken':
       return attempts === 0 ? 'Henüz Girmedi' : `${attempts}. Hak Kullanıldı`;
     case 'passed':
-      return passedAtAttempt ? `${passedAtAttempt}. Hakta Geçti` : 'Geçti';
+      // İlk denemede geçti (attempts = 1) ise "İlk Denemede Geçti"
+      if (passedAtAttempt === 1) {
+        return 'İlk Denemede Geçti';
+      }
+      return passedAtAttempt ? `${passedAtAttempt}. Denemede Geçti` : 'Geçti';
     case 'failed':
       return `${attempts}. Hakta Kaldı`;
     default:

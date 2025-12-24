@@ -381,15 +381,15 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         '& > td': { py: childPayments.length > 0 ? 2 : 1 }
                       }}>
                       <TableCell>
-                        <Typography variant={childPayments.length > 0 ? "body1" : "body2"} fontWeight={childPayments.length > 0 ? 700 : 600}>
+                        <Typography variant="body1" fontWeight={700}>
                           {formatDate(payment.date)}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography 
-                          variant={childPayments.length > 0 ? "body1" : "body2"} 
-                          fontWeight={childPayments.length > 0 ? 700 : 600}
-                          fontSize={childPayments.length > 0 ? "1.1rem" : undefined}
+                          variant="body1" 
+                          fontWeight={700}
+                          fontSize="1.1rem"
                         >
                           {payment.amount.toLocaleString('tr-TR')} ₺
                         </Typography>
@@ -401,9 +401,9 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         {payment.type === 'DEBT' ? (
                           <Chip 
                             label="BORÇ" 
-                            size={childPayments.length > 0 ? "medium" : "small"}
+                            size="medium"
                             color="error"
-                            sx={{ fontWeight: childPayments.length > 0 ? 700 : 600, fontSize: childPayments.length > 0 ? '0.8rem' : '0.75rem' , borderRadius:1}}
+                            sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius:1}}
                           />
                         ) : payment.type === 'INSTALLMENT' ? (
                           <Chip 
@@ -423,8 +423,8 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                       </TableCell>
                       <TableCell>
                         <Typography 
-                          variant={childPayments.length > 0 ? "body1" : "body2"}
-                          fontWeight={childPayments.length > 0 ? 700 : 400}
+                          variant="body1"
+                          fontWeight={700}
                         >
                           {payment.description || '-'}
                         </Typography>
