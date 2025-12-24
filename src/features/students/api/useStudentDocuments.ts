@@ -11,7 +11,7 @@ export const useStudentDocuments = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/student-documents/student/${studentId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -41,7 +41,7 @@ export const useStudentDocuments = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/student-documents/student/${studentId}`, {
         method: 'POST',
         headers: {
@@ -74,7 +74,7 @@ export const useStudentDocuments = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/student-documents/${documentId}`, {
         method: 'PUT',
         headers: {
@@ -104,7 +104,7 @@ export const useStudentDocuments = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/student-documents/${documentId}`, {
         method: 'DELETE',
         headers: {
@@ -130,7 +130,7 @@ export const useStudentDocuments = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${API_URL}/api/student-documents/types`, {
         headers: {
           'Authorization': `Bearer ${token}`,

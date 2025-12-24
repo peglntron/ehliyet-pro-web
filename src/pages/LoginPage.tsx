@@ -33,6 +33,7 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetForm, setShowResetForm] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loginForm, setLoginForm] = useState({
     phone: '',
     password: ''
@@ -50,17 +51,34 @@ const LoginPage: React.FC = () => {
 
   // Role-based yönlendirme (permissions yüklendikten sonra)
   useEffect(() => {
+    // User varsa VE permissions yüklenmiş ise (loading false ise) yönlendir
     if (user && !permissionsLoading) {
-      // Eğer önceki sayfa varsa oraya dön, yoksa role-based default'a git
-      const from = (location.state as any)?.from?.pathname || getDefaultRouteForRole(user.role, permissions);
-      navigate(from, { replace: true });
+      // COMPANY_ADMIN için ekstra kontrol: permissions gerçekten yüklendi mi?
+      // Eğer COMPANY_ADMIN ise canViewDashboard mutlaka true olmalı
+      if (user.role === 'COMPANY_ADMIN' && !permissions.canViewDashboard) {
+        console.log('[LoginPage] COMPANY_ADMIN but permissions not loaded yet, waiting...');
+        return; // Henüz permissions yüklenmemiş, bekle
+      }
+      
+      // Önceki sayfa kontrolü - eğer from "/" ise veya login sayfasıysa, default route'a git
+      const fromPath = (location.state as any)?.from?.pathname;
+      console.log('[LoginPage] fromPath:', fromPath, 'User role:', user.role);
+      
+      // Eğer from "/" veya "/login" ise, role-based default'a git
+      const shouldUseDefault = !fromPath || fromPath === '/' || fromPath === '/login';
+      const targetPath = shouldUseDefault 
+        ? getDefaultRouteForRole(user.role, permissions)
+        : fromPath;
+      
+      console.log('[LoginPage] Redirecting to:', targetPath, 'Role:', user.role, 'Permissions:', permissions);
+      navigate(targetPath, { replace: true });
     }
   }, [user, permissions, permissionsLoading, navigate, location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await loginAdmin(loginForm.phone, loginForm.password);
+      await loginAdmin(loginForm.phone, loginForm.password, rememberMe);
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -217,9 +235,22 @@ const LoginPage: React.FC = () => {
                   ),
                 }}
                 placeholder="Şifrenizi girin"
-                sx={{ mb: 3 }}
+                sx={{ mb: 2 }}
                 required
               />
+
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  style={{ marginRight: '8px', cursor: 'pointer' }}
+                />
+                <label htmlFor="rememberMe" style={{ cursor: 'pointer', fontSize: '14px' }}>
+                  Beni Hatırla
+                </label>
+              </Box>
 
               <Button
                 fullWidth

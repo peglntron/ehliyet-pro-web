@@ -237,7 +237,7 @@ const InstructorCreateModal: React.FC<InstructorCreateModalProps> = ({
     setLoading(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       let profilePhotoUrl = formData.profilePhoto;
       
       // Önce fotoğrafı yükle (varsa)

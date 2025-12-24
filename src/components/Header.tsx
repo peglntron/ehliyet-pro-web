@@ -242,14 +242,7 @@ const Header: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
             {user?.role !== 'ADMIN' && (
               <>
-                {companyLogo ? (
-                  <Avatar 
-                    src={companyLogo}
-                    sx={{ width: 36, height: 36 }}
-                  />
-                ) : (
                   <BusinessIcon sx={{ fontSize: 28, color: 'text.secondary' }} />
-                )}
               </>
             )}
             <Box>

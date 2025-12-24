@@ -202,7 +202,7 @@ const CompanyInfo: React.FC = () => {
     formData.append('companyId', company?.id || '');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch('/api/companies/upload-logo', {
         method: 'POST',
         headers: {

@@ -31,7 +31,7 @@ const UnitCard: React.FC<UnitCardProps> = ({ unit, lessonName }) => {
   const fetchContents = async () => {
     try {
       setLoadingContents(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/units/${unit.id}/contents`, {
         headers: {
           'Authorization': `Bearer ${token}`

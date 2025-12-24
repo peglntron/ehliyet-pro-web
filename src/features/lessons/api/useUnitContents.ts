@@ -35,7 +35,7 @@ export const useUnitContents = (unitId?: string) => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/units/${unitId}/contents`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -68,7 +68,7 @@ export const useUnitContents = (unitId?: string) => {
 
 // Tek bir içeriği ID ile getir
 export const getContentById = async (id: string): Promise<UnitContent> => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const response = await fetch(`${API_BASE_URL}/units/contents/${id}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -88,7 +88,7 @@ export const getContentById = async (id: string): Promise<UnitContent> => {
 export const unitContentApi = {
   // Yeni içerik oluştur
   create: async (contentData: UnitContentFormData): Promise<UnitContent> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units/contents`, {
       method: 'POST',
       headers: {
@@ -109,7 +109,7 @@ export const unitContentApi = {
 
   // Toplu içerik oluştur
   bulkCreate: async (contents: UnitContentFormData[]): Promise<UnitContent[]> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units/contents/bulk`, {
       method: 'POST',
       headers: {
@@ -130,7 +130,7 @@ export const unitContentApi = {
 
   // İçerik güncelle
   update: async (id: string, contentData: UnitContentFormData): Promise<UnitContent> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units/contents/${id}`, {
       method: 'PUT',
       headers: {
@@ -151,7 +151,7 @@ export const unitContentApi = {
 
   // İçerik sil
   delete: async (id: string): Promise<void> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units/contents/${id}`, {
       method: 'DELETE',
       headers: {
@@ -168,7 +168,7 @@ export const unitContentApi = {
 
   // İçerik durumunu değiştir
   toggleStatus: async (id: string): Promise<UnitContent> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units/contents/${id}/toggle-status`, {
       method: 'PATCH',
       headers: {

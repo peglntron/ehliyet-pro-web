@@ -145,7 +145,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
       const response = await fetch(`${API_URL}/api/companies/upload-logo`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
         },
         body: formDataUpload
       });

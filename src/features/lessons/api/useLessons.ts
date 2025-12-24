@@ -48,7 +48,7 @@ export const useLessons = () => {
   const fetchLessons = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${API_BASE_URL}/lessons`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -81,7 +81,7 @@ export const useLessons = () => {
 
 // Tek bir dersi ID ile getir
 export const getLessonById = async (id: string): Promise<Lesson> => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const response = await fetch(`${API_BASE_URL}/lessons/${id}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -101,7 +101,7 @@ export const getLessonById = async (id: string): Promise<Lesson> => {
 export const lessonApi = {
   // Yeni ders oluştur
   create: async (lessonData: LessonFormData): Promise<Lesson> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/lessons`, {
       method: 'POST',
       headers: {
@@ -122,7 +122,7 @@ export const lessonApi = {
 
   // Ders güncelle
   update: async (id: string, lessonData: LessonFormData): Promise<Lesson> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/lessons/${id}`, {
       method: 'PUT',
       headers: {
@@ -143,7 +143,7 @@ export const lessonApi = {
 
   // Ders sil
   delete: async (id: string): Promise<void> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/lessons/${id}`, {
       method: 'DELETE',
       headers: {
@@ -160,7 +160,7 @@ export const lessonApi = {
 
   // Ders durumunu değiştir
   toggleStatus: async (id: string): Promise<Lesson> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/lessons/${id}/toggle-status`, {
       method: 'PATCH',
       headers: {
@@ -188,7 +188,7 @@ export const useUnits = (lessonId?: string) => {
   const fetchUnits = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const url = lessonId 
         ? `${API_BASE_URL}/units?lessonId=${lessonId}`
         : `${API_BASE_URL}/units`;
@@ -225,7 +225,7 @@ export const useUnits = (lessonId?: string) => {
 
 // Tek bir üniteyi ID ile getir
 export const getUnitById = async (id: string): Promise<Unit> => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const response = await fetch(`${API_BASE_URL}/units/${id}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -243,7 +243,7 @@ export const getUnitById = async (id: string): Promise<Unit> => {
 
 // Belirli bir derse ait üniteleri getir
 export const getUnitsByLessonId = async (lessonId: string): Promise<Unit[]> => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const response = await fetch(`${API_BASE_URL}/units/lesson/${lessonId}`, {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -263,7 +263,7 @@ export const getUnitsByLessonId = async (lessonId: string): Promise<Unit[]> => {
 export const unitApi = {
   // Yeni ünite oluştur
   create: async (unitData: UnitFormData): Promise<Unit> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units`, {
       method: 'POST',
       headers: {
@@ -284,7 +284,7 @@ export const unitApi = {
 
   // Ünite güncelle
   update: async (id: string, unitData: UnitFormData): Promise<Unit> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units/${id}`, {
       method: 'PUT',
       headers: {
@@ -305,7 +305,7 @@ export const unitApi = {
 
   // Ünite sil
   delete: async (id: string): Promise<void> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units/${id}`, {
       method: 'DELETE',
       headers: {
@@ -322,7 +322,7 @@ export const unitApi = {
 
   // Ünite durumunu değiştir
   toggleStatus: async (id: string): Promise<Unit> => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/units/${id}/toggle-status`, {
       method: 'PATCH',
       headers: {

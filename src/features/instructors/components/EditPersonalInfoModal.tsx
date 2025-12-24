@@ -111,7 +111,7 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
         const uploadFormData = new FormData();
         uploadFormData.append('photo', selectedFile);
         
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         console.log('Upload URL:', `${API_URL}/api/instructors/upload-photo`);
         const uploadResponse = await axios.post(`${API_URL}/api/instructors/upload-photo`, uploadFormData, {
           headers: {

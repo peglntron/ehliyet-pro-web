@@ -71,7 +71,7 @@ export const useNotificationLogs = () => {
         `${API_BASE_URL}/notification-logs?${queryParams.toString()}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
           }
         }
       );
@@ -100,7 +100,7 @@ export const useNotificationLogs = () => {
         `${API_BASE_URL}/notification-logs/${id}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
           }
         }
       );
@@ -137,7 +137,7 @@ export const useNotificationLogs = () => {
         data,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`,
             'Content-Type': 'application/json'
           }
         }
@@ -165,7 +165,7 @@ export const useNotificationLogs = () => {
         {},
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
           }
         }
       );
@@ -191,7 +191,7 @@ export const useNotificationLogs = () => {
         `${API_BASE_URL}/notification-logs/unread-count`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
           }
         }
       );
@@ -217,7 +217,7 @@ export const useNotificationLogs = () => {
         `${API_BASE_URL}/notification-logs/stats`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
           }
         }
       );

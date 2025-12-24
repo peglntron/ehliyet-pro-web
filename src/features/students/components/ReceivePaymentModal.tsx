@@ -54,7 +54,7 @@ export const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({
       setLoading(true);
       setError('');
       
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
       
       // Borç bilgisini al

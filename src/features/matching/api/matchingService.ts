@@ -1,14 +1,16 @@
 import type { Student } from '../../students/types/types';
 import type { Instructor } from '../../instructors/types/types';
 import type { MatchingResult, MatchingStats, MatchingRequest, MatchingError, InstructorUtilization } from '../types/types';
+import { getToken } from '../../../utils/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+const API_BASE_URL = `${API_URL}/api`; // /api prefix ekle
 
 /**
  * Backend API çağrıları için yardımcı fonksiyon
  */
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = getToken();
   return {
     'Content-Type': 'application/json',
     ...(token && { 'Authorization': `Bearer ${token}` })
@@ -38,7 +40,7 @@ export class MatchingService {
     stats: MatchingStats;
   }> {
     try {
-      const response = await fetch(`${API_URL}/matching/calculate`, {
+      const response = await fetch(`${API_BASE_URL}/matching/calculate`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -79,7 +81,7 @@ export class MatchingService {
     notes?: string
   ): Promise<{ matchingId: string }> {
     try {
-      const response = await fetch(`${API_URL}/matching/save`, {
+      const response = await fetch(`${API_BASE_URL}/matching/save`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -111,7 +113,7 @@ export class MatchingService {
    */
   static async applyMatching(matchingId: string): Promise<void> {
     try {
-      const response = await fetch(`${API_URL}/matching/${matchingId}/apply`, {
+      const response = await fetch(`${API_BASE_URL}/matching/${matchingId}/apply`, {
         method: 'POST',
         headers: getAuthHeaders()
       });
@@ -131,7 +133,7 @@ export class MatchingService {
    */
   static async getMatchingHistory(): Promise<any[]> {
     try {
-      const response = await fetch(`${API_URL}/matching/history`, {
+      const response = await fetch(`${API_BASE_URL}/matching/history`, {
         method: 'GET',
         headers: getAuthHeaders()
       });
@@ -154,7 +156,7 @@ export class MatchingService {
    */
   static async getMatchingDetail(matchingId: string): Promise<any> {
     try {
-      const response = await fetch(`${API_URL}/matching/${matchingId}`, {
+      const response = await fetch(`${API_BASE_URL}/matching/${matchingId}`, {
         method: 'GET',
         headers: getAuthHeaders()
       });
@@ -522,7 +524,7 @@ export const getEligibleStudents = async (
       ...(selectedIds.length > 0 && { selectedIds: JSON.stringify(selectedIds) })
     });
 
-    const response = await fetch(`${API_URL}/matching/eligible-students?${queryParams}`, {
+    const response = await fetch(`${API_BASE_URL}/matching/eligible-students?${queryParams}`, {
       method: 'GET',
       headers: getAuthHeaders()
     });

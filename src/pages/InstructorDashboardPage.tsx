@@ -54,7 +54,7 @@ const InstructorDashboardPage: React.FC = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await axios.get('/api/instructors/dashboard', {
         headers: { 'Authorization': `Bearer ${token}` }
       });

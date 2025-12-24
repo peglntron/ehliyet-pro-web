@@ -6,7 +6,7 @@ const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:3002'}
 
 // API için auth token'ı al
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`

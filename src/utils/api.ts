@@ -11,6 +11,11 @@ export const getApiBaseUrl = () => `${getBaseUrl()}/api`;
 export const API_BASE_URL = getApiBaseUrl(); // Backward compatibility
 export const UPLOADS_BASE_URL = getBaseUrl();
 
+// Token yardımcı fonksiyonu - hem localStorage hem sessionStorage'dan kontrol eder
+export const getToken = (): string | null => {
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
+};
+
 // HTTP Client with token management
 class ApiClient {
   private baseURL: string;
@@ -20,7 +25,8 @@ class ApiClient {
   }
 
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('token');
+    // Token'ı hem localStorage hem sessionStorage'dan kontrol et
+    const token = getToken();
     return {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
@@ -326,7 +332,7 @@ export const licenseClassApi = {
     formData.append('icon', iconFile);
     formData.append('licenseClassId', licenseClassId);
 
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_BASE_URL}/license-classes/upload-icon`, {
       method: 'POST',
       headers: {
@@ -429,7 +435,7 @@ export const trafficSignApi = {
     formData.append('image', imageFile);
     formData.append('trafficSignId', trafficSignId);
 
-    const token = localStorage.getItem('token');
+    const token = getToken();
     const response = await fetch(`${API_BASE_URL}/traffic-signs/upload-image`, {
       method: 'POST',
       headers: {

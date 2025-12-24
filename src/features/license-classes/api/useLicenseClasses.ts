@@ -6,7 +6,7 @@ const API_BASE_URL = '/api';
 
 // API utility functions
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   return {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` })
@@ -497,7 +497,7 @@ export const uploadLicenseClassIcon = async (file: File, licenseClassId: string)
     formData.append('icon', file);
     formData.append('licenseClassId', licenseClassId);
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const response = await fetch(`${API_BASE_URL}/license-classes/upload-icon`, {
       method: 'POST',
       headers: {

@@ -11,7 +11,7 @@ interface AuthContextType {
   isCompanyUser: boolean; // Şirket kullanıcısı kontrolü
   loginPhone: (phone: string) => Promise<{ companyName?: string; smsCode?: string }>;
   verifyCode: (phone: string, code: string) => Promise<void>;
-  loginAdmin: (phone: string, password: string) => Promise<void>;
+  loginAdmin: (phone: string, password: string, rememberMe?: boolean) => Promise<void>;
   requestPasswordReset: (phone: string) => Promise<{ resetCode?: string }>;
   resetPassword: (phone: string, code: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -23,8 +23,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [loading, setLoading] = useState(!!localStorage.getItem('token')); // Token varsa loading true
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem('token') || sessionStorage.getItem('token')
+  );
+  const [loading, setLoading] = useState(
+    !!(localStorage.getItem('token') || sessionStorage.getItem('token'))
+  ); // Token varsa loading true
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = !!user && !!token;
@@ -46,6 +50,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       const data: ApiResponse<User> = await apiClient.get('/auth/profile');
       if (data.success) {
+        console.log('[AuthContext] User profile fetched:', data.data!.role, data.data!.name);
         setUser(data.data!);
       } else {
         logout();
@@ -125,7 +130,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const loginAdmin = async (phone: string, password: string): Promise<void> => {
+  const loginAdmin = async (phone: string, password: string, rememberMe: boolean = false): Promise<void> => {
     setLoading(true);
     setError(null);
 
@@ -147,8 +152,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const { user, tokens } = data.data;
         setUser(user);
         setToken(tokens.accessToken);
-        localStorage.setItem('token', tokens.accessToken);
-        localStorage.setItem('refreshToken', tokens.refreshToken);
+        
+        // Beni hatırla seçiliyse localStorage, değilse sessionStorage kullan
+        if (rememberMe) {
+          localStorage.setItem('token', tokens.accessToken);
+          localStorage.setItem('refreshToken', tokens.refreshToken);
+          // sessionStorage'dan temizle
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('refreshToken');
+        } else {
+          sessionStorage.setItem('token', tokens.accessToken);
+          sessionStorage.setItem('refreshToken', tokens.refreshToken);
+          // localStorage'dan temizle
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+        }
       } else {
         throw new Error(data.message || 'Admin girişi başarısız');
       }
@@ -179,8 +197,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Local state'i temizle
       setUser(null);
       setToken(null);
+      // Her iki storage'ı da temizle
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('refreshToken');
       setError(null);
     }
   };

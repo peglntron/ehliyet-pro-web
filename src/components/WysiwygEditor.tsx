@@ -140,7 +140,7 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
         formData.append('image', file);
         
         // Backend'e upload
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/units/upload-image`, {
           method: 'POST',
           headers: {

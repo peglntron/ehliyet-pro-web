@@ -28,7 +28,7 @@ export const useNotificationSettings = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/notification-settings`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -53,7 +53,7 @@ export const useNotificationSettings = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3002'}/api/notification-settings`, {
           method: 'PUT',
         headers: {

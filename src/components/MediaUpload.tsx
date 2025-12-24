@@ -88,7 +88,7 @@ export const MediaUpload: React.FC<MediaUploadProps> = ({
       }
 
       // Token'ı al
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
       // Upload isteği
       const response = await axios.post(

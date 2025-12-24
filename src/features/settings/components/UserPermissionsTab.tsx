@@ -35,7 +35,7 @@ const UserPermissionsTab: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await axios.get('/api/companies/users/permissions', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -64,7 +64,7 @@ const UserPermissionsTab: React.FC = () => {
     ));
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       await axios.put(`/api/companies/screen-permissions/${userId}`, updatedPermissions, {
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -27,7 +27,7 @@ export const useDrivingLessons = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
       const response = await fetch(
         `${API_URL}/api/driving-lessons/eligible-students`,
@@ -62,7 +62,7 @@ export const useDrivingLessons = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const queryParams = new URLSearchParams();
       
       if (params?.instructorId) queryParams.append('instructorId', params.instructorId);
@@ -100,7 +100,7 @@ export const useDrivingLessons = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
       const response = await fetch(`${API_URL}/api/driving-lessons/tomorrow`, {
         method: 'POST',
@@ -134,7 +134,7 @@ export const useDrivingLessons = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
       const response = await fetch(`${API_URL}/api/driving-lessons/${lessonId}/time`, {
         method: 'PATCH',
@@ -168,7 +168,7 @@ export const useDrivingLessons = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
       const response = await fetch(
         `${API_URL}/api/driving-lessons/${lessonId}/instructor-done`,
@@ -202,7 +202,7 @@ export const useDrivingLessons = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
 
       const response = await fetch(`${API_URL}/api/driving-lessons/${lessonId}`, {
         method: 'DELETE',
