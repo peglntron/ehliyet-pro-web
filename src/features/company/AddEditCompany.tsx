@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Typography, Button, Paper, Divider, Tabs, Tab
+  Box, Typography, Button, Paper, Divider, Tabs, Tab,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import {
@@ -12,7 +13,7 @@ import {
   Badge as BadgeIcon,
   LocationOn as LocationOnIcon
 } from '@mui/icons-material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import { getCompanyById, updateCompany, renewLicense } from './api/useCompanies';
 import type { Company } from './types/types';
@@ -29,6 +30,7 @@ import UserManagement from './components/UserManagement';
 const AddEditCompany: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const isEditMode = Boolean(id);
   
   // State tanımlamaları
@@ -36,6 +38,10 @@ const AddEditCompany: React.FC = () => {
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [userCreateModalOpen, setUserCreateModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const [initialFormData, setInitialFormData] = useState<typeof formData | null>(null);
   
   // Form state
   const [formData, setFormData] = useState<{
@@ -84,7 +90,69 @@ const AddEditCompany: React.FC = () => {
   
   const { showSnackbar } = useSnackbar();
   
-  // Tab değişimi
+  // Sayfa yenileme/kapama kontrolü
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+  
+  // Route değişikliklerini engelle (browser back/forward)
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    
+    const handlePopState = (e: PopStateEvent) => {
+      if (hasUnsavedChanges) {
+        const confirmLeave = window.confirm(
+          'Yaptığınız değişiklikler kaydedilmedi. Sayfadan ayrılırsanız tüm değişiklikler kaybolacak. Devam etmek istiyor musunuz?'
+        );
+        
+        if (!confirmLeave) {
+          // Geri gitmemeyi sağla
+          window.history.pushState(null, '', window.location.pathname);
+        }
+      }
+    };
+    
+    // İlk yüklemede bir history state ekle
+    window.history.pushState(null, '', window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [hasUnsavedChanges, location]);
+    // Navigation handler
+  const handleNavigation = (path: string) => {
+    if (hasUnsavedChanges) {
+      setPendingNavigation(path);
+      setShowUnsavedDialog(true);
+    } else {
+      navigate(path);
+    }
+  };
+  
+  // Unsaved dialog onayı
+  const handleConfirmNavigation = () => {
+    if (pendingNavigation) {
+      navigate(pendingNavigation);
+    }
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  };
+  
+  // Unsaved dialog iptali
+  const handleCancelNavigation = () => {
+    setShowUnsavedDialog(false);
+    setPendingNavigation(null);
+  };
+    // Tab değişimi
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
@@ -95,7 +163,7 @@ const AddEditCompany: React.FC = () => {
       setLoading(true);
       getCompanyById(id)
         .then(company => {
-          setFormData({
+          const loadedData = {
             name: company.name || '',
             province: company.province || '',
             district: company.district || '',
@@ -115,7 +183,9 @@ const AddEditCompany: React.FC = () => {
               mapLink: ''
             },
             isActive: company.isActive
-          });
+          };
+          setFormData(loadedData);
+          setInitialFormData(loadedData);
           setLoading(false);
         })
         .catch(error => {
@@ -128,10 +198,18 @@ const AddEditCompany: React.FC = () => {
   
   // Form alanları değişikliklerini yönet
   const handleFormChange = (updatedData: Partial<typeof formData>) => {
-    setFormData(prev => ({
-      ...prev,
-      ...updatedData
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        ...updatedData
+      };
+      // Değişiklik olup olmadığını kontrol et
+      if (initialFormData) {
+        const hasChanges = JSON.stringify(newData) !== JSON.stringify(initialFormData);
+        setHasUnsavedChanges(hasChanges);
+      }
+      return newData;
+    });
   };
   
   // Hata durumlarını güncelle
@@ -229,6 +307,7 @@ const AddEditCompany: React.FC = () => {
       // Update işlemi
       updateCompany(id, submitData)
         .then(() => {
+          setHasUnsavedChanges(false);
           showSnackbar('Sürücü kursu başarıyla güncellendi!', 'success');
           setTimeout(() => navigate('/company'), 1500);
         })
@@ -285,7 +364,7 @@ const AddEditCompany: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/company')}
+            onClick={() => handleNavigation('/company')}
             sx={{
               py: 1.2,
               px: 2.5,
@@ -406,7 +485,7 @@ const AddEditCompany: React.FC = () => {
           >
             <Button
               variant="outlined"
-              onClick={() => navigate('/company')}
+              onClick={() => handleNavigation('/company')}
               sx={{
                 py: 1.5,
                 px: 4,
@@ -431,7 +510,7 @@ const AddEditCompany: React.FC = () => {
                 fontSize: '1rem'
               }}
             >
-              {isEditMode ? 'Güncelle' : 'Kaydet'}
+              Kaydet
             </Button>
           </Box>
         </form>
@@ -453,6 +532,27 @@ const AddEditCompany: React.FC = () => {
         onSuccess={handleUserCreated}
         companyId={id || ''}
       />
+      
+      {/* Unsaved Changes Dialog */}
+      <Dialog
+        open={showUnsavedDialog}
+        onClose={handleCancelNavigation}
+      >
+        <DialogTitle>Kaydedilmemiş Değişiklikler</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Yaptığınız değişiklikler kaydedilmedi. Sayfadan ayrılırsanız tüm değişiklikler kaybolacak. Devam etmek istiyor musunuz?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelNavigation} color="primary">
+            Kal
+          </Button>
+          <Button onClick={handleConfirmNavigation} color="error" variant="contained">
+            Değişiklikleri İptal Et ve Çık
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

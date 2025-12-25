@@ -20,6 +20,7 @@ import {
 } from '../api/useCompanyUsers';
 import { formatDate, formatDateTime } from '../../../utils/dateFormat';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useSnackbar } from '../../../contexts/SnackbarContext';
 
 interface UserManagementProps {
   companyId: string;
@@ -28,6 +29,7 @@ interface UserManagementProps {
 
 const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreated }) => {
   const { user: currentUser } = useAuth();
+  const { showSnackbar } = useSnackbar();
   const [userCreateModalOpen, setUserCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState<CompanyUser[]>([]);
@@ -44,9 +46,14 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
     try {
       setLoading(true);
       const response = await getCompanyUsers(companyId);
-      setUsers(response.users || []);
+      // Sadece COMPANY_ADMIN ve COMPANY_USER rolündeki kullanıcıları göster
+      const filteredUsers = (response.users || []).filter(
+        user => ['COMPANY_ADMIN', 'COMPANY_USER'].includes(user.role)
+      );
+      setUsers(filteredUsers);
     } catch (err) {
       console.error('Error loading users:', err);
+      showSnackbar('Kullanıcılar yüklenirken hata oluştu', 'error');
     } finally {
       setLoading(false);
     }
@@ -72,10 +79,15 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
   const handleToggleStatus = async (user: CompanyUser) => {
     try {
       await updateCompanyUser(user.id, { isActive: !user.isActive });
+      showSnackbar(
+        `${user.firstName} ${user.lastName} ${!user.isActive ? 'aktif' : 'pasif'} yapıldı`,
+        'success'
+      );
       loadUsers(); // Listeyi yenile
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error toggling user status:', err);
-      alert('Kullanıcı durumu değiştirilirken hata oluştu');
+      const errorMessage = err?.message || 'Kullanıcı durumu değiştirilirken hata oluştu';
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -83,10 +95,14 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
   const handleResetPassword = async (user: CompanyUser) => {
     try {
       const result = await resetUserPassword(user.id);
-      alert(`Yeni şifre: ${result.temporaryPassword}\n\nBu şifre kullanıcıya SMS ile gönderildi.`);
-    } catch (err) {
+      showSnackbar(
+        `${user.firstName} ${user.lastName} kullanıcısının şifresi sıfırlandı. Yeni şifre: ${result.temporaryPassword}`,
+        'success'
+      );
+    } catch (err: any) {
       console.error('Error resetting password:', err);
-      alert('Şifre sıfırlanırken hata oluştu');
+      const errorMessage = err?.message || 'Şifre sıfırlanırken hata oluştu';
+      showSnackbar(errorMessage, 'error');
     }
   };
 

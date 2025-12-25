@@ -116,10 +116,10 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
     }
   };
   
-  // Logo upload işleyicisi
+  // Logo upload işleyicisi - sadece preview için local'de tut
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !companyId) return;
+    if (!file) return;
     
     // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
@@ -137,35 +137,22 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
     try {
       setLogoUploading(true);
       
-      const formDataUpload = new FormData();
-      formDataUpload.append('logo', file);
-      formDataUpload.append('companyId', companyId);
-      
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
-      const response = await fetch(`${API_URL}/api/companies/upload-logo`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`
-        },
-        body: formDataUpload
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText || 'Logo yükleme başarısız'}`);
-      }
-      
-      const result = await response.json();
-      if (result.success && result.data?.logoUrl) {
-        onChange({ logo: result.data.logoUrl });
-        showSnackbar('Logo seçildi. Kaydetmek için Güncelle butonuna basın', 'info');
-      } else {
-        throw new Error(result.message || 'Logo yükleme başarısız');
-      }
+      // Dosyayı base64'e çevir ve preview için kullan
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Base64 string'i state'e kaydet
+        onChange({ logo: reader.result as string });
+        showSnackbar('Logo seçildi. Kaydetmek için "Kaydet" butonuna basın', 'info');
+        setLogoUploading(false);
+      };
+      reader.onerror = () => {
+        showSnackbar('Logo yüklenirken hata oluştu', 'error');
+        setLogoUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error('Logo upload hatası:', error);
-      showSnackbar(error instanceof Error ? error.message : 'Logo yükleme sırasında hata oluştu', 'error');
-    } finally {
+      showSnackbar('Logo yüklenirken hata oluştu', 'error');
       setLogoUploading(false);
     }
   };
@@ -213,7 +200,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
               {formData.logo && (
                 <Avatar
                   sx={{ width: 80, height: 80 }}
-                  src={getImageUrl(formData.logo)}
+                  src={formData.logo.startsWith('data:') ? formData.logo : getImageUrl(formData.logo)}
                   alt="Şirket Logosu"
                 >
                   <BusinessIcon />
