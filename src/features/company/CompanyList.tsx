@@ -18,7 +18,7 @@ import LoadingIndicator from '../../components/LoadingIndicator';
 
 const CompanyList: React.FC = () => {
   const navigate = useNavigate();
-  const { companies: allCompanies, loading, error } = useCompanies();
+  const { companies: allCompanies, loading, error, refetch } = useCompanies();
   const { cities, fetchCities } = useLocations();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterProvince, setFilterProvince] = useState('');
@@ -237,6 +237,7 @@ const CompanyList: React.FC = () => {
               key={company.id} 
               company={company} 
               getLicenseStatus={getLicenseStatus}
+              onStatusChanged={refetch}
             />
           ))
         ) : (

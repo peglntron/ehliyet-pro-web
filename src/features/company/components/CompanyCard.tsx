@@ -40,9 +40,10 @@ import { useSnackbar } from '../../../contexts/SnackbarContext';
 interface CompanyCardProps {
   company: Company;
   getLicenseStatus: (endDate: string) => 'expired' | 'expiring' | 'valid';
+  onStatusChanged?: () => void;
 }
 
-const CompanyCard: React.FC<CompanyCardProps> = ({ company, getLicenseStatus }) => {
+const CompanyCard: React.FC<CompanyCardProps> = ({ company, getLicenseStatus, onStatusChanged }) => {
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -66,10 +67,14 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company, getLicenseStatus }) 
   const handleToggleStatus = async () => {
     handleMenuClose();
     try {
-      const response = await apiClient.patch(`/companies/${company.id}/toggle-status`);
+      const response = await apiClient.patch(`/admin/companies/${company.id}/toggle-status`);
       if (response.success) {
-        showSnackbar(`İşletme ${!company.isActive ? 'aktif' : 'pasif'} edildi`, 'success');
-        // Sayfayı yenile
+        shoListeyi yenile
+        if (onStatusChanged) {
+          onStatusChanged();
+        } else {
+          window.location.reload();
+        }
         window.location.reload();
       } else {
         throw new Error(response.message || 'İşlem başarısız');

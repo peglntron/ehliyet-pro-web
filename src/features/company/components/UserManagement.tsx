@@ -50,6 +50,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
       const filteredUsers = (response.users || []).filter(
         user => ['COMPANY_ADMIN', 'COMPANY_USER', 'INSTRUCTOR'].includes(user.role)
       );
+      console.log('Loaded users:', filteredUsers); // Debug
       setUsers(filteredUsers);
     } catch (err) {
       console.error('Error loading users:', err);
@@ -78,12 +79,14 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
   // Kullanıcı durumunu değiştir
   const handleToggleStatus = async (user: CompanyUser) => {
     try {
+      console.log('Toggling user status:', user.id, 'isActive:', user.isActive, '-> new:', !user.isActive); // Debug
       await updateCompanyUser(user.id, { isActive: !user.isActive });
       showSnackbar(
         `${user.firstName} ${user.lastName} ${!user.isActive ? 'aktif' : 'pasif'} yapıldı`,
         'success'
       );
-      loadUsers(); // Listeyi yenile
+      await loadUsers(); // Listeyi yenile
+      console.log('Users reloaded after toggle'); // Debug
     } catch (err: any) {
       console.error('Error toggling user status:', err);
       const errorMessage = err?.message || 'Kullanıcı durumu değiştirilirken hata oluştu';
