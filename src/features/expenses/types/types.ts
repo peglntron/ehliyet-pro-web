@@ -1,13 +1,8 @@
 export interface ExpenseCategory {
   id: string;
-  companyId: string;
   name: string;
   description?: string;
   isActive: boolean;
-  autoCreateDay?: number; // 1-28, her ayın bu günü otomatik gider oluştur
-  defaultAmount?: number; // Varsayılan tutar
-  paymentMethod?: string; // Varsayılan ödeme yöntemi
-  autoDescription?: string; // Otomatik oluşturulan giderlerin açıklaması
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -19,10 +14,6 @@ export interface ExpenseCategoryFormData {
   name: string;
   description: string;
   isActive: boolean;
-  autoCreateDay: number | '';
-  defaultAmount: string;
-  paymentMethod: string;
-  autoDescription: string;
 }
 
 export interface Expense {

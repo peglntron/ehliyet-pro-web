@@ -31,11 +31,7 @@ const ExpenseCategoriesPage: React.FC = () => {
   const [formData, setFormData] = useState<ExpenseCategoryFormData>({
     name: '',
     description: '',
-    isActive: true,
-    autoCreateDay: '',
-    defaultAmount: '',
-    paymentMethod: '',
-    autoDescription: ''
+    isActive: true
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -45,22 +41,14 @@ const ExpenseCategoriesPage: React.FC = () => {
       setFormData({
         name: category.name,
         description: category.description || '',
-        isActive: category.isActive,
-        autoCreateDay: category.autoCreateDay || '',
-        defaultAmount: category.defaultAmount?.toString() || '',
-        paymentMethod: category.paymentMethod || '',
-        autoDescription: category.autoDescription || ''
+        isActive: category.isActive
       });
     } else {
       setEditingCategory(null);
       setFormData({
         name: '',
         description: '',
-        isActive: true,
-        autoCreateDay: '',
-        defaultAmount: '',
-        paymentMethod: '',
-        autoDescription: ''
+        isActive: true
       });
     }
     setOpenDialog(true);
@@ -77,38 +65,14 @@ const ExpenseCategoriesPage: React.FC = () => {
       return;
     }
 
-    // Otomatik gider validasyonu
-    if (formData.autoCreateDay) {
-      const day = typeof formData.autoCreateDay === 'string' 
-        ? parseInt(formData.autoCreateDay) 
-        : formData.autoCreateDay;
-      
-      if (day < 1 || day > 28) {
-        showSnackbar('Otomatik oluşturma günü 1-28 arasında olmalıdır', 'error');
-        return;
-      }
-      
-      if (!formData.defaultAmount || parseFloat(formData.defaultAmount) <= 0) {
-        showSnackbar('Otomatik gider için varsayılan tutar belirtilmelidir', 'error');
-        return;
-      }
-    }
-
     try {
       setSubmitting(true);
-      const submitData = {
-        ...formData,
-        defaultAmount: formData.defaultAmount ? parseFloat(formData.defaultAmount) : undefined,
-        autoCreateDay: formData.autoCreateDay ? 
-          (typeof formData.autoCreateDay === 'string' ? parseInt(formData.autoCreateDay) : formData.autoCreateDay) 
-          : undefined
-      };
       
       if (editingCategory) {
-        await updateExpenseCategory(editingCategory.id, submitData);
+        await updateExpenseCategory(editingCategory.id, formData);
         showSnackbar('Gider kalemi başarıyla güncellendi', 'success');
       } else {
-        await createExpenseCategory(submitData);
+        await createExpenseCategory(formData);
         showSnackbar('Gider kalemi başarıyla oluşturuldu', 'success');
       }
       handleCloseDialog();
@@ -191,8 +155,8 @@ const ExpenseCategoriesPage: React.FC = () => {
 
       {/* Info Alert */}
       <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
-        <strong>Gider Kalemi Nedir?</strong> İşletmenizin gider kategorilerini (Kira, Maaş, Yakıt vb.) buradan tanımlayın. 
-        Daha sonra gider girişlerinde bu kalemleri seçerek filtreleme ve raporlama yapabilirsiniz.
+        <strong>Gider Kalemi Nedir?</strong> Gider kategorilerini (Kira, Maaş, Yakıt, Stopaj vb.) buradan tanımlayın. 
+        Bu kalemler tüm işletmeler tarafından kullanılacaktır.
       </Alert>
 
       {/* Table */}
@@ -203,8 +167,7 @@ const ExpenseCategoriesPage: React.FC = () => {
               <TableRow>
                 <TableCell><strong>Kalem Adı</strong></TableCell>
                 <TableCell><strong>Açıklama</strong></TableCell>
-                <TableCell><strong>Otomatik Gider</strong></TableCell>
-                <TableCell align="center"><strong>Gider Sayısı</strong></TableCell>
+                <TableCell align="center"><strong>Kullanım Sayısı</strong></TableCell>
                 <TableCell align="center"><strong>Durum</strong></TableCell>
                 <TableCell align="right"><strong>İşlemler</strong></TableCell>
               </TableRow>
@@ -212,7 +175,7 @@ const ExpenseCategoriesPage: React.FC = () => {
             <TableBody>
               {categories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
                     <Typography variant="h6" color="text.secondary">
                       Henüz gider kalemi eklenmemiş
                     </Typography>
@@ -231,20 +194,6 @@ const ExpenseCategoriesPage: React.FC = () => {
                       <Typography variant="body2" color="text.secondary">
                         {category.description || '-'}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
-                      {category.autoCreateDay && category.defaultAmount ? (
-                        <Box>
-                          <Typography variant="body2" fontWeight={600} color="primary.main">
-                            Her ayın {category.autoCreateDay}. günü
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {category.defaultAmount.toLocaleString('tr-TR')} ₺
-                          </Typography>
-                        </Box>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">-</Typography>
-                      )}
                     </TableCell>
                     <TableCell align="center">
                       <Chip
@@ -307,80 +256,10 @@ const ExpenseCategoriesPage: React.FC = () => {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               multiline
-              rows={2}
+              rows={3}
+              placeholder="Bu gider kalemi hakkında kısa açıklama"
               InputProps={{ sx: { borderRadius: 2 } }}
             />
-
-            {/* Otomatik Gider Oluşturma */}
-            <Box sx={{ 
-              bgcolor: '#f0f7ff', 
-              p: 2, 
-              borderRadius: 2, 
-              border: '1px solid #2196f3',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2
-            }}>
-              <Typography variant="subtitle2" color="primary" fontWeight={600}>
-                🔄 Otomatik Gider Oluşturma (İsteğe Bağlı)
-              </Typography>
-              <Alert severity="info" sx={{ mb: 1 }}>
-                Bu gider kaleminin her ay otomatik oluşturulmasını istiyorsanız aşağıdaki alanları doldurun
-              </Alert>
-              
-              <TextField
-                fullWidth
-                label="Her Ayın Kaçında Oluşturulsun?"
-                type="number"
-                value={formData.autoCreateDay}
-                onChange={(e) => setFormData({ ...formData, autoCreateDay: e.target.value ? parseInt(e.target.value) : '' })}
-                inputProps={{ min: 1, max: 28 }}
-                placeholder="Örn: 5 (Her ayın 5'inde)"
-                helperText="1-28 arası bir gün seçin (boş bırakılabilir)"
-                InputProps={{ sx: { borderRadius: 2 } }}
-                onWheel={(e) => e.target instanceof HTMLElement && e.target.blur()}
-              />
-              
-              <TextField
-                fullWidth
-                label="Varsayılan Tutar (₺)"
-                type="number"
-                value={formData.defaultAmount}
-                onChange={(e) => setFormData({ ...formData, defaultAmount: e.target.value })}
-                inputProps={{ min: 0, step: 0.01 }}
-                placeholder="Örn: 15000"
-                helperText="Otomatik gün seçildiyse zorunludur"
-                InputProps={{ sx: { borderRadius: 2 } }}
-                onWheel={(e) => e.target instanceof HTMLElement && e.target.blur()}
-              />
-              
-              <FormControl fullWidth>
-                <InputLabel>Varsayılan Ödeme Yöntemi</InputLabel>
-                <Select
-                  value={formData.paymentMethod}
-                  label="Varsayılan Ödeme Yöntemi"
-                  onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="">Seçiniz</MenuItem>
-                  <MenuItem value="Nakit">Nakit</MenuItem>
-                  <MenuItem value="Kredi Kartı">Kredi Kartı</MenuItem>
-                  <MenuItem value="Banka Transferi">Banka Transferi</MenuItem>
-                  <MenuItem value="Çek">Çek</MenuItem>
-                </Select>
-              </FormControl>
-              
-              <TextField
-                fullWidth
-                label="Otomatik Açıklama"
-                value={formData.autoDescription}
-                onChange={(e) => setFormData({ ...formData, autoDescription: e.target.value })}
-                placeholder="Örn: Aylık kira ödemesi"
-                multiline
-                rows={2}
-                InputProps={{ sx: { borderRadius: 2 } }}
-              />
-            </Box>
 
             <FormControlLabel
               control={
