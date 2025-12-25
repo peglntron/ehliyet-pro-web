@@ -3,8 +3,10 @@ import {
   Box, Typography, Container, Paper, Tabs, Tab, Button,
   Table, TableBody, TableCell, TableContainer, TableHead, 
   TableRow, Chip, IconButton, Tooltip, TextField, Divider,
-  InputAdornment, Snackbar, Alert, Link, Grid, Avatar
+  InputAdornment, Link, Grid, Avatar, Dialog, DialogTitle, 
+  DialogContent, DialogActions
 } from '@mui/material';
+import { useSnackbar } from '../../contexts/SnackbarContext';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -25,11 +27,12 @@ import {
   Add as AddIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCompanyById } from './api/useCompanies';
+import { getCompanyById, addCompanyPhone, addCompanyIban, deleteCompanyPhone, deleteCompanyIban, updateCompany } from './api/useCompanies';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import LoadingIndicator from '../../components/LoadingIndicator';
-import UserCreateModal from './components/UserCreateModal';
+import UserManagement from './components/UserManagement';
 import type { Company } from './types/types';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Sekme panel component'i
 interface TabPanelProps {
@@ -61,6 +64,10 @@ function TabPanel(props: TabPanelProps) {
 const CompanyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Sadece ADMIN ve COMPANY_ADMIN değiştirebilir
+  const canEdit = user?.role === 'ADMIN' || user?.role === 'COMPANY_ADMIN';
   
   // Local state for admin company detail view
   const [company, setCompany] = useState<Company | null>(null);
@@ -69,39 +76,162 @@ const CompanyDetail: React.FC = () => {
   
   // Local state
   const [tabValue, setTabValue] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [userCreateModalOpen, setUserCreateModalOpen] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [ibanModalOpen, setIbanModalOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [phoneForm, setPhoneForm] = useState({ number: '', description: '' });
+  const [ibanForm, setIbanForm] = useState({ iban: '', bankName: '', accountHolder: '', description: '' });
+  const [locationForm, setLocationForm] = useState({ latitude: '', longitude: '', mapLink: '' });
+  const [saving, setSaving] = useState(false);
+  const { showSnackbar } = useSnackbar();
 
-  // Örnek kullanıcılar
-  const [users, setUsers] = useState([
-    { 
-      id: '1', 
-      name: 'Ahmet', 
-      surname: 'Yılmaz', 
-      phone: '05321234567', 
-      tcNo: '12345678901',
-      role: 'company_admin',
-      email:'asd@as.com',
-      status: 'active'
-    },
-    { 
-      id: '2', 
-      name: 'Mehmet', 
-      surname: 'Kaya', 
-      phone: '05321234569', 
-      tcNo: '12345678902',
-      role: 'company_admin',
-      email:'asd@as.com',
-      status: 'pending'
-    },
-  ]);
+  // IBAN formatlaması - TR00 0000 0000 0000 0000 0000 0000 00
+  const formatIban = (iban: string) => {
+    // Boşlukları ve TR'yi kaldır
+    const cleaned = iban.replace(/\s/g, '').replace(/^TR/i, '');
+    // TR + 2 hane + her 4 hanede bir boşluk
+    const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned;
+    return `TR${formatted}`;
+  };
 
   // Sekme değiştirme
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+  };
+
+  // Telefon kaydetme
+  const handleSavePhone = async () => {
+    if (!id) return;
+    
+    if (!phoneForm.number || !phoneForm.description) {
+      showSnackbar('Telefon numarası ve açıklama zorunludur', 'error');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await addCompanyPhone(id, phoneForm);
+      showSnackbar('Telefon numarası başarıyla eklendi', 'success');
+      setPhoneModalOpen(false);
+      setPhoneForm({ number: '', description: '' });
+      
+      // Şirket bilgilerini yenile
+      const updatedCompany = await getCompanyById(id);
+      setCompany(updatedCompany);
+    } catch (error) {
+      console.error('Error adding phone:', error);
+      showSnackbar('Telefon eklenirken hata oluştu', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // IBAN kaydetme
+  const handleSaveIban = async () => {
+    if (!id) return;
+    
+    if (!ibanForm.iban || !ibanForm.bankName || !ibanForm.accountHolder || !ibanForm.description) {
+      showSnackbar('Tüm alanlar zorunludur', 'error');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // IBAN'ı boşluksuz halde gönder
+      const cleanedIban = ibanForm.iban.replace(/\s/g, '');
+      await addCompanyIban(id, { ...ibanForm, iban: cleanedIban });
+      showSnackbar('IBAN bilgisi başarıyla eklendi', 'success');
+      setIbanModalOpen(false);
+      setIbanForm({ iban: '', bankName: '', accountHolder: '', description: '' });
+      
+      // Şirket bilgilerini yenile
+      const updatedCompany = await getCompanyById(id);
+      setCompany(updatedCompany);
+    } catch (error) {
+      console.error('Error adding IBAN:', error);
+      showSnackbar('IBAN eklenirken hata oluştu', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Telefon silme
+  const handleDeletePhone = async (phoneId: string) => {
+    if (!id) return;
+    
+    if (!confirm('Bu telefon numarasını silmek istediğinizden emin misiniz?')) {
+      return;
+    }
+
+    try {
+      await deleteCompanyPhone(phoneId);
+      showSnackbar('Telefon numarası başarıyla silindi', 'success');
+      
+      // Şirket bilgilerini yenile
+      const updatedCompany = await getCompanyById(id);
+      setCompany(updatedCompany);
+    } catch (error) {
+      console.error('Error deleting phone:', error);
+      showSnackbar('Telefon silinirken hata oluştu', 'error');
+    }
+  };
+
+  // IBAN silme
+  const handleDeleteIban = async (ibanId: string) => {
+    if (!id) return;
+    
+    if (!confirm('Bu IBAN bilgisini silmek istediğinizden emin misiniz?')) {
+      return;
+    }
+
+    try {
+      await deleteCompanyIban(ibanId);
+      showSnackbar('IBAN bilgisi başarıyla silindi', 'success');
+      
+      // Şirket bilgilerini yenile
+      const updatedCompany = await getCompanyById(id);
+      setCompany(updatedCompany);
+    } catch (error) {
+      console.error('Error deleting IBAN:', error);
+      showSnackbar('IBAN silinirken hata oluştu', 'error');
+    }
+  };
+
+  // Konum kaydetme
+  const handleSaveLocation = async () => {
+    if (!id) return;
+    
+    if (!locationForm.mapLink && (!locationForm.latitude || !locationForm.longitude)) {
+      showSnackbar('Google Maps linki veya enlem/boylam bilgisi gereklidir', 'error');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const locationData: any = {
+        mapLink: locationForm.mapLink
+      };
+      
+      // Enlem/boylam varsa ekle
+      if (locationForm.latitude && locationForm.longitude) {
+        locationData.latitude = parseFloat(locationForm.latitude);
+        locationData.longitude = parseFloat(locationForm.longitude);
+      }
+      
+      await updateCompany(id, { location: locationData });
+      showSnackbar('Konum bilgisi başarıyla eklendi', 'success');
+      setLocationModalOpen(false);
+      setLocationForm({ latitude: '', longitude: '', mapLink: '' });
+      
+      // Şirket bilgilerini yenile
+      const updatedCompany = await getCompanyById(id);
+      setCompany(updatedCompany);
+    } catch (error) {
+      console.error('Error adding location:', error);
+      showSnackbar('Konum eklenirken hata oluştu', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Fetch company details for admin view
@@ -110,6 +240,9 @@ const CompanyDetail: React.FC = () => {
       setLoading(true);
       getCompanyById(id)
         .then(data => {
+          console.log('=== COMPANY DATA FROM API ===', data);
+          console.log('Phones:', data.phones);
+          console.log('Ibans:', data.ibans);
           setCompany(data);
           setLoading(false);
         })
@@ -117,47 +250,14 @@ const CompanyDetail: React.FC = () => {
           console.error('Error fetching company details:', error);
           setError('Şirket bilgileri yüklenirken hata oluştu');
           setLoading(false);
-          setSnackbarMessage('Şirket bilgileri yüklenirken hata oluştu');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
+          showSnackbar('Şirket bilgileri yüklenirken hata oluştu', 'error');
         });
     }
   }, [id]);
 
-  // Kullanıcı arama
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.surname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.phone.includes(searchTerm) ||
-    (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
   // Kullanıcı oluşturulduğunda
   const handleUserCreated = (userId: string) => {
-    // Gerçek bir uygulamada burada kullanıcı listesini yenileyebiliriz
-    // Örnek olarak statik bir kullanıcı ekleyelim
-    const newUser = { 
-      id: userId, 
-      name: 'Yeni', 
-      surname: 'Yönetici', 
-      phone: '05321234570', 
-      tcNo: '12345678903',
-      role: 'company_admin',
-      status: 'pending'
-    };
-    
-    setUsers([...users, newUser]);
-    setSnackbarMessage('Kurum yöneticisi başarıyla oluşturuldu');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
-  };
-
-  // Snackbar kapatma
-  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setSnackbarOpen(false);
+    showSnackbar('Kurum yöneticisi başarıyla oluşturuldu', 'success');
   };
 
   // Tarih formatını düzenleme
@@ -219,7 +319,6 @@ const CompanyDetail: React.FC = () => {
       boxSizing: 'border-box',
       p: { xs: 2, md: 3 }
     }}>
-      <Container maxWidth="xl" sx={{ py: 3 }}>
         {/* Başlık ve breadcrumb */}
         <PageBreadcrumb />
         
@@ -287,9 +386,9 @@ const CompanyDetail: React.FC = () => {
             showBackground={true} 
           />
         ) : error ? (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Box sx={{ mt: 2, p: 2, bgcolor: 'error.light', color: 'error.dark', borderRadius: 1 }}>
             Şirket bilgileri yüklenirken hata oluştu: {error}
-          </Alert>
+          </Box>
         ) : (
           <>
             <Paper elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
@@ -421,126 +520,7 @@ const CompanyDetail: React.FC = () => {
               
               {/* Kullanıcılar Sekmesi */}
               <TabPanel value={tabValue} index={0}>
-                <Box sx={{ p: 3 }}>
-                  <Box 
-                    sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'center',
-                      mb: 3
-                    }}
-                  >
-                    <Typography variant="h6" fontWeight={600}>
-                      Kurum Yöneticisi Listesi
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      startIcon={<PersonAddIcon />}
-                      onClick={() => setUserCreateModalOpen(true)}
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        py: 1.2,
-                        px: 2.5,
-                      }}
-                    >
-                      Yeni Kurum Yöneticisi Ekle
-                    </Button>
-                  </Box>
-                  
-                  <Box sx={{ mb: 3 }}>
-                    <TextField
-                      fullWidth
-                      placeholder="Kullanıcı Ara..."
-                      variant="outlined"
-                      size="small"
-                      sx={{ 
-                        maxWidth: 400,
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 2
-                        }
-                      }}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon fontSize="small" />
-                          </InputAdornment>
-                        )
-                      }}
-                    />
-                  </Box>
-                  
-                  {filteredUsers.length === 0 ? (
-                    <Paper 
-                      variant="outlined" 
-                      sx={{ 
-                        p: 3, 
-                        textAlign: 'center',
-                        borderRadius: 2,
-                        bgcolor: 'grey.50'
-                      }}
-                    >
-                      <Typography color="text.secondary">
-                        Kullanıcı bulunamadı
-                      </Typography>
-                    </Paper>
-                  ) : (
-                    <TableContainer sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-                      <Table>
-                        <TableHead sx={{ bgcolor: 'grey.50' }}>
-                          <TableRow>
-                            <TableCell sx={{ fontWeight: 700 }}>Ad Soyad</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Telefon</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>T.C. Kimlik No</TableCell>
-                            <TableCell sx={{ fontWeight: 700 }}>Durum</TableCell>
-                            <TableCell align="right" sx={{ fontWeight: 700 }}>İşlemler</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {filteredUsers.map((user) => (
-                            <TableRow key={user.id} hover>
-                              <TableCell>
-                                {user.name} {user.surname}
-                              </TableCell>
-                              <TableCell>{user.phone}</TableCell>
-                              <TableCell>{user.tcNo || '-'}</TableCell>
-                              <TableCell>
-                                <Chip 
-                                  label={getStatusName(user.status)} 
-                                  size="small"
-                                  color={getStatusColor(user.status) as any}
-                                  sx={{ borderRadius: 1 }}
-                                />
-                              </TableCell>
-                              <TableCell align="right">
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                                  <Tooltip title="Görüntüle">
-                                    <IconButton size="small" color="primary">
-                                      <VisibilityIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Düzenle">
-                                    <IconButton size="small" color="primary">
-                                      <EditIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                  <Tooltip title="Sil">
-                                    <IconButton size="small" color="error">
-                                      <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                  </Tooltip>
-                                </Box>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  )}
-                </Box>
+                <UserManagement companyId={id || ''} />
               </TabPanel>
               
               {/* Konum Sekmesi */}
@@ -554,6 +534,8 @@ const CompanyDetail: React.FC = () => {
                     <Button
                       variant="contained"
                       startIcon={<AddIcon />}
+                      onClick={() => setPhoneModalOpen(true)}
+                      disabled={!canEdit}
                       sx={{ borderRadius: 2 }}
                     >
                       Telefon Ekle
@@ -577,11 +559,21 @@ const CompanyDetail: React.FC = () => {
                               }
                             }}
                           >
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                              <PhoneIcon color="primary" sx={{ mr: 1 }} />
-                              <Typography variant="subtitle1" fontWeight={600}>
-                                {phone.number}
-                              </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <PhoneIcon color="primary" sx={{ mr: 1 }} />
+                                <Typography variant="subtitle1" fontWeight={600}>
+                                  {phone.number}
+                                </Typography>
+                              </Box>
+                              <IconButton 
+                                size="small" 
+                                color="error"
+                                onClick={() => handleDeletePhone(phone.id)}
+                                disabled={!canEdit}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
                             </Box>
                             <Typography variant="body2" color="text.secondary">
                               {phone.description}
@@ -591,9 +583,9 @@ const CompanyDetail: React.FC = () => {
                       ))}
                     </Grid>
                   ) : (
-                    <Alert severity="info">
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
                       Henüz telefon numarası eklenmemiş.
-                    </Alert>
+                    </Typography>
                   )}
                 </Box>
               </TabPanel>
@@ -608,6 +600,8 @@ const CompanyDetail: React.FC = () => {
                     <Button
                       variant="contained"
                       startIcon={<AddIcon />}
+                      onClick={() => setIbanModalOpen(true)}
+                      disabled={!canEdit}
                       sx={{ borderRadius: 2 }}
                     >
                       IBAN Ekle
@@ -631,14 +625,24 @@ const CompanyDetail: React.FC = () => {
                               }
                             }}
                           >
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                              <BankIcon color="primary" sx={{ mr: 1 }} />
-                              <Typography variant="subtitle1" fontWeight={600}>
-                                {iban.bankName}
-                              </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <BankIcon color="primary" sx={{ mr: 1 }} />
+                                <Typography variant="subtitle1" fontWeight={600}>
+                                  {iban.bankName}
+                                </Typography>
+                              </Box>
+                              <IconButton 
+                                size="small" 
+                                color="error"
+                                onClick={() => handleDeleteIban(iban.id)}
+                                disabled={!canEdit}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
                             </Box>
                             <Typography variant="body2" sx={{ fontFamily: 'monospace', mb: 1 }}>
-                              {iban.iban}
+                              {formatIban(iban.iban)}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                               <strong>Hesap Sahibi:</strong> {iban.accountHolder}
@@ -651,9 +655,9 @@ const CompanyDetail: React.FC = () => {
                       ))}
                     </Grid>
                   ) : (
-                    <Alert severity="info">
+                    <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
                       Henüz IBAN bilgisi eklenmemiş.
-                    </Alert>
+                    </Typography>
                   )}
                 </Box>
               </TabPanel>
@@ -667,69 +671,21 @@ const CompanyDetail: React.FC = () => {
                   
                   {company.location ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {/* Google Maps linki varsa göster */}
-                      {company.location.mapLink && (
-                        <Alert severity="info" sx={{ borderRadius: 2 }}>
-                          <Typography variant="body2">
-                            Google Maps'te görüntülemek için{' '}
-                            <Link 
-                              href={company.location.mapLink} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              sx={{ fontWeight: 600 }}
-                            >
-                              buraya tıklayın
-                            </Link>
-                          </Typography>
-                        </Alert>
-                      )}
-                      
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          height: 400,
+                      <Button 
+                        variant="contained"
+                        startIcon={<Map />}
+                        href={company.location.mapLink || `https://www.google.com/maps/search/?api=1&query=${company.location.latitude},${company.location.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{ 
                           borderRadius: 2,
-                          overflow: 'hidden',
-                          position: 'relative'
+                          textTransform: 'none',
+                          fontWeight: 600,
+                          py: 1.5
                         }}
                       >
-                        {/* Harita Burada Gösterilecek */}
-                        <Box 
-                          sx={{ 
-                            width: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: '#f5f5f5',
-                            backgroundImage: 'url("https://maps.googleapis.com/maps/api/staticmap?center=' + 
-                              company.location.latitude + ',' + company.location.longitude + 
-                              '&zoom=14&size=800x400&markers=color:red%7C' + 
-                              company.location.latitude + ',' + company.location.longitude + 
-                              '&key=YOUR_API_KEY")',
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                          }}
-                        />
-                        
-                        <Button 
-                          variant="contained"
-                          startIcon={<Map />}
-                          href={company.location.mapLink || `https://www.google.com/maps/search/?api=1&query=${company.location.latitude},${company.location.longitude}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          sx={{ 
-                            position: 'absolute',
-                            bottom: 16,
-                            right: 16,
-                            borderRadius: 2,
-                            textTransform: 'none',
-                            fontWeight: 600
-                          }}
-                        >
-                          Google Maps'te Aç
-                        </Button>
-                      </Paper>
+                        Google Maps'te Aç
+                      </Button>
                     </Box>
                   ) : (
                     <Paper 
@@ -747,7 +703,8 @@ const CompanyDetail: React.FC = () => {
                       <Button
                         variant="outlined"
                         sx={{ mt: 2, borderRadius: 2 }}
-                        onClick={() => navigate(`/company/edit/${id}`)}
+                        onClick={() => setLocationModalOpen(true)}
+                        disabled={!canEdit}
                       >
                         Konum Ekle
                       </Button>
@@ -770,32 +727,142 @@ const CompanyDetail: React.FC = () => {
             </Paper>
           </>
         )}
-      </Container>
-      
-      {/* Kullanıcı Oluşturma Modalı */}
-      <UserCreateModal 
-        open={userCreateModalOpen}
-        onClose={() => setUserCreateModalOpen(false)}
-        onSuccess={handleUserCreated}
-        companyId={id || ''}
-      />
-      
-      {/* Bildirim Snackbar */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbarSeverity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+
+      {/* Telefon Ekle Modal */}
+      <Dialog open={phoneModalOpen} onClose={() => setPhoneModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Telefon Numarası Ekle</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Telefon Numarası"
+              placeholder="0212 123 45 67"
+              fullWidth
+              value={phoneForm.number}
+              onChange={(e) => setPhoneForm({ ...phoneForm, number: e.target.value })}
+            />
+            <TextField
+              label="Açıklama"
+              placeholder="Örn: Santral, Mobil, Faks"
+              fullWidth
+              value={phoneForm.description}
+              onChange={(e) => setPhoneForm({ ...phoneForm, description: e.target.value })}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPhoneModalOpen(false)}>İptal</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSavePhone}
+            disabled={saving}
+          >
+            {saving ? 'Kaydediliyor...' : 'Kaydet'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* IBAN Ekle Modal */}
+      <Dialog open={ibanModalOpen} onClose={() => setIbanModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>IBAN Bilgisi Ekle</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Banka Adı"
+              placeholder="Örn: Ziraat Bankası"
+              fullWidth
+              value={ibanForm.bankName}
+              onChange={(e) => setIbanForm({ ...ibanForm, bankName: e.target.value })}
+            />
+            <TextField
+              label="IBAN"
+              placeholder="TR00 0000 0000 0000 0000 0000 0000 00"
+              fullWidth
+              value={ibanForm.iban}
+              onChange={(e) => {
+                let value = e.target.value.replace(/\s/g, '').toUpperCase();
+                // TR ekle eğer yoksa
+                if (!value.startsWith('TR')) {
+                  value = 'TR' + value.replace(/^TR/i, '');
+                }
+                // Formatla: TR + her 4 karakterde bir boşluk
+                const cleaned = value.replace(/^TR/i, '');
+                const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned;
+                setIbanForm({ ...ibanForm, iban: `TR${formatted}` });
+              }}
+            />
+            <TextField
+              label="Hesap Sahibi"
+              placeholder="Ad Soyad / Şirket Adı"
+              fullWidth
+              value={ibanForm.accountHolder}
+              onChange={(e) => setIbanForm({ ...ibanForm, accountHolder: e.target.value })}
+            />
+            <TextField
+              label="Açıklama"
+              placeholder="Örn: Ana Hesap, Taksit Hesabı"
+              fullWidth
+              value={ibanForm.description}
+              onChange={(e) => setIbanForm({ ...ibanForm, description: e.target.value })}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIbanModalOpen(false)}>İptal</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSaveIban}
+            disabled={saving}
+          >
+            {saving ? 'Kaydediliyor...' : 'Kaydet'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Konum Ekle Modal */}
+      <Dialog open={locationModalOpen} onClose={() => setLocationModalOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Konum Bilgisi Ekle</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Google Maps Linki"
+              placeholder="https://maps.google.com/..."
+              fullWidth
+              value={locationForm.mapLink}
+              onChange={(e) => setLocationForm({ ...locationForm, mapLink: e.target.value })}
+              helperText="Google Maps'ten konumu kopyalayıp yapıştırabilirsiniz"
+            />
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+              veya
+            </Typography>
+            <TextField
+              label="Enlem (Latitude) - Opsiyonel"
+              placeholder="Örn: 38.4192"
+              fullWidth
+              type="number"
+              value={locationForm.latitude}
+              onChange={(e) => setLocationForm({ ...locationForm, latitude: e.target.value })}
+            />
+            <TextField
+              label="Boylam (Longitude) - Opsiyonel"
+              placeholder="Örn: 27.1287"
+              fullWidth
+              type="number"
+              value={locationForm.longitude}
+              onChange={(e) => setLocationForm({ ...locationForm, longitude: e.target.value })}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLocationModalOpen(false)}>İptal</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSaveLocation}
+            disabled={saving}
+          >
+            {saving ? 'Kaydediliyor...' : 'Kaydet'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

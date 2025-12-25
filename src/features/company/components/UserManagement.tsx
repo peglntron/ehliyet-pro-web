@@ -2,26 +2,24 @@ import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Button, TextField, Paper,
   Table, TableBody, TableCell, TableContainer, TableHead, 
-  TableRow, Chip, IconButton, Tooltip, InputAdornment,
-  Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText
+  TableRow, Chip, IconButton, Tooltip, InputAdornment
 } from '@mui/material';
 import {
   Search as SearchIcon,
   PersonAdd as PersonAddIcon,
   ToggleOff as ToggleOffIcon,
   ToggleOn as ToggleOnIcon,
-  Delete as DeleteIcon,
   VpnKey as VpnKeyIcon
 } from '@mui/icons-material';
 import UserCreateModal from './UserCreateModal';
 import { 
   getCompanyUsers, 
-  deleteCompanyUser, 
   updateCompanyUser,
   resetUserPassword,
   type CompanyUser 
 } from '../api/useCompanyUsers';
 import { formatDate, formatDateTime } from '../../../utils/dateFormat';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface UserManagementProps {
   companyId: string;
@@ -29,12 +27,11 @@ interface UserManagementProps {
 }
 
 const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreated }) => {
+  const { user: currentUser } = useAuth();
   const [userCreateModalOpen, setUserCreateModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState<CompanyUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<CompanyUser | null>(null);
 
   // Kullanıcıları yükle
   useEffect(() => {
@@ -71,36 +68,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
     }
   };
 
-  // Kullanıcı silme
-  const handleDeleteClick = (user: CompanyUser) => {
-    if (user.role === 'INSTRUCTOR') {
-      alert('Eğitmen kullanıcıları "Eğitmenler" sekmesinden yönetilmelidir.');
-      return;
-    }
-    setUserToDelete(user);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!userToDelete) return;
-    
-    try {
-      await deleteCompanyUser(userToDelete.id);
-      loadUsers(); // Listeyi yenile
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-    } catch (err) {
-      console.error('Error deleting user:', err);
-      alert('Kullanıcı silinirken hata oluştu');
-    }
-  };
-
   // Kullanıcı durumunu değiştir
   const handleToggleStatus = async (user: CompanyUser) => {
-    if (user.role === 'INSTRUCTOR') {
-      alert('Eğitmen durumu "Eğitmenler" sekmesinden değiştirilmelidir.');
-      return;
-    }
     try {
       await updateCompanyUser(user.id, { isActive: !user.isActive });
       loadUsers(); // Listeyi yenile
@@ -149,7 +118,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
   }
 
   return (
-    <Box>
+    <Box sx={{ p: 3 }}>
       {/* Başlık ve Arama */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -217,18 +186,12 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
                     {formatDateTime(user.lastLogin)}
                   </TableCell>
                   <TableCell align="center">
-                    {user.role === 'INSTRUCTOR' ? (
-                      <Tooltip title="Eğitmen kaydı 'Eğitmenler' sekmesinden yönetilir">
-                        <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                          Eğitmenler sekmesinden yönetilir
-                        </Typography>
-                      </Tooltip>
-                    ) : (
-                      <>
-                        <Tooltip title="Şifre Sıfırla">
+                    <>
+                      <Tooltip title="Şifre Sıfırla">
                           <IconButton 
                             size="small" 
                             onClick={() => handleResetPassword(user)}
+                            disabled={currentUser?.role !== 'ADMIN' && currentUser?.id === user.id}
                             sx={{ color: '#3b82f6' }}
                           >
                             <VpnKeyIcon fontSize="small" />
@@ -238,22 +201,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
                           <IconButton 
                             size="small" 
                             onClick={() => handleToggleStatus(user)}
+                            disabled={currentUser?.role !== 'ADMIN' && currentUser?.id === user.id}
                             sx={{ color: user.isActive ? '#10b981' : '#6b7280' }}
                           >
                             {user.isActive ? <ToggleOnIcon fontSize="small" /> : <ToggleOffIcon fontSize="small" />}
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Sil">
-                          <IconButton 
-                            size="small" 
-                            onClick={() => handleDeleteClick(user)}
-                            sx={{ color: '#ef4444' }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
                       </>
-                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -269,28 +223,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
         onUserCreated={handleUserCreated}
         companyId={companyId}
       />
-
-      {/* Silme Onay Dialogu */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Kullanıcıyı Sil</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {userToDelete && (
-              <>
-                <strong>{userToDelete.firstName} {userToDelete.lastName}</strong> kullanıcısını silmek istediğinizden emin misiniz?
-                <br />
-                Bu işlem geri alınamaz.
-              </>
-            )}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>İptal</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Sil
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };

@@ -13,7 +13,7 @@ export interface Vehicle {
   chassisNumber?: string;
   engineNumber?: string;
   transmissionType: 'MANUAL' | 'AUTOMATIC';
-  fuelType: 'DIESEL' | 'GASOLINE' | 'HYBRID' | 'ELECTRIC' | 'LPG';
+  fuelType: 'DIESEL' | 'PETROL' | 'HYBRID' | 'ELECTRIC' | 'LPG';
   engineCapacity?: string;
   horsePower?: number;
   currentKm: number;

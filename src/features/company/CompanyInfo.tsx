@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Snackbar, Alert, Tabs, Tab, Avatar, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Tabs, Tab, Avatar, CircularProgress } from '@mui/material';
 import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, Business as BusinessIcon, CloudUpload as UploadIcon } from '@mui/icons-material';
 import { useCompanyInfo, useUpdateCompanyInfo, useCompanyPhones, useCompanyIbans } from './api/useCompanyInfo';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
+import { useSnackbar } from '../../contexts/SnackbarContext';
 import CompanyBasicInfo from './components/CompanyBasicInfo';
 import CompanyAddressInfo from './components/CompanyAddressInfo';
 import CompanyDescriptionInfo from './components/CompanyDescriptionInfo';
@@ -32,6 +33,7 @@ const CompanyInfo: React.FC = () => {
   const { updateCompanyInfo, loading: updateLoading } = useUpdateCompanyInfo();
   const { addPhone, updatePhone, deletePhone } = useCompanyPhones();
   const { addIban, updateIban, deleteIban } = useCompanyIbans();
+  const { showSnackbar } = useSnackbar();
 
   // State
   const [formData, setFormData] = useState<any>({});
@@ -43,9 +45,6 @@ const CompanyInfo: React.FC = () => {
   const [ibanForm, setIbanForm] = useState<IbanFormData>({ iban: '', bankName: '', accountHolder: '', description: '' });
   const [editingPhoneId, setEditingPhoneId] = useState<string | null>(null);
   const [editingIbanId, setEditingIbanId] = useState<string | null>(null);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info'>('info');
   const [currentTab, setCurrentTab] = useState(0);
   const [logoUploading, setLogoUploading] = useState(false);
 
@@ -86,16 +85,12 @@ const CompanyInfo: React.FC = () => {
   const handlePhoneDelete = async (id: string) => {
     try {
       await deletePhone(id);
-      setSnackbarMessage('Telefon numarası silindi!');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
+      showSnackbar('Telefon numarası silindi!', 'success');
       refetch();
     } catch (error: any) {
       const errorMessage = error.message || 'Silme sırasında hata oluştu!';
       console.error('Phone delete error:', error);
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -103,21 +98,17 @@ const CompanyInfo: React.FC = () => {
     try {
       if (editingPhoneId) {
         await updatePhone(editingPhoneId, phoneForm);
-        setSnackbarMessage('Telefon numarası güncellendi!');
+        showSnackbar('Telefon numarası güncellendi!', 'success');
       } else {
         await addPhone(phoneForm);
-        setSnackbarMessage('Telefon numarası eklendi!');
+        showSnackbar('Telefon numarası eklendi!', 'success');
       }
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
       setPhoneDialog(false);
       refetch();
     } catch (error: any) {
       const errorMessage = error.message || 'İşlem sırasında hata oluştu!';
       console.error('Phone save error:', error);
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -141,16 +132,12 @@ const CompanyInfo: React.FC = () => {
   const handleIbanDelete = async (id: string) => {
     try {
       await deleteIban(id);
-      setSnackbarMessage('IBAN bilgisi silindi!');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
+      showSnackbar('IBAN bilgisi silindi!', 'success');
       refetch();
     } catch (error: any) {
       const errorMessage = error.message || 'Silme sırasında hata oluştu!';
       console.error('IBAN delete error:', error);
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -158,21 +145,17 @@ const CompanyInfo: React.FC = () => {
     try {
       if (editingIbanId) {
         await updateIban(editingIbanId, ibanForm);
-        setSnackbarMessage('IBAN bilgisi güncellendi!');
+        showSnackbar('IBAN bilgisi güncellendi!', 'success');
       } else {
         await addIban(ibanForm);
-        setSnackbarMessage('IBAN bilgisi eklendi!');
+        showSnackbar('IBAN bilgisi eklendi!', 'success');
       }
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
       setIbanDialog(false);
       refetch();
     } catch (error: any) {
       const errorMessage = error.message || 'İşlem sırasında hata oluştu!';
       console.error('IBAN save error:', error);
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar(errorMessage, 'error');
     }
   };
 
@@ -182,17 +165,13 @@ const CompanyInfo: React.FC = () => {
 
     // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setSnackbarMessage('Dosya boyutu 5MB\'dan küçük olmalıdır');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar('Dosya boyutu 5MB\'dan küçük olmalıdır', 'error');
       return;
     }
 
     // Dosya tipi kontrolü
     if (!file.type.startsWith('image/')) {
-      setSnackbarMessage('Sadece resim dosyaları yüklenebilir');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar('Sadece resim dosyaları yüklenebilir', 'error');
       return;
     }
 
@@ -215,17 +194,12 @@ const CompanyInfo: React.FC = () => {
 
       if (result.success) {
         setFormData((prev: any) => ({ ...prev, logo: result.data.logoUrl }));
-        setSnackbarMessage('Logo başarıyla yüklendi');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
-        refetch();
+        showSnackbar('Logo seçildi. Kaydetmek için Güncelle butonuna basın', 'info');
       } else {
         throw new Error(result.message || 'Logo yüklenemedi');
       }
     } catch (error) {
-      setSnackbarMessage('Logo yüklenirken hata oluştu');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar('Logo yüklenirken hata oluştu', 'error');
     } finally {
       setLogoUploading(false);
     }
@@ -257,14 +231,10 @@ const CompanyInfo: React.FC = () => {
       // Header'daki logo'yu güncelle
       window.dispatchEvent(new CustomEvent('logoUpdated'));
       
-      setSnackbarMessage('Şirket bilgileri başarıyla güncellendi!');
-      setSnackbarSeverity('success');
-      setSnackbarOpen(true);
+      showSnackbar('Şirket bilgileri başarıyla güncellendi!', 'success');
       refetch();
     } catch (error) {
-      setSnackbarMessage('Güncelleme sırasında hata oluştu!');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar('Güncelleme sırasında hata oluştu!', 'error');
     }
   };
 
@@ -716,28 +686,14 @@ const CompanyInfo: React.FC = () => {
         open={addUserDialog}
         onClose={() => setAddUserDialog(false)}
         onSuccess={() => {
-          setSnackbarMessage('Kullanıcı başarıyla eklendi! SMS ile giriş bilgileri gönderildi.');
-          setSnackbarSeverity('success');
-          setSnackbarOpen(true);
+          showSnackbar('Kullanıcı başarıyla eklendi! SMS ile giriş bilgileri gönderildi.', 'success');
+        }}
+        onUserAdded={() => {
+          setAddUserDialog(false);
+          showSnackbar('Kullanıcı başarıyla eklendi!', 'success');
           refetch();
         }}
       />
-
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity={snackbarSeverity}
-          sx={{ width: '100%' }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

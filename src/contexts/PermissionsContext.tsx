@@ -66,9 +66,12 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   useEffect(() => {
-    console.log('[PermissionsContext] useEffect triggered, user changed:', user?.role);
-    fetchPermissions();
-  }, [user]);
+    console.log('[PermissionsContext] useEffect triggered, user changed:', user?.role, user?.id);
+    // User tam yüklenene kadar bekle
+    if (user !== undefined) {
+      fetchPermissions();
+    }
+  }, [user?.id, user?.role]); // user.id ve role değişince tetikle
 
   return (
     <PermissionsContext.Provider value={{ 

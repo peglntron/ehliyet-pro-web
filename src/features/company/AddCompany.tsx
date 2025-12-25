@@ -157,7 +157,7 @@ const AddCompany: React.FC = () => {
     if (!formData.province) newErrors.province = 'İl seçimi gereklidir';
     if (!formData.district) newErrors.district = 'İlçe seçimi gereklidir';
     if (!formData.address) newErrors.address = 'Adres gereklidir';
-    if (!formData.owner) newErrors.owner = 'Yetkili kişi adı gereklidir';
+    if (!formData.owner) newErrors.owner = 'Şirket sahibi adı gereklidir';
     
     // Kullanıcı bilgileri - ZORUNLU
     if (!formData.userPhone) newErrors.userPhone = 'Kullanıcı telefon numarası gereklidir';

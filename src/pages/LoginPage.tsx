@@ -53,19 +53,20 @@ const LoginPage: React.FC = () => {
   useEffect(() => {
     // User varsa VE permissions yüklenmiş ise (loading false ise) yönlendir
     if (user && !permissionsLoading) {
+      // ADMIN için permissions beklemeden direkt yönlendir (tüm izinleri var)
       // COMPANY_ADMIN için ekstra kontrol: permissions gerçekten yüklendi mi?
-      // Eğer COMPANY_ADMIN ise canViewDashboard mutlaka true olmalı
       if (user.role === 'COMPANY_ADMIN' && !permissions.canViewDashboard) {
         console.log('[LoginPage] COMPANY_ADMIN but permissions not loaded yet, waiting...');
         return; // Henüz permissions yüklenmemiş, bekle
       }
       
-      // Önceki sayfa kontrolü - eğer from "/" ise veya login sayfasıysa, default route'a git
+      // Önceki sayfa kontrolü - rol-specific dashboard'ları ignore et
       const fromPath = (location.state as any)?.from?.pathname;
       console.log('[LoginPage] fromPath:', fromPath, 'User role:', user.role);
       
-      // Eğer from "/" veya "/login" ise, role-based default'a git
-      const shouldUseDefault = !fromPath || fromPath === '/' || fromPath === '/login';
+      // Rol-specific dashboard'lar ve login/root sayfaları ignore edilmeli
+      const roleDashboards = ['/company/dashboard', '/admin/dashboard', '/instructor/dashboard'];
+      const shouldUseDefault = !fromPath || fromPath === '/' || fromPath === '/login' || roleDashboards.includes(fromPath);
       const targetPath = shouldUseDefault 
         ? getDefaultRouteForRole(user.role, permissions)
         : fromPath;

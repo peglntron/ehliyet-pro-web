@@ -1,10 +1,7 @@
-export type ExpenseCategoryType = 'RECURRING' | 'ONE_TIME';
-
 export interface ExpenseCategory {
   id: string;
   companyId: string;
   name: string;
-  type: ExpenseCategoryType;
   description?: string;
   isActive: boolean;
   autoCreateDay?: number; // 1-28, her ayın bu günü otomatik gider oluştur
@@ -20,7 +17,6 @@ export interface ExpenseCategory {
 
 export interface ExpenseCategoryFormData {
   name: string;
-  type: ExpenseCategoryType;
   description: string;
   isActive: boolean;
   autoCreateDay: number | '';
@@ -68,7 +64,6 @@ export interface ExpenseStats {
 export interface CategoryStats {
   categoryId: string;
   categoryName: string;
-  categoryType: ExpenseCategoryType;
   totalAmount: number;
   count: number;
 }

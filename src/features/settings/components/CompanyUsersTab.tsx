@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box, Typography, Paper, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Chip, Avatar, CircularProgress, Alert, Button
+  TableHead, TableRow, Chip, Avatar, CircularProgress, Alert, Button,
+  IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogContentText,
+  DialogActions, TextField
 } from '@mui/material';
-import { Person as PersonIcon, Add as AddIcon } from '@mui/icons-material';
+import {
+  Person as PersonIcon,
+  Add as AddIcon,
+  Block as BlockIcon,
+  CheckCircle as CheckCircleIcon,
+  VpnKey as VpnKeyIcon,
+  ContentCopy as ContentCopyIcon
+} from '@mui/icons-material';
 import { apiClient } from '../../../utils/api';
+import { useSnackbar } from '../../../contexts/SnackbarContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface CompanyUser {
   id: string;
@@ -28,6 +39,22 @@ const CompanyUsersTab: React.FC<CompanyUsersTabProps> = ({ onAddUser }) => {
   const [users, setUsers] = useState<CompanyUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { showSnackbar } = useSnackbar();
+  const { user: currentUser } = useAuth();
+  
+  // Password reset dialog
+  const [resetPasswordDialog, setResetPasswordDialog] = useState<{
+    open: boolean;
+    userId: string | null;
+    userName: string;
+    newPassword: string;
+  }>({
+    open: false,
+    userId: null,
+    userName: '',
+    newPassword: ''
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -62,6 +89,64 @@ const CompanyUsersTab: React.FC<CompanyUsersTabProps> = ({ onAddUser }) => {
     if (role === 'COMPANY_ADMIN') return 'primary';
     if (role === 'INSTRUCTOR') return 'info';
     return 'secondary';
+  };
+
+  const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      setActionLoading(userId);
+      const response = await apiClient.patch(`/users/${userId}/toggle-status`);
+      
+      if (response.success) {
+        // Update local state
+        setUsers(users.map(u => 
+          u.id === userId ? { ...u, isActive: !currentStatus } : u
+        ));
+        showSnackbar(response.message || `Kullanıcı ${!currentStatus ? 'aktif' : 'pasif'} edildi`, 'success');
+      } else {
+        throw new Error(response.message || 'İşlem başarısız');
+      }
+    } catch (err: any) {
+      showSnackbar(err.message || 'Kullanıcı durumu değiştirilirken hata oluştu', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleResetPassword = async (userId: string, userName: string) => {
+    try {
+      setActionLoading(userId);
+      const response = await apiClient.post(`/users/${userId}/reset-password`);
+      
+      if (response.success && response.data?.newPassword) {
+        setResetPasswordDialog({
+          open: true,
+          userId,
+          userName,
+          newPassword: response.data.newPassword
+        });
+        showSnackbar('Şifre başarıyla sıfırlandı', 'success');
+      } else {
+        throw new Error(response.message || 'İşlem başarısız');
+      }
+    } catch (err: any) {
+      showSnackbar(err.message || 'Şifre sıfırlanırken hata oluştu', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCopyPassword = () => {
+    navigator.clipboard.writeText(resetPasswordDialog.newPassword);
+    showSnackbar('Şifre panoya kopyalandı', 'success');
+  };
+
+  const handleClosePasswordDialog = () => {
+    setResetPasswordDialog({
+      open: false,
+      userId: null,
+      userName: '',
+      newPassword: ''
+    });
   };
 
   if (loading) {
@@ -109,12 +194,13 @@ const CompanyUsersTab: React.FC<CompanyUsersTabProps> = ({ onAddUser }) => {
                 <TableCell><strong>Rol</strong></TableCell>
                 <TableCell><strong>Durum</strong></TableCell>
                 <TableCell><strong>Son Giriş</strong></TableCell>
+                <TableCell align="center"><strong>İşlemler</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                     <Typography variant="h6" color="text.secondary">
                       Kullanıcı bulunamadı
                     </Typography>
@@ -171,6 +257,34 @@ const CompanyUsersTab: React.FC<CompanyUsersTabProps> = ({ onAddUser }) => {
                           : 'Hiç giriş yapmadı'}
                       </Typography>
                     </TableCell>
+                    <TableCell align="center">
+                      <Box display="flex" gap={1} justifyContent="center">
+                        <Tooltip title={user.isActive ? 'Pasife Al' : 'Aktif Et'}>
+                          <span>
+                            <IconButton
+                              size="small"
+                              color={user.isActive ? 'warning' : 'success'}
+                              onClick={() => handleToggleStatus(user.id, user.isActive)}
+                              disabled={actionLoading === user.id || (currentUser?.role !== 'ADMIN' && currentUser?.id === user.id)}
+                            >
+                              {user.isActive ? <BlockIcon /> : <CheckCircleIcon />}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title="Şifre Yenile">
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => handleResetPassword(user.id, `${user.firstName} ${user.lastName}`)}
+                              disabled={actionLoading === user.id || (currentUser?.role !== 'ADMIN' && currentUser?.id === user.id)}
+                            >
+                              <VpnKeyIcon />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -185,6 +299,43 @@ const CompanyUsersTab: React.FC<CompanyUsersTabProps> = ({ onAddUser }) => {
           {users.filter(u => !u.isActive).length > 0 && ` (${users.filter(u => !u.isActive).length} pasif)`}
         </Alert>
       </Box>
+
+      {/* Password Reset Dialog */}
+      <Dialog open={resetPasswordDialog.open} onClose={handleClosePasswordDialog}>
+        <DialogTitle>Şifre Yenilendi</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            <strong>{resetPasswordDialog.userName}</strong> kullanıcısı için yeni şifre oluşturuldu.
+            Lütfen bu şifreyi kullanıcıya ileterek güvenli bir şekilde saklamasını sağlayın.
+          </DialogContentText>
+          <TextField
+            fullWidth
+            label="Yeni Şifre"
+            value={resetPasswordDialog.newPassword}
+            InputProps={{
+              readOnly: true,
+              endAdornment: (
+                <IconButton onClick={handleCopyPassword} edge="end">
+                  <ContentCopyIcon />
+                </IconButton>
+              )
+            }}
+            variant="outlined"
+            sx={{ mb: 1 }}
+          />
+          <Alert severity="warning" sx={{ mt: 2 }}>
+            Bu şifre sadece bir kez gösterilmektedir. Lütfen kopyalayın veya not edin.
+          </Alert>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCopyPassword} startIcon={<ContentCopyIcon />}>
+            Kopyala
+          </Button>
+          <Button onClick={handleClosePasswordDialog} variant="contained">
+            Kapat
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -35,9 +35,9 @@ const AddEditVehicle: React.FC = () => {
     year: new Date().getFullYear(),
     color: '',
     transmissionType: 'MANUAL' as 'MANUAL' | 'AUTOMATIC',
-    fuelType: 'DIESEL' as 'DIESEL' | 'GASOLINE' | 'HYBRID' | 'ELECTRIC' | 'LPG',
+    fuelType: 'DIESEL' as 'DIESEL' | 'PETROL' | 'HYBRID' | 'ELECTRIC' | 'LPG',
     status: 'AVAILABLE' as 'AVAILABLE' | 'ASSIGNED' | 'MAINTENANCE' | 'REPAIR' | 'INACTIVE',
-    currentKm: 0,
+    currentKm: '' as string | number,
     trafficInsuranceStart: null as Date | null,
     trafficInsuranceEnd: null as Date | null,
     kaskoInsuranceStart: null as Date | null,
@@ -291,7 +291,7 @@ const AddEditVehicle: React.FC = () => {
                 label="Yakıt Tipi"
               >
                 <MenuItem value="DIESEL">Dizel</MenuItem>
-                <MenuItem value="GASOLINE">Benzin</MenuItem>
+                <MenuItem value="PETROL">Benzin</MenuItem>
                 <MenuItem value="HYBRID">Hibrit</MenuItem>
                 <MenuItem value="ELECTRIC">Elektrik</MenuItem>
                 <MenuItem value="LPG">LPG</MenuItem>
@@ -300,11 +300,17 @@ const AddEditVehicle: React.FC = () => {
 
             <TextField
               fullWidth
-              type="number"
               label="Mevcut KM"
               value={formData.currentKm}
-              onChange={(e) => handleInputChange('currentKm', parseInt(e.target.value) || 0)}
-              onWheel={(e) => e.target instanceof HTMLElement && e.target.blur()}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, ''); // Sadece rakam
+                handleInputChange('currentKm', value === '' ? '' : parseInt(value));
+              }}
+              placeholder="0"
+              inputProps={{
+                inputMode: 'numeric',
+                pattern: '[0-9]*'
+              }}
             />
 
             {isEdit && (

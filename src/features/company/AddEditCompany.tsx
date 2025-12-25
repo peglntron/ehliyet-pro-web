@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Typography, Button, Snackbar, Alert, Paper, Divider, Tabs, Tab
+  Box, Typography, Button, Paper, Divider, Tabs, Tab
 } from '@mui/material';
+import { useSnackbar } from '../../contexts/SnackbarContext';
 import {
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
@@ -46,6 +47,7 @@ const AddEditCompany: React.FC = () => {
     registrationDate: string;
     licenseEndDate: string;
     owner: string;
+    logo?: string;
     location: {
       latitude: string;
       longitude: string;
@@ -80,10 +82,7 @@ const AddEditCompany: React.FC = () => {
     owner?: string;
   }>({});
   
-  // Snackbar state
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
+  const { showSnackbar } = useSnackbar();
   
   // Tab değişimi
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -105,6 +104,7 @@ const AddEditCompany: React.FC = () => {
             registrationDate: company.registrationDate ? new Date(company.registrationDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             licenseEndDate: company.licenseEndDate ? new Date(company.licenseEndDate).toISOString().split('T')[0] : '',
             owner: company.owner || '',
+            logo: company.logo || undefined,
             location: company.location ? {
               latitude: company.location.latitude?.toString() || '',
               longitude: company.location.longitude?.toString() || '',
@@ -120,9 +120,7 @@ const AddEditCompany: React.FC = () => {
         })
         .catch(error => {
           console.error('Error loading company:', error);
-          setSnackbarMessage('Sürücü kursu yüklenirken hata oluştu!');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
+          showSnackbar('Sürücü kursu yüklenirken hata oluştu!', 'error');
           setLoading(false);
         });
     }
@@ -156,9 +154,7 @@ const AddEditCompany: React.FC = () => {
     description?: string;
   }) => {
     if (!id) {
-      setSnackbarMessage('Önce işletmeyi kaydedin');
-      setSnackbarSeverity('warning');
-      setSnackbarOpen(true);
+      showSnackbar('Önce işletmeyi kaydedin', 'warning');
       return;
     }
 
@@ -176,18 +172,15 @@ const AddEditCompany: React.FC = () => {
       
       // Başarı mesajı göster
       const isRenewal = Boolean(formData.licenseEndDate);
-      setSnackbarMessage(
+      showSnackbar(
         isRenewal 
           ? 'Lisans yenileme işlemi oluşturuldu. Ödeme onayını bekleniyor.' 
-          : 'Lisans ekleme işlemi oluşturuldu. Ödeme onayını bekleniyor.'
+          : 'Lisans ekleme işlemi oluşturuldu. Ödeme onayını bekleniyor.',
+        'info'
       );
-      setSnackbarSeverity('info');
-      setSnackbarOpen(true);
     } catch (error) {
       console.error('Error adding license:', error);
-      setSnackbarMessage('Lisans eklenirken bir hata oluştu');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar('Lisans eklenirken bir hata oluştu', 'error');
     } finally {
       setLoading(false);
     }
@@ -195,27 +188,20 @@ const AddEditCompany: React.FC = () => {
   
   // Kullanıcı oluşturma işlemi
   const handleUserCreated = (userId: string) => {
-    setSnackbarMessage('Kullanıcı başarıyla oluşturuldu!');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
+    showSnackbar('Kullanıcı başarıyla oluşturuldu!', 'success');
   };
   
   // Form gönderim işlemi
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Form doğrulama
+    // Form doğrulama - Sadece temel bilgiler zorunlu
     const newErrors: typeof errors = {};
     
     if (!formData.name) newErrors.name = 'Sürücü kursu adı gereklidir';
-    if (!formData.province) newErrors.province = 'İl seçimi gereklidir';
-    if (!formData.district) newErrors.district = 'İlçe seçimi gereklidir';
-    if (!formData.address) newErrors.address = 'Adres gereklidir';
-    if (!formData.phone) newErrors.phone = 'Telefon numarası gereklidir';
-    if (!formData.licenseEndDate) newErrors.licenseEndDate = 'Lisans bitiş tarihi gereklidir';
-    if (!formData.owner) newErrors.owner = 'Yetkili kişi adı gereklidir';
+    if (!formData.owner) newErrors.owner = 'Şirket sahibi adı gereklidir';
     
-    // Telefon formatı kontrolü
+    // Telefon formatı kontrolü (varsa)
     const phoneRegex = /^0[2-9][0-9]{2}\s?[0-9]{3}\s?[0-9]{2}\s?[0-9]{2}$/;
     if (formData.phone && !phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
       newErrors.phone = 'Geçerli bir telefon numarası girin (örn: 0212 123 45 67)';
@@ -223,9 +209,7 @@ const AddEditCompany: React.FC = () => {
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setSnackbarMessage('Lütfen form hatalarını düzeltiniz!');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
+      showSnackbar('Lütfen form hatalarını düzeltiniz!', 'error');
       return;
     }
     
@@ -245,32 +229,18 @@ const AddEditCompany: React.FC = () => {
       // Update işlemi
       updateCompany(id, submitData)
         .then(() => {
-          setSnackbarMessage('Sürücü kursu başarıyla güncellendi!');
-          setSnackbarSeverity('success');
-          setSnackbarOpen(true);
+          showSnackbar('Sürücü kursu başarıyla güncellendi!', 'success');
           setTimeout(() => navigate('/company'), 1500);
         })
         .catch(error => {
           console.error('Update error:', error);
-          setSnackbarMessage('Güncelleme sırasında hata oluştu!');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
+          showSnackbar('Güncelleme sırasında hata oluştu!', 'error');
         });
     } else {
       // Create işlemi - bu dosyada şimdilik konsola log, çünkü create başka yerde
       console.log('Create Data:', submitData);
-      setSnackbarMessage('Oluşturma işlemi henüz aktif değil');
-      setSnackbarSeverity('info');
-      setSnackbarOpen(true);
+      showSnackbar('Oluşturma işlemi henüz aktif değil', 'info');
     }
-  };
-  
-  // Snackbar kapatma işlevi
-  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    setSnackbarOpen(false);
   };
   
   return (
@@ -430,7 +400,7 @@ const AddEditCompany: React.FC = () => {
           {/* Butonlar */}
           <Box 
             display="flex" 
-            justifyContent="space-between" 
+            justifyContent="flex-end" 
             gap={2} 
             mb={4}
           >
@@ -483,23 +453,6 @@ const AddEditCompany: React.FC = () => {
         onSuccess={handleUserCreated}
         companyId={id || ''}
       />
-      
-      {/* Snackbar Alert */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity={snackbarSeverity}
-          variant="filled"
-          sx={{ width: '100%' }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

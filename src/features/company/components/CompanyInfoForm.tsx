@@ -158,9 +158,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
       const result = await response.json();
       if (result.success && result.data?.logoUrl) {
         onChange({ logo: result.data.logoUrl });
-        // Header'daki logo'yu güncelle
-        window.dispatchEvent(new CustomEvent('logoUpdated'));
-        showSnackbar('Logo başarıyla yüklendi', 'success');
+        showSnackbar('Logo seçildi. Kaydetmek için Güncelle butonuna basın', 'info');
       } else {
         throw new Error(result.message || 'Logo yükleme başarısız');
       }
@@ -400,7 +398,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
           />
         </Box>
         
-        {/* Yetkili, Email ve Vergi No */}
+        {/* Şirket Sahibi, Email ve Vergi No */}
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
           <Box sx={{ flex: 1 }}>
             <Typography 
@@ -411,14 +409,14 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
               sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
             >
               <PersonIcon fontSize="small" color="primary" />
-              Yetkili Kişi *
+              Şirket Sahibi *
             </Typography>
             <TextField
               name="owner"
               value={formData.owner}
               onChange={handleChange}
               fullWidth
-              placeholder="Yetkili kişi adını girin..."
+              placeholder="Şirket sahibi adını girin..."
               required
               error={!!errors.owner}
               helperText={errors.owner}

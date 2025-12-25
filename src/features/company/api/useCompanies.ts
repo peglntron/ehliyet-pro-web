@@ -21,7 +21,9 @@ const mapApiCompanyToLocal = (apiCompany: ApiCompany): Company => ({
   authorizedPerson: apiCompany.authorizedPerson,
   email: apiCompany.email,
   website: apiCompany.website,
-  description: apiCompany.description
+  description: apiCompany.description,
+  phones: (apiCompany as any).phones || [],
+  ibans: (apiCompany as any).ibans || []
 });
 
 // API functions - Admin endpoints
@@ -285,4 +287,57 @@ export const useCompanies = () => {
       fetchCompanies();
     }
   };
+};
+
+// Phone API functions
+export const addCompanyPhone = async (companyId: string, data: { number: string; description: string }) => {
+  try {
+    const response: ApiResponse = await apiClient.post(`/company-resources/phones`, {
+      ...data,
+      companyId
+    });
+    return response;
+  } catch (error) {
+    console.error('Error adding phone:', error);
+    throw error;
+  }
+};
+
+export const deleteCompanyPhone = async (phoneId: string) => {
+  try {
+    const response: ApiResponse = await apiClient.delete(`/company-resources/phones/${phoneId}`);
+    return response;
+  } catch (error) {
+    console.error('Error deleting phone:', error);
+    throw error;
+  }
+};
+
+// IBAN API functions
+export const addCompanyIban = async (companyId: string, data: { 
+  iban: string; 
+  bankName: string; 
+  accountHolder: string; 
+  description: string 
+}) => {
+  try {
+    const response: ApiResponse = await apiClient.post(`/company-resources/ibans`, {
+      ...data,
+      companyId
+    });
+    return response;
+  } catch (error) {
+    console.error('Error adding IBAN:', error);
+    throw error;
+  }
+};
+
+export const deleteCompanyIban = async (ibanId: string) => {
+  try {
+    const response: ApiResponse = await apiClient.delete(`/company-resources/ibans/${ibanId}`);
+    return response;
+  } catch (error) {
+    console.error('Error deleting IBAN:', error);
+    throw error;
+  }
 };
