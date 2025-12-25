@@ -67,12 +67,12 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company, getLicenseStatus, on
   const handleToggleStatus = async () => {
     handleMenuClose();
     try {
-      const response = await apiClient.patch(`/admin/companies/${company.id}/toggle-status`);
+      const response = await apiClient.post(`/admin/companies/${company.id}/toggle-status`); // Geçici olarak POST
       if (response.success) {
         showSnackbar(`İşletme ${!company.isActive ? 'aktif' : 'pasif'} edildi`, 'success');
         // Listeyi yenile
         if (onStatusChanged) {
-          onStatusChanged();
+          await onStatusChanged(); // await ekledik
         } else {
           window.location.reload();
         }
