@@ -46,9 +46,9 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
     try {
       setLoading(true);
       const response = await getCompanyUsers(companyId);
-      // Sadece COMPANY_ADMIN ve COMPANY_USER rolündeki kullanıcıları göster
+      // COMPANY_ADMIN, COMPANY_USER ve INSTRUCTOR rollerini göster
       const filteredUsers = (response.users || []).filter(
-        user => ['COMPANY_ADMIN', 'COMPANY_USER'].includes(user.role)
+        user => ['COMPANY_ADMIN', 'COMPANY_USER', 'INSTRUCTOR'].includes(user.role)
       );
       setUsers(filteredUsers);
     } catch (err) {

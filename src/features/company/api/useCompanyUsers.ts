@@ -82,7 +82,7 @@ export const updateCompanyUser = async (
 ): Promise<CompanyUser> => {
   try {
     const response: ApiResponse<CompanyUser> = 
-      await apiClient.put(`/admin/users/${userId}`, data);
+      await apiClient.put(`/admin/companies/users/${userId}`, data);
     
     if (response.success && response.data) {
       return response.data;
@@ -98,7 +98,7 @@ export const updateCompanyUser = async (
 export const deleteCompanyUser = async (userId: string): Promise<boolean> => {
   try {
     const response: ApiResponse = 
-      await apiClient.delete(`/admin/users/${userId}`);
+      await apiClient.delete(`/admin/companies/users/${userId}`);
     
     return response.success;
   } catch (error) {
@@ -113,7 +113,7 @@ export const resetUserPassword = async (
 ): Promise<{ temporaryPassword: string }> => {
   try {
     const response: ApiResponse<{ temporaryPassword: string }> = 
-      await apiClient.post(`/admin/users/${userId}/reset-password`);
+      await apiClient.post(`/admin/companies/users/${userId}/reset-password`);
     
     if (response.success && response.data) {
       return response.data;
