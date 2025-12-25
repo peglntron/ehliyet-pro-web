@@ -544,8 +544,8 @@ const CompanyDetail: React.FC = () => {
 
                   {company?.phones && company.phones.length > 0 ? (
                     <Grid container spacing={2}>
-                      {company.phones.map((phone, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
+                      {company.phones.map((phone) => (
+                        <Grid item xs={12} sm={6} md={4} key={phone.id}>
                           <Paper 
                             elevation={2} 
                             sx={{ 
@@ -610,8 +610,8 @@ const CompanyDetail: React.FC = () => {
 
                   {company?.ibans && company.ibans.length > 0 ? (
                     <Grid container spacing={2}>
-                      {company.ibans.map((iban, index) => (
-                        <Grid item xs={12} md={6} key={index}>
+                      {company.ibans.map((iban) => (
+                        <Grid item xs={12} md={6} key={iban.id}>
                           <Paper 
                             elevation={2} 
                             sx={{ 

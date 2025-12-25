@@ -51,7 +51,9 @@ const ExpensesPage: React.FC = () => {
     invoiceNumber: '',
     paymentMethod: 'Nakit',
     isPaid: false,
-    paidDate: ''
+    paidDate: '',
+    isRecurring: false,
+    recurringDay: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -66,7 +68,9 @@ const ExpensesPage: React.FC = () => {
         invoiceNumber: expense.invoiceNumber || '',
         paymentMethod: expense.paymentMethod || 'Nakit',
         isPaid: expense.isPaid,
-        paidDate: expense.paidDate ? expense.paidDate.split('T')[0] : ''
+        paidDate: expense.paidDate ? expense.paidDate.split('T')[0] : '',
+        isRecurring: expense.isRecurring || false,
+        recurringDay: expense.recurringDay ? expense.recurringDay.toString() : ''
       });
     } else {
       setEditingExpense(null);
@@ -78,7 +82,9 @@ const ExpensesPage: React.FC = () => {
         invoiceNumber: '',
         paymentMethod: 'Nakit',
         isPaid: false,
-        paidDate: ''
+        paidDate: '',
+        isRecurring: false,
+        recurringDay: ''
       });
     }
     setOpenDialog(true);
@@ -100,8 +106,18 @@ const ExpensesPage: React.FC = () => {
       return;
     }
 
+    // Tekrarlı gider kontrolü
+    if (formData.isRecurring) {
+      const day = parseInt(formData.recurringDay);
+      if (!day || day < 1 || day > 31) {
+        showSnackbar('Tekrarlı gider için 1-31 arası bir gün seçilmelidir', 'error');
+        return;
+      }
+    }
+
     try {
       setSubmitting(true);
+      
       if (editingExpense) {
         await updateExpense(editingExpense.id, formData);
         showSnackbar('Gider başarıyla güncellendi', 'success');
@@ -280,6 +296,7 @@ const ExpensesPage: React.FC = () => {
                   <TableCell><strong>Açıklama</strong></TableCell>
                   <TableCell align="right"><strong>Tutar</strong></TableCell>
                   <TableCell><strong>Ödeme Yöntemi</strong></TableCell>
+                  <TableCell align="center"><strong>Tekrar</strong></TableCell>
                   <TableCell align="center"><strong>Durum</strong></TableCell>
                   <TableCell align="right"><strong>İşlemler</strong></TableCell>
                 </TableRow>
@@ -287,7 +304,7 @@ const ExpensesPage: React.FC = () => {
               <TableBody>
                 {expenses.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                    <TableCell colSpan={8} align="center" sx={{ py: 8 }}>
                       <Typography variant="h6" color="text.secondary">
                         Henüz gider eklenmemiş
                       </Typography>
@@ -307,7 +324,7 @@ const ExpensesPage: React.FC = () => {
                       <TableCell>
                         <Chip
                           label={expense.expenseCategory?.name || 'Bilinmiyor'}
-                          color={expense.expenseCategory?.type === 'RECURRING' ? 'primary' : 'default'}
+                          color="default"
                           size="small"
                           sx={{ borderRadius: 1 }}
                         />
@@ -331,6 +348,18 @@ const ExpensesPage: React.FC = () => {
                         <Typography variant="body2">
                           {expense.paymentMethod || '-'}
                         </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        {expense.isRecurring ? (
+                          <Chip
+                            label={`Her Ayın ${expense.recurringDay}. Günü`}
+                            color="info"
+                            size="small"
+                            sx={{ borderRadius: 1 }}
+                          />
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">-</Typography>
+                        )}
                       </TableCell>
                       <TableCell align="center">
                         <Chip
@@ -371,6 +400,25 @@ const ExpensesPage: React.FC = () => {
           </DialogTitle>
           <DialogContent dividers>
             <Grid container spacing={2} sx={{ pt: 1 }}>
+              {/* Tekrarlı Gider Checkbox */}
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.isRecurring}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        isRecurring: e.target.checked,
+                        recurringDay: e.target.checked ? '1' : '',
+                        date: e.target.checked ? '' : new Date().toISOString().split('T')[0]
+                      })}
+                    />
+                  }
+                  label="Tekrarlı Gider (Her Ay Otomatik)"
+                />
+              </Grid>
+
+              {/* Gider Kalemi */}
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Gider Kalemi</InputLabel>
@@ -382,13 +430,14 @@ const ExpensesPage: React.FC = () => {
                   >
                     {categories.filter(c => c.isActive).map(cat => (
                       <MenuItem key={cat.id} value={cat.id}>
-                        {cat.name} ({cat.type === 'RECURRING' ? 'Tekrarlı' : 'Tek Seferlik'})
+                        {cat.name}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
 
+              {/* Tutar */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -403,24 +452,43 @@ const ExpensesPage: React.FC = () => {
                 />
               </Grid>
 
+              {/* Tarih veya Tekrar Günü */}
               <Grid item xs={12} md={6}>
-                <DatePicker
-                  label="Gider Tarihi"
-                  value={formData.date ? new Date(formData.date) : null}
-                  onChange={(newValue) => {
-                    if (newValue) {
-                      setFormData({ ...formData, date: newValue.toISOString().split('T')[0] });
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      InputProps: { sx: { borderRadius: 2 } }
-                    }
-                  }}
-                />
+                {formData.isRecurring ? (
+                  <TextField
+                    fullWidth
+                    required
+                    label="Her Ayın Kaçıncı Günü"
+                    type="number"
+                    value={formData.recurringDay}
+                    onChange={(e) => setFormData({ ...formData, recurringDay: e.target.value })}
+                    InputProps={{ 
+                      sx: { borderRadius: 2 },
+                      inputProps: { min: 1, max: 31 }
+                    }}
+                    helperText="1-31 arası (Ayın son günü için dikkatli olun)"
+                  />
+                ) : (
+                  <DatePicker
+                    label="Gider Tarihi"
+                    value={formData.date ? new Date(formData.date) : null}
+                    onChange={(newValue) => {
+                      if (newValue) {
+                        setFormData({ ...formData, date: newValue.toISOString().split('T')[0] });
+                      }
+                    }}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        required: true,
+                        InputProps: { sx: { borderRadius: 2 } }
+                      }
+                    }}
+                  />
+                )}
               </Grid>
 
+              {/* Ödeme Yöntemi */}
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
                   <InputLabel>Ödeme Yöntemi</InputLabel>
@@ -438,6 +506,7 @@ const ExpensesPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
+              {/* Fatura Numarası */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -448,22 +517,29 @@ const ExpensesPage: React.FC = () => {
                 />
               </Grid>
 
+              {/* Ödendi Butonu */}
               <Grid item xs={12} md={6}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.isPaid}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        isPaid: e.target.checked,
-                        paidDate: e.target.checked ? new Date().toISOString().split('T')[0] : ''
-                      })}
-                    />
-                  }
-                  label="Ödendi"
-                />
+                <Button
+                  fullWidth
+                  variant={formData.isPaid ? "contained" : "outlined"}
+                  color={formData.isPaid ? "success" : "warning"}
+                  onClick={() => setFormData({
+                    ...formData,
+                    isPaid: !formData.isPaid,
+                    paidDate: !formData.isPaid ? new Date().toISOString().split('T')[0] : ''
+                  })}
+                  sx={{ 
+                    height: '56px',
+                    borderRadius: 2,
+                    fontSize: '1rem',
+                    fontWeight: 600
+                  }}
+                >
+                  {formData.isPaid ? '✓ Ödendi' : 'Ödenmedi'}
+                </Button>
               </Grid>
 
+              {/* Açıklama */}
               <Grid item xs={12}>
                 <TextField
                   fullWidth

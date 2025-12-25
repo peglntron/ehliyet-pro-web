@@ -29,6 +29,9 @@ export interface Expense {
   paidDate?: string;
   attachments: string[];
   createdBy?: string;
+  isRecurring: boolean;
+  recurringDay?: number;
+  parentExpenseId?: string;
   createdAt: string;
   updatedAt: string;
   expenseCategory?: ExpenseCategory;
@@ -43,6 +46,8 @@ export interface ExpenseFormData {
   paymentMethod: string;
   isPaid: boolean;
   paidDate: string;
+  isRecurring: boolean;
+  recurringDay: string;
 }
 
 export interface ExpenseStats {

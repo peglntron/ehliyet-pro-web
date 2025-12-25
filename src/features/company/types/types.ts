@@ -1,9 +1,11 @@
 export interface PhoneInfo {
+  id: string;
   number: string;
   description: string;
 }
 
 export interface IbanInfo {
+  id: string;
   iban: string;
   bankName: string;
   accountHolder: string; // Hesap sahibi adı soyadı
