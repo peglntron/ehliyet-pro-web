@@ -82,7 +82,7 @@ export const updateCompanyUser = async (
 ): Promise<CompanyUser> => {
   try {
     const response: ApiResponse<CompanyUser> = 
-      await apiClient.put(`/admin/companies/users/${userId}`, data);
+      await apiClient.post(`/admin/companies/users/${userId}/update`, data); // Geçici POST endpoint
     
     if (response.success && response.data) {
       return response.data;
