@@ -44,7 +44,7 @@ const PageBreadcrumb: React.FC<PageBreadcrumbProps> = ({ className, skipHome = f
     if (!user) return '/';
     
     // ADMIN → Admin Dashboard
-    if (user.role === 'ADMIN') return '/admin';
+    if (user.role === 'ADMIN') return '/';
     
     // INSTRUCTOR → Eğitmen Dashboard
     if (user.role === 'INSTRUCTOR') return '/instructor';
