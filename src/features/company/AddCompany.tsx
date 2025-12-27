@@ -168,9 +168,11 @@ const AddCompany: React.FC = () => {
     }
     
     // İsim soyisim kontrolü - owner'dan ayır
-    const ownerParts = formData.owner.trim().split(/\s+/);
-    if (ownerParts.length < 2) {
-      newErrors.owner = 'Lütfen ad ve soyad girin';
+    if (formData.owner) {
+      const nameParts = formData.owner.trim().split(/\s+/);
+      if (nameParts.length < 2) {
+        newErrors.owner = 'Lütfen ad ve soyad girin';
+      }
     }
     
     if (Object.keys(newErrors).length > 0) {
