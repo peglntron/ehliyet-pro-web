@@ -52,6 +52,7 @@ const LicensePackages: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     duration: '',
+    durationType: 'month' as 'day' | 'month',
     price: '',
     description: '',
     isActive: true
@@ -83,6 +84,7 @@ const LicensePackages: React.FC = () => {
     setFormData({
       name: '',
       duration: '',
+      durationType: 'month',
       price: '',
       description: '',
       isActive: true
@@ -90,12 +92,27 @@ const LicensePackages: React.FC = () => {
     setDialogOpen(true);
   };
 
+  // 7 günlük deneme paketi şablonu
+  const handleTrialTemplate = () => {
+    setFormData({
+      name: '7 Günlük Deneme',
+      duration: '7',
+      durationType: 'day',
+      price: '0',
+      description: 'Ücretsiz 7 günlük deneme süresi',
+      isActive: true
+    });
+  };
+
   // Paket düzenle modal'ını aç
   const handleEditClick = (pkg: LicensePackage) => {
     setEditingPackage(pkg);
+    // Süre tipini belirle: eğer 1 aydan az ise gün, değilse ay
+    const isDays = pkg.duration < 1;
     setFormData({
       name: pkg.name,
-      duration: pkg.duration.toString(),
+      duration: isDays ? Math.round(pkg.duration * 30).toString() : pkg.duration.toString(),
+      durationType: isDays ? 'day' : 'month',
       price: pkg.price.toString(),
       description: pkg.description || '',
       isActive: pkg.isActive
@@ -112,9 +129,15 @@ const LicensePackages: React.FC = () => {
         return;
       }
 
+      // Süreyi aya çevir (backend ay bazında saklıyor)
+      const durationValue = parseInt(formData.duration);
+      const durationInMonths = formData.durationType === 'day' 
+        ? durationValue / 30 
+        : durationValue;
+
       const data = {
         name: formData.name,
-        duration: parseInt(formData.duration),
+        duration: durationInMonths,
         price: parseFloat(formData.price),
         description: formData.description || null,
         isActive: formData.isActive
@@ -208,12 +231,19 @@ const LicensePackages: React.FC = () => {
                 <TableCell colSpan={6} align="center">Henüz paket bulunmuyor</TableCell>
               </TableRow>
             ) : (
-              packages.map((pkg) => (
-                <TableRow key={pkg.id}>
-                  <TableCell>{pkg.name}</TableCell>
-                  <TableCell align="center">{pkg.duration} Ay</TableCell>
-                  <TableCell align="right">{formatCurrency(pkg.price)}</TableCell>
-                  <TableCell>{pkg.description || '-'}</TableCell>
+              packages.map((pkg) => {
+                // Süreyi formatla: 1 aydan az ise gün, değilse ay olarak göster
+                const isDays = pkg.duration < 1;
+                const displayDuration = isDays 
+                  ? `${Math.round(pkg.duration * 30)} Gün`
+                  : `${pkg.duration} Ay`;
+                
+                return (
+                  <TableRow key={pkg.id}>
+                    <TableCell>{pkg.name}</TableCell>
+                    <TableCell align="center">{displayDuration}</TableCell>
+                    <TableCell align="right">{formatCurrency(pkg.price)}</TableCell>
+                    <TableCell>{pkg.description || '-'}</TableCell>
                   <TableCell align="center">
                     <Chip
                       label={pkg.isActive ? 'Aktif' : 'Pasif'}
@@ -238,7 +268,8 @@ const LicensePackages: React.FC = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -251,6 +282,18 @@ const LicensePackages: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            {/* Hızlı Şablon Butonu - Sadece yeni paket eklerken */}
+            {!editingPackage && (
+              <Button 
+                variant="outlined" 
+                onClick={handleTrialTemplate}
+                size="small"
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                📋 7 Günlük Deneme Şablonunu Kullan
+              </Button>
+            )}
+            
             <TextField
               label="Paket Adı"
               value={formData.name}
@@ -258,15 +301,32 @@ const LicensePackages: React.FC = () => {
               required
               fullWidth
             />
-            <TextField
-              label="Süre (Ay)"
-              type="number"
-              value={formData.duration}
-              onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-              required
-              fullWidth
-              helperText="Örnek: 1, 3, 6, 12"
-            />
+            
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="Süre"
+                type="number"
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                required
+                sx={{ flex: 2 }}
+                helperText={formData.durationType === 'day' ? 'Gün olarak giriniz' : 'Ay olarak giriniz'}
+              />
+              <TextField
+                select
+                label="Birim"
+                value={formData.durationType}
+                onChange={(e) => setFormData({ ...formData, durationType: e.target.value as 'day' | 'month' })}
+                sx={{ flex: 1 }}
+                SelectProps={{
+                  native: true,
+                }}
+              >
+                <option value="day">Gün</option>
+                <option value="month">Ay</option>
+              </TextField>
+            </Box>
+            
             <TextField
               label="Fiyat (TL)"
               type="number"
