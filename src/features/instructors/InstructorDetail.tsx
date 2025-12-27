@@ -94,6 +94,24 @@ const InstructorDetail: React.FC = () => {
     if (!instructor) return;
     try {
       const newStatus = instructor.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      
+      // API'ye status güncellemesi gönder
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/instructors/${instructor.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: newStatus
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Durum güncellenemedi');
+      }
+      
       setSnackbarMessage(`Eğitmen başarıyla ${newStatus === 'ACTIVE' ? 'aktif' : 'pasif'} yapıldı!`);
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
@@ -219,7 +237,7 @@ const InstructorDetail: React.FC = () => {
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, mb: 3, mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
-              src={instructor.profilePhoto ? `${API_URL}${instructor.profilePhoto}` : undefined}
+              src={instructor.profileImage ? `${API_URL}${instructor.profileImage}` : undefined}
               alt={`${instructor.firstName} ${instructor.lastName}`}
               sx={{ width: 80, height: 80, border: '4px solid', borderColor: 'primary.main', boxShadow: 3 }}
             >
