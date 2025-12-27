@@ -34,6 +34,17 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
     return date.toISOString().split('T')[0];
   };
   
+  // Profil fotoğrafı URL'sini oluştur
+  const getPhotoUrl = (photoPath: string | null | undefined) => {
+    if (!photoPath) return '';
+    // Eğer zaten tam URL ise olduğu gibi döndür
+    if (photoPath.startsWith('http://') || photoPath.startsWith('https://') || photoPath.startsWith('data:')) {
+      return photoPath;
+    }
+    // Değilse backend URL'sine ekle
+    return `${API_URL}${photoPath.startsWith('/') ? photoPath : '/' + photoPath}`;
+  };
+  
   const [formData, setFormData] = useState({
     firstName: instructor.firstName,
     lastName: instructor.lastName,
@@ -41,7 +52,7 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
     phone: instructor.phone,
     email: instructor.email || '',
     startDate: formatDateForInput(instructor.startDate),
-    profilePhoto: instructor.profileImage || instructor.profilePhoto || ''
+    profilePhoto: getPhotoUrl(instructor.profileImage || instructor.profilePhoto)
   });
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
