@@ -28,7 +28,8 @@ export interface Company {
   address: string;
   district: string;
   province: string;
-  phone?: string; // Optional - backend'den gelmeyebilir
+  email?: string;
+  taxNumber?: string;
   phones?: PhoneInfo[]; // Birden fazla telefon numarası açıklamalı
   users?: CompanyUser[]; // İşletme kullanıcıları
   owner: string;

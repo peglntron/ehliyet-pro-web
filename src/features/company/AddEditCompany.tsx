@@ -50,7 +50,9 @@ const AddEditCompany: React.FC = () => {
     province: string;
     district: string;
     address: string;
-    phone: string;
+    ownerPhone: string;
+    email?: string;
+    taxNumber?: string;
     registrationDate: string;
     licenseEndDate: string;
     owner: string;
@@ -66,7 +68,9 @@ const AddEditCompany: React.FC = () => {
     province: '',
     district: '',
     address: '',
-    phone: '',
+    ownerPhone: '',
+    email: '',
+    taxNumber: '',
     registrationDate: new Date().toISOString().split('T')[0],
     licenseEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
     owner: '',
@@ -84,7 +88,9 @@ const AddEditCompany: React.FC = () => {
     province?: string;
     district?: string;
     address?: string;
-    phone?: string;
+    ownerPhone?: string;
+    email?: string;
+    taxNumber?: string;
     licenseEndDate?: string;
     owner?: string;
   }>({});
@@ -131,12 +137,17 @@ const AddEditCompany: React.FC = () => {
       setLoading(true);
       getCompanyById(id)
         .then(company => {
+          // COMPANY_ADMIN kullanıcısının phone'unu bul
+          const companyAdmin = company.users?.find(u => u.role === 'COMPANY_ADMIN');
+          
           const loadedData = {
             name: company.name || '',
             province: company.province || '',
             district: company.district || '',
             address: company.address || '',
-            phone: company.phone || '',
+            ownerPhone: companyAdmin?.phone || '',
+            email: company.email || '',
+            taxNumber: company.taxNumber || '',
             registrationDate: company.registrationDate ? new Date(company.registrationDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             licenseEndDate: company.licenseEndDate ? new Date(company.licenseEndDate).toISOString().split('T')[0] : '',
             owner: company.owner || '',

@@ -350,11 +350,6 @@ const AddCompany: React.FC = () => {
                 iconPosition="start"
               />
               <Tab 
-                icon={<BadgeIcon />} 
-                label="Lisans Bilgileri" 
-                iconPosition="start"
-              />
-              <Tab 
                 icon={<LocationOnIcon />} 
                 label="Konum Bilgileri" 
                 iconPosition="start"
@@ -373,18 +368,8 @@ const AddCompany: React.FC = () => {
                 />
               )}
               
-              {/* Lisans Bilgileri Tab */}
-              {activeTab === 1 && (
-                <LicenseInfoForm 
-                  formData={formData}
-                  onChange={handleFormChange}
-                  onAddLicense={handleOpenLicenseModal}
-                  isEditMode={false}
-                />
-              )}
-              
               {/* Konum Bilgileri Tab */}
-              {activeTab === 2 && (
+              {activeTab === 1 && (
                 <LocationInfoForm 
                   formData={formData}
                   onChange={handleFormChange}
