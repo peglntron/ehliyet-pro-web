@@ -19,6 +19,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import { getLessonById, lessonApi, type LessonFormData } from './api/useLessons';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 
 const AddEditLesson: React.FC = () => {
   const navigate = useNavigate();
@@ -31,9 +32,13 @@ const AddEditLesson: React.FC = () => {
     displayOrder: 1,
     isActive: true
   });
+  const [initialFormData, setInitialFormData] = useState<LessonFormData>(formData);
   
   const [loading, setLoading] = useState(isEditMode);
   const [saving, setSaving] = useState(false);
+  
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  useUnsavedChangesWarning({ hasUnsavedChanges });
   
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -46,11 +51,13 @@ const AddEditLesson: React.FC = () => {
       setLoading(true);
       getLessonById(id)
         .then(lesson => {
-          setFormData({
+          const loadedData = {
             name: lesson.name,
             displayOrder: lesson.displayOrder,
             isActive: lesson.isActive
-          });
+          };
+          setFormData(loadedData);
+          setInitialFormData(loadedData);
           setLoading(false);
         })
         .catch(error => {

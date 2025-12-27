@@ -21,6 +21,7 @@ import {
 } from './api/useExpenseCategories';
 import type { ExpenseCategory, ExpenseCategoryFormData } from './types/types';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 
 const ExpenseCategoriesPage: React.FC = () => {
   const { categories, loading, refetch } = useExpenseCategories();
@@ -33,23 +34,31 @@ const ExpenseCategoriesPage: React.FC = () => {
     description: '',
     isActive: true
   });
+  const [initialFormData, setInitialFormData] = useState<ExpenseCategoryFormData>(formData);
   const [submitting, setSubmitting] = useState(false);
+
+  const hasUnsavedChanges = openDialog && JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  useUnsavedChangesWarning({ hasUnsavedChanges });
 
   const handleOpenDialog = (category?: ExpenseCategory) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({
+      const loadedData = {
         name: category.name,
         description: category.description || '',
         isActive: category.isActive
-      });
+      };
+      setFormData(loadedData);
+      setInitialFormData(loadedData);
     } else {
       setEditingCategory(null);
-      setFormData({
+      const newData = {
         name: '',
         description: '',
         isActive: true
-      });
+      };
+      setFormData(newData);
+      setInitialFormData(newData);
     }
     setOpenDialog(true);
   };

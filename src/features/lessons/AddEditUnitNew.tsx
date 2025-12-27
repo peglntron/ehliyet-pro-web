@@ -34,6 +34,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import { useLessons, getUnitById, unitApi, type UnitFormData } from './api/useLessons';
 import { useUnitContents, unitContentApi } from './api/useUnitContents';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 
 const AddEditUnitNew: React.FC = () => {
   const navigate = useNavigate();
@@ -47,9 +48,13 @@ const AddEditUnitNew: React.FC = () => {
     displayOrder: 1,
     isActive: true
   });
+  const [initialFormData, setInitialFormData] = useState<UnitFormData>(formData);
   
   const [loading, setLoading] = useState(isEditMode);
   const [saving, setSaving] = useState(false);
+  
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  useUnsavedChangesWarning({ hasUnsavedChanges });
   
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -71,12 +76,14 @@ const AddEditUnitNew: React.FC = () => {
       setLoading(true);
       getUnitById(id)
         .then(unit => {
-          setFormData({
+          const loadedData = {
             lessonId: unit.lessonId,
             name: unit.name,
             displayOrder: unit.displayOrder,
             isActive: unit.isActive
-          });
+          };
+          setFormData(loadedData);
+          setInitialFormData(loadedData);
           setLoading(false);
         })
         .catch(error => {

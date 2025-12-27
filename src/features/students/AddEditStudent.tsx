@@ -21,6 +21,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 import { getStudentById } from './api/useStudents';
 import { studentAPI } from '../../api/students';
 import type { CreateStudentData } from '../../api/students';
@@ -51,6 +52,26 @@ const AddEditStudent: React.FC = () => {
     firstName: '',
     lastName: '',
     tcNo: '',
+    phone: '',
+    email: '',
+    address: '',
+    province: '',
+    district: '',
+    gender: 'MALE' as const,
+    birthDate: '',
+    licenseType: '',
+    licenseClassId: '',
+    notes: '',
+    startDate: new Date().toISOString().split('T')[0]
+  });
+  
+  const [initialFormData, setInitialFormData] = useState(formData);
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  
+  useUnsavedChangesWarning({ hasUnsavedChanges });
+    firstName: '',
+    lastName: '',
+    tcNo: '',
     gender: 'male',
     phone: '',
     licenseType: '',
@@ -68,20 +89,22 @@ const AddEditStudent: React.FC = () => {
       setLoading(true);
       getStudentById(id)
         .then(student => {
-          setFormData({
+          const loadedData = {
             firstName: student.name || '',
             lastName: student.surname || '',
             tcNo: student.tcNo || '',
             gender: student.gender || 'male',
-            phone: student.phone ? student.phone.replace('+90', '') : '', // +90 prefix'ini kaldır
+            phone: student.phone ? student.phone.replace('+90', '') : '',
             licenseType: student.licenseType || '',
-            licenseClassId: student.licenseClassId || '',  // UUID relation
+            licenseClassId: student.licenseClassId || '',
             province: student.province || '',
             district: student.district || '',
             address: student.address || '',
             notes: student.notes || '',
             status: student.status || 'active'
-          });
+          };
+          setFormData(loadedData);
+          setInitialFormData(loadedData);
           setLoading(false);
         })
         .catch(error => {

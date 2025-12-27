@@ -15,6 +15,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 import { vehicleAPI } from '../../api/vehicles';
 
 const AddEditVehicle: React.FC = () => {
@@ -46,6 +47,11 @@ const AddEditVehicle: React.FC = () => {
     inspectionEnd: null as Date | null,
     notes: ''
   });
+  
+  const [initialFormData, setInitialFormData] = useState(formData);
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  
+  useUnsavedChangesWarning({ hasUnsavedChanges });
 
   const [autoFilledFields, setAutoFilledFields] = useState({
     trafficInsuranceEnd: false,
@@ -60,7 +66,7 @@ const AddEditVehicle: React.FC = () => {
         try {
           setLoading(true);
           const vehicleData = await vehicleAPI.getById(id);
-          setFormData({
+          const loadedData = {
             licensePlate: vehicleData.licensePlate,
             brand: vehicleData.brand,
             model: vehicleData.model,
@@ -77,7 +83,9 @@ const AddEditVehicle: React.FC = () => {
             inspectionStart: vehicleData.inspectionStart ? new Date(vehicleData.inspectionStart) : null,
             inspectionEnd: vehicleData.inspectionEnd ? new Date(vehicleData.inspectionEnd) : null,
             notes: vehicleData.notes || ''
-          });
+          };
+          setFormData(loadedData);
+          setInitialFormData(loadedData);
         } catch (error) {
           console.error('Araç verisi yükleme hatası:', error);
           showSnackbar('Araç verisi yüklenirken hata oluştu!', 'error');

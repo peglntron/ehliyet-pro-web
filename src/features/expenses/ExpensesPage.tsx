@@ -27,6 +27,7 @@ import {
 import { useExpenseCategories } from './api/useExpenseCategories';
 import type { Expense, ExpenseFormData } from './types/types';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 
 const ExpensesPage: React.FC = () => {
   const [filters, setFilters] = useState({
@@ -55,12 +56,16 @@ const ExpensesPage: React.FC = () => {
     isRecurring: false,
     recurringDay: ''
   });
+  const [initialFormData, setInitialFormData] = useState<ExpenseFormData>(formData);
   const [submitting, setSubmitting] = useState(false);
+
+  const hasUnsavedChanges = openDialog && JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  useUnsavedChangesWarning({ hasUnsavedChanges });
 
   const handleOpenDialog = (expense?: Expense) => {
     if (expense) {
       setEditingExpense(expense);
-      setFormData({
+      const loadedData = {
         expenseCategoryId: expense.expenseCategoryId,
         amount: expense.amount.toString(),
         date: expense.date.split('T')[0],
@@ -71,10 +76,12 @@ const ExpensesPage: React.FC = () => {
         paidDate: expense.paidDate ? expense.paidDate.split('T')[0] : '',
         isRecurring: expense.isRecurring || false,
         recurringDay: expense.recurringDay ? expense.recurringDay.toString() : ''
-      });
+      };
+      setFormData(loadedData);
+      setInitialFormData(loadedData);
     } else {
       setEditingExpense(null);
-      setFormData({
+      const newData = {
         expenseCategoryId: '',
         amount: '',
         date: new Date().toISOString().split('T')[0],
@@ -85,7 +92,9 @@ const ExpensesPage: React.FC = () => {
         paidDate: '',
         isRecurring: false,
         recurringDay: ''
-      });
+      };
+      setFormData(newData);
+      setInitialFormData(newData);
     }
     setOpenDialog(true);
   };

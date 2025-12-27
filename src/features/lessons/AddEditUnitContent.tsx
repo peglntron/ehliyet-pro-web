@@ -21,6 +21,7 @@ import PageBreadcrumb from '../../components/PageBreadcrumb';
 import WysiwygEditor from '../../components/WysiwygEditor';
 import { getContentById, unitContentApi, type UnitContentFormData } from './api/useUnitContents';
 import { getUnitById } from './api/useLessons';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 
 const AddEditUnitContent: React.FC = () => {
   const navigate = useNavigate();
@@ -35,10 +36,14 @@ const AddEditUnitContent: React.FC = () => {
     displayOrder: 1,
     isActive: true
   });
+  const [initialFormData, setInitialFormData] = useState<UnitContentFormData>(formData);
   
   const [unitName, setUnitName] = useState('');
   const [loading, setLoading] = useState(isEditMode);
   const [saving, setSaving] = useState(false);
+  
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  useUnsavedChangesWarning({ hasUnsavedChanges });
   
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -60,13 +65,15 @@ const AddEditUnitContent: React.FC = () => {
       setLoading(true);
       getContentById(contentId)
         .then(content => {
-          setFormData({
+          const loadedData = {
             unitId: content.unitId,
             title: content.title,
             content: content.content,
             displayOrder: content.displayOrder || 1,
             isActive: content.isActive
-          });
+          };
+          setFormData(loadedData);
+          setInitialFormData(loadedData);
           setLoading(false);
         })
         .catch(error => {

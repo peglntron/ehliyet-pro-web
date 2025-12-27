@@ -34,6 +34,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import LoadingBackdrop from '../../components/LoadingBackdrop';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 import { useInstructor, createInstructor, updateInstructor } from './api/useInstructors';
 import type { InstructorFormData } from './types/types';
 import { useLicenseClassValues } from '../../hooks/useLicenseClassOptions';
@@ -67,10 +68,15 @@ const AddEditInstructor: React.FC = () => {
     notes: ''
   });
   
+  const [initialFormData, setInitialFormData] = useState<InstructorFormData>(formData);
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  
+  useUnsavedChangesWarning({ hasUnsavedChanges });
+  
   // Düzenleme modunda veriyi yükle
   useEffect(() => {
     if (isEditMode && instructor) {
-      setFormData({
+      const loadedData = {
         firstName: instructor.firstName || '',
         lastName: instructor.lastName || '',
         tcNo: instructor.tcNo || '',
@@ -87,7 +93,9 @@ const AddEditInstructor: React.FC = () => {
         profileImage: instructor.profileImage || '',
         startDate: instructor.startDate || new Date().toISOString().split('T')[0],
         notes: instructor.notes || ''
-      });
+      };
+      setFormData(loadedData);
+      setInitialFormData(loadedData);
     }
   }, [isEditMode, instructor]);
   
