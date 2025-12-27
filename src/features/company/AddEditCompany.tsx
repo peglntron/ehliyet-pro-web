@@ -4,6 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import { useSnackbar } from '../../contexts/SnackbarContext';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 import {
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
@@ -90,44 +91,11 @@ const AddEditCompany: React.FC = () => {
   
   const { showSnackbar } = useSnackbar();
   
-  // Sayfa yenileme/kapama kontrolü
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [hasUnsavedChanges]);
-  
-  // Route değişikliklerini engelle (browser back/forward)
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-    
-    const handlePopState = (e: PopStateEvent) => {
-      if (hasUnsavedChanges) {
-        const confirmLeave = window.confirm(
-          'Yaptığınız değişiklikler kaydedilmedi. Sayfadan ayrılırsanız tüm değişiklikler kaybolacak. Devam etmek istiyor musunuz?'
-        );
-        
-        if (!confirmLeave) {
-          // Geri gitmemeyi sağla
-          window.history.pushState(null, '', window.location.pathname);
-        }
-      }
-    };
-    
-    // İlk yüklemede bir history state ekle
-    window.history.pushState(null, '', window.location.pathname);
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [hasUnsavedChanges, location]);
+  // Kaydedilmemiş değişiklik uyarısı
+  useUnsavedChangesWarning({ 
+    hasUnsavedChanges,
+    message: 'Yaptığınız değişiklikler kaydedilmedi. Sayfadan ayrılırsanız tüm değişiklikler kaybolacak. Devam etmek istiyor musunuz?'
+  });
     // Navigation handler
   const handleNavigation = (path: string) => {
     if (hasUnsavedChanges) {
