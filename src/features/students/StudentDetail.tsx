@@ -132,24 +132,39 @@ const StudentDetail: React.FC = () => {
     }
   };
   
-  // Helper: Ödenen toplam tutar (PAYMENT + ödenmiş INSTALLMENT)
+  // Helper: Ödenen toplam tutar (SADECE PAYMENT kayıtları + ödenmiş INSTALLMENT)
   const calculatePaidAmount = (student: Student | null): number => {
     if (!student?.payments) return 0;
-    return student.payments
-      .filter(p => 
-        p.type === 'PAYMENT' || 
-        (p.type === 'INSTALLMENT' && p.status === 'PAID')
-      )
-      .reduce((total, payment) => total + payment.amount, 0);
+    
+    const payments = student.payments.filter(p => 
+      p.type === 'PAYMENT' || 
+      (p.type === 'INSTALLMENT' && p.status === 'PAID')
+    );
+    
+    const total = payments.reduce((sum, payment) => sum + payment.amount, 0);
+    
+    console.log('=== ÖDEME HESAPLAMA ===');
+    console.log('PAYMENT kayıtları:', payments);
+    console.log('Toplam ödenen:', total);
+    
+    return total;
   };
   
-  // Helper: Toplam borç hesaplama (TÜM DEBT + TÜM INSTALLMENT - ödeme durumuna bakmadan)
+  // Helper: Toplam borç hesaplama (SADECE DEBT + INSTALLMENT kayıtları)
   const calculateTotalDebt = (student: Student | null): number => {
     if (!student?.payments) return 0;
-    // Tarihteki tüm borçlar (ödenmiş olsalar bile)
-    return student.payments
-      .filter(p => p.type === 'DEBT' || p.type === 'INSTALLMENT')
-      .reduce((sum, p) => sum + (p.amount || 0), 0);
+    
+    const debts = student.payments.filter(p => 
+      p.type === 'DEBT' || p.type === 'INSTALLMENT'
+    );
+    
+    const total = debts.reduce((sum, p) => sum + (p.amount || 0), 0);
+    
+    console.log('=== BORÇ HESAPLAMA ===');
+    console.log('DEBT/INSTALLMENT kayıtları:', debts);
+    console.log('Toplam borç:', total);
+    
+    return total;
   };
 
   // Helper: Kalan borç hesaplama (Toplam Borç - Ödenen)

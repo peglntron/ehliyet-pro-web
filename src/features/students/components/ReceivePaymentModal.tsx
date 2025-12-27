@@ -74,70 +74,30 @@ export const ReceivePaymentModal: React.FC<ReceivePaymentModalProps> = ({
       // Tam ödeme mi kısmi ödeme mi? (debtAmount zaten kalan borç)
       const isFullPayment = paymentAmount >= debtAmount;
       
-      if (isFullPayment) {
-        // TAM ÖDEME: Önce ödeme kaydı oluştur, sonra borcu PAID yap
-        const paymentResponse = await fetch(`${API_URL}/api/payments/students/${debt.studentId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            amount: paymentAmount,
-            method: method,
-            status: 'PAID',
-            type: 'PAYMENT',
-            description: `${debtDescription} için son ödeme`,
-            paymentDate: new Date().toISOString(),
-            relatedDebtId: debtId
-          })
-        });
+      // Her durumda sadece PAYMENT kaydı oluştur
+      // DEBT kaydı hiçbir zaman PAID olarak işaretlenmez
+      const paymentResponse = await fetch(`${API_URL}/api/payments/students/${debt.studentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: paymentAmount,
+          method: method,
+          status: 'PAID',
+          type: 'PAYMENT',
+          description: isFullPayment 
+            ? `${debtDescription} için tam ödeme` 
+            : `${debtDescription} için kısmi ödeme`,
+          paymentDate: new Date().toISOString(),
+          relatedDebtId: debtId
+        })
+      });
 
-        if (!paymentResponse.ok) {
-          const errorData = await paymentResponse.json();
-          throw new Error(errorData.message || 'Ödeme kaydı oluşturulamadı');
-        }
-        
-        // Borcu PAID yap
-        const response = await fetch(`${API_URL}/api/payments/${debtId}/mark-paid`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            method: method,
-            paymentDate: new Date().toISOString()
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Borç güncellenirken hata oluştu');
-        }
-      } else {
-        // KISMİ ÖDEME: Sadece ödeme kaydı oluştur
-        const response = await fetch(`${API_URL}/api/payments/students/${debt.studentId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            amount: paymentAmount,
-            method: method,
-            status: 'PAID',
-            type: 'PAYMENT',
-            description: `${debtDescription} için kısmi ödeme`,
-            paymentDate: new Date().toISOString(),
-            relatedDebtId: debtId
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Ödeme kaydı oluşturulamadı');
-        }
+      if (!paymentResponse.ok) {
+        const errorData = await paymentResponse.json();
+        throw new Error(errorData.message || 'Ödeme kaydı oluşturulamadı');
       }
 
       onSuccess();
