@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Typography, Container, Paper, Tabs, Tab, Button,
-  Table, TableBody, TableCell, TableContainer, TableHead, 
-  TableRow, Chip, IconButton, Tooltip, TextField, Divider,
-  InputAdornment, Link, Grid, Avatar, Dialog, DialogTitle, 
+  Box, Typography, Paper, Tabs, Tab, Button,
+  Chip, IconButton, TextField,
+  Grid, Dialog, DialogTitle, 
   DialogContent, DialogActions
 } from '@mui/material';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  Search as SearchIcon,
-  PersonAdd as PersonAddIcon,
   ArrowBack as ArrowBackIcon,
   CalendarToday as CalendarTodayIcon,
   Person as PersonIcon,
@@ -21,8 +17,6 @@ import {
   Business as BusinessIcon,
   PeopleAlt as PeopleAltIcon,
   Map,
-  Email as EmailIcon,
-  Language as WebsiteIcon,
   AccountBalance as BankIcon,
   Add as AddIcon
 } from '@mui/icons-material';
@@ -95,7 +89,7 @@ const CompanyDetail: React.FC = () => {
   };
 
   // Sekme değiştirme
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -255,11 +249,6 @@ const CompanyDetail: React.FC = () => {
     }
   }, [id]);
 
-  // Kullanıcı oluşturulduğunda
-  const handleUserCreated = (userId: string) => {
-    showSnackbar('Kurum yöneticisi başarıyla oluşturuldu', 'success');
-  };
-
   // Tarih formatını düzenleme
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) return '-';
@@ -273,46 +262,6 @@ const CompanyDetail: React.FC = () => {
       }).format(date);
     } catch (error) {
       return '-';
-    }
-  };
-
-  // Rol adını Türkçe olarak göster
-  const getRoleName = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return 'Sistem Yöneticisi';
-      case 'company_admin':
-        return 'Kurum Yöneticisi';
-      default:
-        return role;
-    }
-  };
-  
-  // Durum adını Türkçe olarak göster
-  const getStatusName = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Aktif';
-      case 'inactive':
-        return 'Pasif';
-      case 'pending':
-        return 'Beklemede';
-      default:
-        return status;
-    }
-  };
-  
-  // Durum göstergesinin rengini belirle
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'success';
-      case 'inactive':
-        return 'error';
-      case 'pending':
-        return 'warning';
-      default:
-        return 'default';
     }
   };
 
@@ -421,7 +370,11 @@ const CompanyDetail: React.FC = () => {
                         <PhoneIcon color="primary" />
                         <Box>
                           <Typography variant="subtitle2" fontWeight={600}>Telefon</Typography>
-                          <Typography variant="body2">{company.phone}</Typography>
+                          <Typography variant="body2">
+                            {company.users?.find(u => u.role === 'COMPANY_ADMIN')?.phone 
+                              ? `+90 ${company.users.find(u => u.role === 'COMPANY_ADMIN')?.phone}` 
+                              : '-'}
+                          </Typography>
                         </Box>
                       </Box>
                       

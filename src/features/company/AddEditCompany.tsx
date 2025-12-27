@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Typography, Button, Paper, Divider, Tabs, Tab,
+  Box, Typography, Button, Paper,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 import {
   Save as SaveIcon,
-  ArrowBack as ArrowBackIcon,
-  PersonAdd as PersonAddIcon,
-  People as PeopleIcon,
-  Business as BusinessIcon,
-  Badge as BadgeIcon,
-  LocationOn as LocationOnIcon
+  ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
-import { getCompanyById, updateCompany, renewLicense } from './api/useCompanies';
+import { getCompanyById, updateCompany } from './api/useCompanies';
 import type { Company } from './types/types';
 import LoadingIndicator from '../../components/LoadingIndicator';
 
 // Alt bileşenleri import ediyoruz
 import CompanyInfoForm from './components/CompanyInfoForm';
-import LicenseInfoForm from './components/LicenseInfoForm';
-import LocationInfoForm from './components/LocationInfoForm';
-import AddLicenseModal from './components/AddLicenseModal';
-import UserCreateModal from './components/UserCreateModal';
-import UserManagement from './components/UserManagement';
 
 const AddEditCompany: React.FC = () => {
   const navigate = useNavigate();
@@ -36,9 +26,6 @@ const AddEditCompany: React.FC = () => {
   
   // State tanımlamaları
   const [loading, setLoading] = useState(isEditMode);
-  const [licenseModalOpen, setLicenseModalOpen] = useState(false);
-  const [userCreateModalOpen, setUserCreateModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
@@ -199,50 +186,6 @@ const AddEditCompany: React.FC = () => {
     }));
   };
   
-  // Lisans ekleme modalını aç/kapat
-  const handleOpenLicenseModal = () => setLicenseModalOpen(true);
-  const handleCloseLicenseModal = () => setLicenseModalOpen(false);
-  
-  // Yeni lisans ekle
-  const handleAddLicense = async (data: { 
-    packageId?: string; 
-    customDays?: number; 
-    amount?: number; 
-    description?: string;
-  }) => {
-    if (!id) {
-      showSnackbar('Önce işletmeyi kaydedin', 'warning');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const result = await renewLicense(id, data);
-      
-      // Lisans bitiş tarihini güncelle
-      setFormData(prev => ({
-        ...prev,
-        licenseEndDate: result.payment.endDate || result.company.licenseEndDate
-      }));
-      
-      handleCloseLicenseModal();
-      
-      // Başarı mesajı göster
-      const isRenewal = Boolean(formData.licenseEndDate);
-      showSnackbar(
-        isRenewal 
-          ? 'Lisans yenileme işlemi oluşturuldu. Ödeme onayını bekleniyor.' 
-          : 'Lisans ekleme işlemi oluşturuldu. Ödeme onayını bekleniyor.',
-        'info'
-      );
-    } catch (error) {
-      console.error('Error adding license:', error);
-      showSnackbar('Lisans eklenirken bir hata oluştu', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   // Kullanıcı oluşturma işlemi
   const handleUserCreated = (userId: string) => {
     showSnackbar('Kullanıcı başarıyla oluşturuldu!', 'success');
@@ -379,79 +322,15 @@ const AddEditCompany: React.FC = () => {
               overflow: 'hidden'
             }}
           >
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange}
-              variant="fullWidth"
-              sx={{
-                borderBottom: 1,
-                borderColor: 'divider',
-                '& .MuiTab-root': {
-                  minHeight: 64,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 600
-                }
-              }}
-            >
-              <Tab 
-                icon={<BusinessIcon />} 
-                label="Kurs Bilgileri" 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<BadgeIcon />} 
-                label="Lisans Bilgileri" 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<LocationOnIcon />} 
-                label="Konum Bilgileri" 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<PeopleIcon />} 
-                label="Kullanıcı Yönetimi" 
-                iconPosition="start"
-                disabled={!isEditMode}
-              />
-            </Tabs>
-
-            {/* Tab Content */}
+            {/* Form Content */}
             <Box sx={{ p: 3, backgroundColor: '#f8fafc', minHeight: 400 }}>
-              {activeTab === 0 && (
-                <CompanyInfoForm 
-                  formData={formData}
-                  errors={errors}
-                  onChange={handleFormChange}
-                  onErrorChange={handleErrorChange}
-                  companyId={id}
-                />
-              )}
-              
-              {activeTab === 1 && (
-                <LicenseInfoForm 
-                  formData={formData}
-                  onChange={handleFormChange}
-                  onAddLicense={handleOpenLicenseModal}
-                  companyId={id}
-                  isEditMode={isEditMode}
-                />
-              )}
-              
-              {activeTab === 2 && (
-                <LocationInfoForm 
-                  formData={formData}
-                  onChange={handleFormChange}
-                />
-              )}
-              
-              {isEditMode && activeTab === 3 && (
-                <UserManagement 
-                  companyId={id || ''} 
-                  onUserCreated={handleUserCreated}
-                />
-              )}
+              <CompanyInfoForm 
+                formData={formData}
+                errors={errors}
+                onChange={handleFormChange}
+                onErrorChange={handleErrorChange}
+                companyId={id}
+              />
             </Box>
           </Paper>
           
@@ -494,15 +373,6 @@ const AddEditCompany: React.FC = () => {
           </Box>
         </form>
       )}
-      
-      {/* Lisans Ekleme Modal */}
-      <AddLicenseModal 
-        open={licenseModalOpen}
-        onClose={handleCloseLicenseModal}
-        onSubmit={handleAddLicense}
-        registrationDate={formData.registrationDate}
-        currentLicenseEndDate={formData.licenseEndDate || undefined}
-      />
       
       {/* Kullanıcı Oluşturma Modalı */}
       <UserCreateModal 

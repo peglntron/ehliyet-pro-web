@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import {
-  Box, Typography, Button, Snackbar, Alert, Paper, Tabs, Tab
+  Box, Typography, Button, Snackbar, Alert, Paper
 } from '@mui/material';
 import {
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,
-  Business as BusinessIcon,
-  Badge as BadgeIcon,
-  LocationOn as LocationOnIcon,
-  Person as PersonIcon
+  Business as BusinessIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
@@ -17,17 +14,12 @@ import LoadingIndicator from '../../components/LoadingIndicator';
 
 // Alt bileşenleri import ediyoruz
 import CompanyInfoForm from './components/CompanyInfoForm';
-import LicenseInfoForm from './components/LicenseInfoForm';
-import LocationInfoForm from './components/LocationInfoForm';
-import AddLicenseModal from './components/AddLicenseModal';
 
 const AddCompany: React.FC = () => {
   const navigate = useNavigate();
   
   // State tanımlamaları
   const [loading, setLoading] = useState(false);
-  const [licenseModalOpen, setLicenseModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
   
   // Form state
   const [formData, setFormData] = useState<{
@@ -44,11 +36,6 @@ const AddCompany: React.FC = () => {
     authorizedPerson?: string;
     website?: string;
     description?: string;
-    location: {
-      latitude: string;
-      longitude: string;
-      mapLink?: string;
-    };
     isActive: boolean;
   }>({
     name: '',
@@ -64,11 +51,6 @@ const AddCompany: React.FC = () => {
     authorizedPerson: '',
     website: '',
     description: '',
-    location: {
-      latitude: '',
-      longitude: '',
-      mapLink: ''
-    },
     isActive: true
   });
   
@@ -92,11 +74,6 @@ const AddCompany: React.FC = () => {
   
   // Tab değişimi
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
-  
-  // Form alanları değişikliklerini yönet
-  const handleFormChange = (updatedData: Partial<typeof formData>) => {
     setFormData(prev => ({
       ...prev,
       ...updatedData
@@ -195,7 +172,7 @@ const AddCompany: React.FC = () => {
     const firstName = ownerParts.slice(0, -1).join(' ') || ownerParts[0];
     const lastName = ownerParts[ownerParts.length - 1];
     
-    // Admin API ile işletme oluştur
+    // Admin API ile işletme oluştur (user bilgisi manuel eklenmeli)
     const submitData = {
       name: formData.name,
       email: formData.email,
@@ -208,15 +185,7 @@ const AddCompany: React.FC = () => {
       licenseEndDate: formData.licenseEndDate || undefined,
       authorizedPerson: formData.authorizedPerson,
       website: formData.website,
-      description: formData.description,
-      latitude: formData.location.latitude,
-      longitude: formData.location.longitude,
-      mapLink: formData.location.mapLink,
-      // Şirket sahibi bilgilerinden kullanıcı oluştur
-      userPhone: formData.ownerPhone,
-      userFirstName: firstName,
-      userLastName: lastName,
-      userRole: 'COMPANY_ADMIN'
+      description: formData.description
     };
 
     console.log('Submit Data:', submitData);
@@ -310,14 +279,13 @@ const AddCompany: React.FC = () => {
       {/* Yükleniyor göstergesi */}
       {loading ? (
         <LoadingIndicator 
-          text="İşletme oluşturuluyor ve SMS gönderiliyor..." 
+          text="İşletme oluşturuluyor..." 
           size="medium" 
           showBackground={true} 
         />
       ) : (
-        /* Form - form tag'i kaldırıldı */
         <Box>
-          {/* Tab Navigasyon */}
+          {/* Form */}
           <Paper 
             elevation={0}
             sx={{ 
@@ -328,53 +296,13 @@ const AddCompany: React.FC = () => {
               overflow: 'hidden'
             }}
           >
-            <Tabs 
-              value={activeTab} 
-              onChange={handleTabChange}
-              variant="fullWidth"
-              sx={{
-                borderBottom: 1,
-                borderColor: 'divider',
-                '& .MuiTab-root': {
-                  py: 2,
-                  textTransform: 'none',
-                  fontSize: '0.95rem',
-                  fontWeight: 600,
-                  minHeight: 64
-                }
-              }}
-            >
-              <Tab 
-                icon={<BusinessIcon />} 
-                label="İşletme Bilgileri" 
-                iconPosition="start"
-              />
-              <Tab 
-                icon={<LocationOnIcon />} 
-                label="Konum Bilgileri" 
-                iconPosition="start"
-              />
-            </Tabs>
-            
-            {/* Tab Panels */}
             <Box sx={{ p: 3, backgroundColor: '#f8fafc', minHeight: 400 }}>
-              {/* İşletme Bilgileri Tab */}
-              {activeTab === 0 && (
-                <CompanyInfoForm 
-                  formData={formData}
-                  errors={errors}
-                  onChange={handleFormChange}
-                  onErrorChange={handleErrorChange}
-                />
-              )}
-              
-              {/* Konum Bilgileri Tab */}
-              {activeTab === 1 && (
-                <LocationInfoForm 
-                  formData={formData}
-                  onChange={handleFormChange}
-                />
-              )}
+              <CompanyInfoForm 
+                formData={formData}
+                errors={errors}
+                onChange={handleFormChange}
+                onErrorChange={handleErrorChange}
+              />
             </Box>
           </Paper>
           
@@ -417,7 +345,7 @@ const AddCompany: React.FC = () => {
                 fontSize: '1rem'
               }}
             >
-              {loading ? 'Oluşturuluyor...' : 'Kaydet ve SMS Gönder'}
+              {loading ? 'Oluşturuluyor...' : 'İşletmeyi Kaydet'}
             </Button>
           </Box>
         </Box>
