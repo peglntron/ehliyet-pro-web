@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box, Typography, Button, Paper, Chip,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Accordion, AccordionSummary, AccordionDetails, IconButton
 } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Add as AddIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import type { Student, Installment, Payment } from '../../types/types';
 
 interface StudentPaymentInfoCardProps {
@@ -37,6 +38,20 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
   getPaymentStatusInfo,
   getPaymentMethodText
 }) => {
+  const [expandedAccordions, setExpandedAccordions] = useState<Set<string>>(new Set());
+
+  const handleAccordionToggle = (paymentId: string) => {
+    setExpandedAccordions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(paymentId)) {
+        newSet.delete(paymentId);
+      } else {
+        newSet.add(paymentId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <Paper
       elevation={0}
@@ -243,6 +258,8 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     }
                     
                     const totalAmount = group.reduce((sum, p) => sum + p.amount, 0);
+                    const accordionId = `installment-${groupKey}`;
+                    const isExpanded = expandedAccordions.has(accordionId);
                     
                     return (
                       <React.Fragment key={`installment-group-${groupKey}`}>
@@ -251,115 +268,133 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           bgcolor: 'background.paper',
                           borderLeft: '4px solid',
                           borderColor: 'primary.main',
-                          '& > td': { py: 2 }
+                          '& > td': { py: 0, border: 'none' }
                         }}>
-                          <TableCell>
-                            <Typography variant="body1" fontWeight={700}>
-                              {formatDate(payment.date)}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body1" fontWeight={700} color="primary.main" fontSize="1.1rem">
-                              {totalAmount.toLocaleString('tr-TR')} ₺
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary">-</Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip 
-                              label="TAKSİT PLANI" 
-                              size="medium" 
-                              color="primary"
-                              variant='outlined'
-                              sx={{ fontWeight: 700, fontSize: '0.8rem' , borderRadius:1}}
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body1" fontWeight={700}>
-                              {payment.description || 'Taksitli Borç'}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {group.length} Taksit
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary">-</Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary">-</Typography>
-                          </TableCell>
-                        </TableRow>
-                        
-                        {/* TAKSİT CHILD ROWS */}
-                        {group.map((installment) => {
-                          const instStatusInfo = getPaymentStatusInfo(installment.status);
-                          const instIsPending = installment.status === 'PENDING';
-                          const instIsPaid = installment.status === 'PAID';
-                          
-                          return (
-                            <TableRow 
-                              key={installment.id}
+                          <TableCell colSpan={7} sx={{ p: 0 }}>
+                            <Accordion 
+                              expanded={isExpanded}
+                              onChange={() => handleAccordionToggle(accordionId)}
                               sx={{ 
-                                bgcolor: 'rgba(0, 0, 0, 0.02)',
-                                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' },
-                                '& > td': { py: 1 }
+                                boxShadow: 'none',
+                                '&:before': { display: 'none' },
+                                bgcolor: 'transparent'
                               }}
                             >
-                              <TableCell sx={{ pl: 6 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography variant="body2" color="text.secondary">↳</Typography>
-                                  <Typography variant="body2">{formatDate(installment.date)}</Typography>
+                              <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                sx={{
+                                  px: 2,
+                                  py: 1.5,
+                                  minHeight: 'auto',
+                                  '&.Mui-expanded': { minHeight: 'auto' },
+                                  '& .MuiAccordionSummary-content': { 
+                                    my: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2
+                                  }
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1 }}>
+                                  <Typography variant="body1" fontWeight={700} sx={{ minWidth: 100 }}>
+                                    {formatDate(payment.date)}
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight={700} color="primary.main" fontSize="1.1rem" sx={{ minWidth: 120 }}>
+                                    {totalAmount.toLocaleString('tr-TR')} ₺
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>-</Typography>
+                                  <Chip 
+                                    label="TAKSİT PLANI" 
+                                    size="medium" 
+                                    color="primary"
+                                    variant='outlined'
+                                    sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius: 1, minWidth: 120 }}
+                                  />
+                                  <Box sx={{ flex: 1 }}>
+                                    <Typography variant="body1" fontWeight={700}>
+                                      {payment.description || 'Taksitli Borç'}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {group.length} Taksit
+                                    </Typography>
+                                  </Box>
                                 </Box>
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="body2" fontWeight={600}>
-                                  {installment.amount.toLocaleString('tr-TR')} ₺
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="body2">{getPaymentMethodText(installment.method)}</Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Chip 
-                                  label={`${installment.installmentNumber}. Taksit`}
-                                  size="small" 
-                                  color="info"
-                                  sx={{ fontWeight: 600, fontSize: '0.7rem', borderRadius:1 }}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Typography variant="body2" color="text.secondary">
-                                  {installment.description || '-'}
-                                </Typography>
-                              </TableCell>
-                              <TableCell>
-                                <Chip 
-                                  label={instStatusInfo.text} 
-                                  color={instStatusInfo.color as any} 
-                                  size="small" 
-                                  sx={{ borderRadius: 1 }} 
-                                />
-                              </TableCell>
-                              <TableCell>
-                                {instIsPending && (
-                                  <Button
-                                    variant="contained"
-                                    size="small"
-                                    color="info"
-                                    onClick={() => onMarkPaymentPaid(installment.id)}
-                                    sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
-                                  >
-                                    Ödeme Al
-                                  </Button>
-                                )}
-                                {instIsPaid && (
-                                  <Typography variant="body2" color="text.secondary">-</Typography>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
+                              </AccordionSummary>
+                              <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
+                                <Table size="small">
+                                  <TableBody>
+                                    {group.map((installment) => {
+                                      const instStatusInfo = getPaymentStatusInfo(installment.status);
+                                      const instIsPending = installment.status === 'PENDING';
+                                      const instIsPaid = installment.status === 'PAID';
+                                      
+                                      return (
+                                        <TableRow 
+                                          key={installment.id}
+                                          sx={{ 
+                                            '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                                          }}
+                                        >
+                                          <TableCell sx={{ pl: 6, width: 120 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                              <Typography variant="body2" color="text.secondary">↳</Typography>
+                                              <Typography variant="body2">{formatDate(installment.date)}</Typography>
+                                            </Box>
+                                          </TableCell>
+                                          <TableCell sx={{ width: 140 }}>
+                                            <Typography variant="body2" fontWeight={600}>
+                                              {installment.amount.toLocaleString('tr-TR')} ₺
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell sx={{ width: 120 }}>
+                                            <Typography variant="body2">{getPaymentMethodText(installment.method)}</Typography>
+                                          </TableCell>
+                                          <TableCell sx={{ width: 140 }}>
+                                            <Chip 
+                                              label={`${installment.installmentNumber}. Taksit`}
+                                              size="small" 
+                                              color="info"
+                                              sx={{ fontWeight: 600, fontSize: '0.7rem', borderRadius: 1 }}
+                                            />
+                                          </TableCell>
+                                          <TableCell>
+                                            <Typography variant="body2" color="text.secondary">
+                                              {installment.description || '-'}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell sx={{ width: 100 }}>
+                                            <Chip 
+                                              label={instStatusInfo.text} 
+                                              color={instStatusInfo.color as any} 
+                                              size="small" 
+                                              sx={{ borderRadius: 1 }} 
+                                            />
+                                          </TableCell>
+                                          <TableCell sx={{ width: 120 }}>
+                                            {instIsPending && (
+                                              <Button
+                                                variant="contained"
+                                                size="small"
+                                                color="info"
+                                                onClick={() => onMarkPaymentPaid(installment.id)}
+                                                sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                                              >
+                                                Ödeme Al
+                                              </Button>
+                                            )}
+                                            {instIsPaid && (
+                                              <Typography variant="body2" color="text.secondary">-</Typography>
+                                            )}
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </Table>
+                              </AccordionDetails>
+                            </Accordion>
+                          </TableCell>
+                        </TableRow>
                       </React.Fragment>
                     );
                   }
@@ -370,169 +405,247 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   
                   // Bu borca ait child payment'ları bul
                   const childPayments = student.payments?.filter(p => p.relatedDebtId === payment.id) || [];
+                  const hasChildren = childPayments.length > 0;
+                  const accordionId = `debt-${payment.id}`;
+                  const isExpanded = expandedAccordions.has(accordionId);
                   
-                  return (
-                    <React.Fragment key={payment.id}>
-                      {/* PARENT ROW */}
-                      <TableRow sx={{ 
+                  // Eğer child payment yoksa normal row göster
+                  if (!hasChildren) {
+                    return (
+                      <TableRow key={payment.id} sx={{ 
                         bgcolor: 'background.paper',
-                        borderLeft: childPayments.length > 0 ? '4px solid' : 'none',
+                        borderLeft: '4px solid',
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
-                        '& > td': { py: childPayments.length > 0 ? 2 : 1 }
+                        '& > td': { py: 1 }
                       }}>
-                      <TableCell>
-                        <Typography variant="body1" fontWeight={700}>
-                          {formatDate(payment.date)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography 
-                          variant="body1" 
-                          fontWeight={700}
-                          fontSize="1.1rem"
-                        >
-                          {payment.amount.toLocaleString('tr-TR')} ₺
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">{getPaymentMethodText(payment.method)}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        {payment.type === 'DEBT' ? (
-                          <Chip 
-                            label="BORÇ" 
-                            size="medium"
-                            color="error"
-                            sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius:1}}
-                          />
-                        ) : payment.type === 'INSTALLMENT' ? (
-                          <Chip 
-                            label="TAKSİT" 
-                            size="small" 
-                            color="info"
-                            sx={{ fontWeight: 600, fontSize: '0.75rem' }}
-                          />
-                        ) : (
-                          <Chip 
-                            label="ÖDEME" 
-                            size="small" 
-                            color="success"
-                            sx={{ fontWeight: 600, fontSize: '0.75rem', borderRadius:1 }}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Typography 
-                          variant="body1"
-                          fontWeight={700}
-                        >
-                          {payment.description || '-'}
-                        </Typography>
-                        {payment.installmentNumber && (
-                          <Chip 
-                            label={`${payment.installmentNumber}. Taksit`}
-                            size="small" 
-                            variant="outlined"
-                            color="info"
-                            sx={{ mt: 0.5, fontSize: '0.7rem', height: 20, borderRadius:1 }}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={paymentStatusInfo.text} 
-                          color={paymentStatusInfo.color as any} 
-                          size="small" 
-                          sx={{ borderRadius: 1 }} 
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {/* DEBT tipinde ve PENDING ise "Ödeme Alındı" butonu göster */}
-                        {payment.type === 'DEBT' && isPending && (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            color="info"
-                            onClick={() => onMarkPaymentPaid(payment.id)}
-                            sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                        <TableCell>
+                          <Typography variant="body1" fontWeight={700}>
+                            {formatDate(payment.date)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography 
+                            variant="body1" 
+                            fontWeight={700}
+                            fontSize="1.1rem"
                           >
-                            Ödeme Al
-                          </Button>
-                        )}
-                        {payment.type === 'DEBT' && isPaid && (
-                          <Typography variant="body2" color="text.secondary">-</Typography>
-                        )}
-                        {/* PAYMENT ve INSTALLMENT tiplerinde işlem göster */}
-                        {payment.type !== 'DEBT' && isPending && (
-                          <Button
-                            variant="contained"
-                            size="small"
-                            color="success"
-                            onClick={() => onMarkPaymentPaid(payment.id)}
-                            sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
-                          >
-                            Ödeme Al
-                          </Button>
-                        )}
-                        {payment.type !== 'DEBT' && isPaid && (
-                          <Typography variant="body2" color="text.secondary">-</Typography>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                    
-                    {/* CHILD ROWS - Bu borca yapılan kısmi ödemeler */}
-                    {childPayments.map((childPayment) => {
-                      const childStatusInfo = getPaymentStatusInfo(childPayment.status);
-                      return (
-                        <TableRow 
-                          key={childPayment.id}
-                          sx={{ 
-                            bgcolor: 'rgba(0, 0, 0, 0.02)',
-                            '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' },
-                            '& > td': { py: 1 }
-                          }}
-                        >
-                          <TableCell sx={{ pl: 6 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="body2" color="text.secondary">↳</Typography>
-                              <Typography variant="body2">{formatDate(childPayment.date)}</Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" fontWeight={600} color="success.main">
-                              {childPayment.amount.toLocaleString('tr-TR')} ₺
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">{getPaymentMethodText(childPayment.method)}</Typography>
-                          </TableCell>
-                          <TableCell>
+                            {payment.amount.toLocaleString('tr-TR')} ₺
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">{getPaymentMethodText(payment.method)}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          {payment.type === 'DEBT' ? (
+                            <Chip 
+                              label="BORÇ" 
+                              size="medium"
+                              color="error"
+                              sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius:1}}
+                            />
+                          ) : payment.type === 'INSTALLMENT' ? (
+                            <Chip 
+                              label="TAKSİT" 
+                              size="small" 
+                              color="info"
+                              sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+                            />
+                          ) : (
                             <Chip 
                               label="ÖDEME" 
                               size="small" 
                               color="success"
-                              sx={{ fontWeight: 600, fontSize: '0.7rem' , borderRadius:1}}
+                              sx={{ fontWeight: 600, fontSize: '0.75rem', borderRadius:1 }}
                             />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" color="text.secondary">
-                              {childPayment.description || 'Kısmi Ödeme'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={childStatusInfo.text} 
-                              color={childStatusInfo.color as any} 
-                              size="small" 
-                              sx={{ borderRadius: 1 }} 
-                            />
-                          </TableCell>
-                          <TableCell>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Typography 
+                            variant="body1"
+                            fontWeight={700}
+                          >
+                            {payment.description || '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={paymentStatusInfo.text} 
+                            color={paymentStatusInfo.color as any} 
+                            size="small" 
+                            sx={{ borderRadius: 1 }} 
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {payment.type === 'DEBT' && isPending && (
+                            <Button
+                              variant="contained"
+                              size="small"
+                              color="info"
+                              onClick={() => onMarkPaymentPaid(payment.id)}
+                              sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                            >
+                              Ödeme Al
+                            </Button>
+                          )}
+                          {payment.type === 'DEBT' && isPaid && (
                             <Typography variant="body2" color="text.secondary">-</Typography>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                          )}
+                          {payment.type !== 'DEBT' && isPending && (
+                            <Button
+                              variant="contained"
+                              size="small"
+                              color="success"
+                              onClick={() => onMarkPaymentPaid(payment.id)}
+                              sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                            >
+                              Ödeme Al
+                            </Button>
+                          )}
+                          {payment.type !== 'DEBT' && isPaid && (
+                            <Typography variant="body2" color="text.secondary">-</Typography>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+                  
+                  // Child payment varsa accordion ile göster
+                  return (
+                    <React.Fragment key={payment.id}>
+                      <TableRow sx={{ 
+                        bgcolor: 'background.paper',
+                        borderLeft: '4px solid',
+                        borderColor: payment.type === 'DEBT' ? 'error.main' : 'info.main',
+                        '& > td': { py: 0, border: 'none' }
+                      }}>
+                        <TableCell colSpan={7} sx={{ p: 0 }}>
+                          <Accordion 
+                            expanded={isExpanded}
+                            onChange={() => handleAccordionToggle(accordionId)}
+                            sx={{ 
+                              boxShadow: 'none',
+                              '&:before': { display: 'none' },
+                              bgcolor: 'transparent'
+                            }}
+                          >
+                            <AccordionSummary
+                              expandIcon={<ExpandMoreIcon />}
+                              sx={{
+                                px: 2,
+                                py: 1.5,
+                                minHeight: 'auto',
+                                '&.Mui-expanded': { minHeight: 'auto' },
+                                '& .MuiAccordionSummary-content': { 
+                                  my: 0,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 2
+                                }
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1 }}>
+                                <Typography variant="body1" fontWeight={700} sx={{ minWidth: 100 }}>
+                                  {formatDate(payment.date)}
+                                </Typography>
+                                <Typography variant="body1" fontWeight={700} fontSize="1.1rem" sx={{ minWidth: 120 }}>
+                                  {payment.amount.toLocaleString('tr-TR')} ₺
+                                </Typography>
+                                <Typography variant="body2" sx={{ minWidth: 100 }}>{getPaymentMethodText(payment.method)}</Typography>
+                                <Chip 
+                                  label="BORÇ" 
+                                  size="medium"
+                                  color="error"
+                                  sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius: 1, minWidth: 80 }}
+                                />
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="body1" fontWeight={700}>
+                                    {payment.description || '-'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {childPayments.length} Ödeme Kaydı
+                                  </Typography>
+                                </Box>
+                                <Chip 
+                                  label={paymentStatusInfo.text} 
+                                  color={paymentStatusInfo.color as any} 
+                                  size="small" 
+                                  sx={{ borderRadius: 1, minWidth: 80 }} 
+                                />
+                                {isPending && (
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    color="info"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onMarkPaymentPaid(payment.id);
+                                    }}
+                                    sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                                  >
+                                    Ödeme Al
+                                  </Button>
+                                )}
+                              </Box>
+                            </AccordionSummary>
+                            <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
+                              <Table size="small">
+                                <TableBody>
+                                  {childPayments.map((childPayment) => {
+                                    const childStatusInfo = getPaymentStatusInfo(childPayment.status);
+                                    return (
+                                      <TableRow 
+                                        key={childPayment.id}
+                                        sx={{ 
+                                          '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                                        }}
+                                      >
+                                        <TableCell sx={{ pl: 6, width: 120 }}>
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Typography variant="body2" color="text.secondary">↳</Typography>
+                                            <Typography variant="body2">{formatDate(childPayment.date)}</Typography>
+                                          </Box>
+                                        </TableCell>
+                                        <TableCell sx={{ width: 140 }}>
+                                          <Typography variant="body2" fontWeight={600} color="success.main">
+                                            {childPayment.amount.toLocaleString('tr-TR')} ₺
+                                          </Typography>
+                                        </TableCell>
+                                        <TableCell sx={{ width: 120 }}>
+                                          <Typography variant="body2">{getPaymentMethodText(childPayment.method)}</Typography>
+                                        </TableCell>
+                                        <TableCell sx={{ width: 100 }}>
+                                          <Chip 
+                                            label="ÖDEME" 
+                                            size="small" 
+                                            color="success"
+                                            sx={{ fontWeight: 600, fontSize: '0.7rem', borderRadius: 1 }}
+                                          />
+                                        </TableCell>
+                                        <TableCell>
+                                          <Typography variant="body2" color="text.secondary">
+                                            {childPayment.description || 'Kısmi Ödeme'}
+                                          </Typography>
+                                        </TableCell>
+                                        <TableCell sx={{ width: 100 }}>
+                                          <Chip 
+                                            label={childStatusInfo.text} 
+                                            color={childStatusInfo.color as any} 
+                                            size="small" 
+                                            sx={{ borderRadius: 1 }} 
+                                          />
+                                        </TableCell>
+                                        <TableCell sx={{ width: 120 }}>
+                                          <Typography variant="body2" color="text.secondary">-</Typography>
+                                        </TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
+                                </TableBody>
+                              </Table>
+                            </AccordionDetails>
+                          </Accordion>
+                        </TableCell>
+                      </TableRow>
                     </React.Fragment>
                   );
                 })})()}
