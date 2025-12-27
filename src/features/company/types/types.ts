@@ -12,14 +12,25 @@ export interface IbanInfo {
   description: string;
 }
 
+export interface CompanyUser {
+  id: string;
+  phone: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  isActive: boolean;
+  lastLogin?: string;
+}
+
 export interface Company {
   id: string;
   name: string;
   address: string;
   district: string;
   province: string;
-  phone: string;
+  phone?: string; // Optional - backend'den gelmeyebilir
   phones?: PhoneInfo[]; // Birden fazla telefon numarası açıklamalı
+  users?: CompanyUser[]; // İşletme kullanıcıları
   owner: string;
   registrationDate: string;
   licenseEndDate: string;

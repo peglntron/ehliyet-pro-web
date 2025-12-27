@@ -235,7 +235,7 @@ const LicensePackages: React.FC = () => {
                 // Süreyi formatla: 1 aydan az ise gün, değilse ay olarak göster
                 const isDays = pkg.duration < 1;
                 const displayDuration = isDays 
-                  ? `${Math.round(pkg.duration * 30)} Gün`
+                  ? `${Math.ceil(pkg.duration * 30)} Gün`
                   : `${pkg.duration} Ay`;
                 
                 return (

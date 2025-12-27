@@ -158,12 +158,12 @@ const AddCompany: React.FC = () => {
       }
     }
     
-    // Telefon formatı kontrolü
+    // Telefon formatı kontrolü - 5 ile başlayan 10 hane
     if (formData.ownerPhone) {
-      const phoneRegex = /^[5-9][0-9]{9}$/;
+      const phoneRegex = /^5[0-9]{9}$/;
       const cleanPhone = formData.ownerPhone.replace(/\s+/g, '');
       if (!phoneRegex.test(cleanPhone)) {
-        newErrors.ownerPhone = 'Geçerli bir telefon numarası girin (örn: 5551234567)';
+        newErrors.ownerPhone = 'Telefon numarası 5 ile başlamalı ve 10 hane olmalıdır';
       }
     }
     

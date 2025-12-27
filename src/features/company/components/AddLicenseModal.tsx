@@ -65,7 +65,7 @@ const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
     }
   };
   
-  // Bitiş tarihini hesapla (duration ay cinsinden gelir, güne çeviriyoruz)
+  // Bitiş tarihini hesapla (duration ay cinsinden gelir)
   const calculateEndDate = (durationInMonths: number): Date => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -74,9 +74,16 @@ const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
     const startDate = (currentEndDate && currentEndDate > today) ? currentEndDate : today;
     
     const newEndDate = new Date(startDate);
-    // Ay cinsinden gelen değeri güne çeviriyoruz (1 ay = 30 gün)
-    const days = Math.round(durationInMonths * 30);
-    newEndDate.setDate(newEndDate.getDate() + days);
+    
+    // Ay cinsinden geliyorsa setMonth kullan, gün cinsindeyse setDate kullan
+    if (durationInMonths < 1) {
+      // 1 aydan az ise gün olarak hesapla (örn: 0.23 ay = 7 gün)
+      const days = Math.round(durationInMonths * 30);
+      newEndDate.setDate(newEndDate.getDate() + days);
+    } else {
+      // 1 ay ve üzeri ise ay olarak ekle
+      newEndDate.setMonth(newEndDate.getMonth() + Math.round(durationInMonths));
+    }
     
     return newEndDate;
   };

@@ -438,13 +438,23 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
             <TextField
               name="ownerPhone"
               value={formData.ownerPhone}
-              onChange={handleChange}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 10) {
+                  handleChange(e);
+                }
+              }}
               fullWidth
-              placeholder="05XX XXX XX XX"
+              placeholder="5XX XXX XX XX"
               required
               error={!!errors.ownerPhone}
-              helperText={errors.ownerPhone || 'Bu telefon numarası giriş yapmak için kullanılacaktır'}
+              helperText={errors.ownerPhone || 'Bu telefon numarası giriş yapmak için kullanılacaktır (5 ile başlayan 10 hane)'}
               InputProps={{
+                startAdornment: (
+                  <Box component="span" sx={{ mr: 1, color: 'text.secondary' }}>
+                    +90
+                  </Box>
+                ),
                 sx: {
                   borderRadius: 2,
                   height: 56,
