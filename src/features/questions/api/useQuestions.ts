@@ -9,6 +9,7 @@ export const useQuestions = (filters?: {
   isActive?: boolean;
   cikmis?: boolean;
   animasyonlu?: boolean;
+  search?: string;
   page?: number;
   limit?: number;
 }) => {
@@ -58,6 +59,7 @@ export const useQuestions = (filters?: {
     filters?.isActive,
     filters?.cikmis,
     filters?.animasyonlu,
+    filters?.search,
     filters?.page,
     filters?.limit
   ]);

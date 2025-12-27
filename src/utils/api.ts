@@ -536,6 +536,7 @@ export const questionApi = {
     isActive?: boolean;
     cikmis?: boolean;
     animasyonlu?: boolean;
+    search?: string;
     page?: number;
     limit?: number;
   }): Promise<ApiResponse<{
@@ -554,6 +555,7 @@ export const questionApi = {
     if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
     if (filters?.cikmis !== undefined) params.append('cikmis', filters.cikmis.toString());
     if (filters?.animasyonlu !== undefined) params.append('animasyonlu', filters.animasyonlu.toString());
+    if (filters?.search) params.append('search', filters.search);
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
     

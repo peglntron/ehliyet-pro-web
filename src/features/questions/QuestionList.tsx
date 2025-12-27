@@ -90,6 +90,7 @@ const QuestionList: React.FC = () => {
     isActive: filterStatus,
     cikmis: filterCikmis,
     animasyonlu: filterAnimasyonlu,
+    search: searchTerm || undefined,
     page: currentPage,
     limit: 12
   });
@@ -140,15 +141,6 @@ const QuestionList: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
-
-  // Eğer arama terimi varsa, istemci tarafında da filtrele
-  const filteredQuestions = searchTerm.trim() 
-    ? questions.filter(question => 
-        question.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        question.lessonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        question.unitName.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : questions;
   
   return (
     <Box sx={{ 
@@ -327,9 +319,9 @@ const QuestionList: React.FC = () => {
             size="medium" 
             showBackground={true}
           />
-        ) : filteredQuestions.length > 0 ? (
+        ) : questions.length > 0 ? (
           <>
-            {filteredQuestions.map((question) => (
+            {questions.map((question) => (
               <QuestionCard key={question.id} question={question} />
             ))}
             
