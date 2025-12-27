@@ -41,7 +41,7 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
     phone: instructor.phone,
     email: instructor.email || '',
     startDate: formatDateForInput(instructor.startDate),
-    profilePhoto: instructor.profilePhoto || ''
+    profilePhoto: instructor.profileImage || instructor.profilePhoto || ''
   });
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
