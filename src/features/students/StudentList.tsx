@@ -146,13 +146,27 @@ const StudentList: React.FC = () => {
   };
 
   // Sınav durumu güncelleme
-  const handleUpdateExamStatus = (updatedStudent: Student) => {
-    // Modal zaten API çağrısı yaptı ve snackbar gösterdi, sadece state'i güncelle
-    setStudents(prevStudents => 
-      prevStudents.map(student => 
-        student.id === updatedStudent.id ? updatedStudent : student
-      )
-    );
+  const handleUpdateExamStatus = async (updatedStudent: Student) => {
+    // Sınav durumu değiştiğinde listeyi yeniden yükle
+    // Çünkü status 'COMPLETED' olmuşsa aktif listeden çıkmalı
+    try {
+      setLoading(true);
+      let data: Student[];
+      
+      if (filterStatus === 'completed') {
+        data = await getCompletedStudents();
+      } else if (filterStatus === 'inactive') {
+        data = await getInactiveStudents();
+      } else {
+        data = await getActiveStudents();
+      }
+      
+      setStudents(data);
+    } catch (error) {
+      console.error('Liste yenilenirken hata:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Bildirim gönder işlemi

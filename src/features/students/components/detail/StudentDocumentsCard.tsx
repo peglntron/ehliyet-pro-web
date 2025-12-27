@@ -78,7 +78,7 @@ const StudentDocumentsCard: React.FC<StudentDocumentsCardProps> = ({ student, on
       }
       
       await loadDocuments();
-      onUpdate?.();
+      // onUpdate kaldırıldı - sayfa refresh sorununu çözüyor
     } catch (error) {
       console.error('Evrak güncellenirken hata:', error);
     }
