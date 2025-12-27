@@ -325,8 +325,8 @@ const QuestionList: React.FC = () => {
               <QuestionCard key={question.id} question={question} />
             ))}
             
-            {/* Pagination */}
-            {pagination && pagination.pages > 1 && (
+            {/* Pagination - arama yapıldığında gizle */}
+            {!searchTerm && pagination && pagination.pages > 1 && (
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                 <Pagination
                   count={pagination.pages}
