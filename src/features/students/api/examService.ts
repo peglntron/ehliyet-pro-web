@@ -35,8 +35,12 @@ export const updateDrivingExamStatus = async (
     return mapApiStudentToUI(apiStudent);
   } catch (error: any) {
     console.error('Direksiyon sınavı güncellenirken hata:', error);
+    console.error('Error response:', error?.response);
+    console.error('Error response data:', error?.response?.data);
+    console.error('Error message:', error?.response?.data?.message);
+    
     // Backend'den gelen hata mesajını kullan
-    const message = error?.response?.data?.message || 'Direksiyon sınavı durumu güncellenemedi';
+    const message = error?.response?.data?.message || error?.message || 'Direksiyon sınavı durumu güncellenemedi';
     throw new Error(message);
   }
 };
