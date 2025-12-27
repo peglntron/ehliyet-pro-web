@@ -17,6 +17,7 @@ import { useTrafficSignCategories, getTrafficSignById, addTrafficSign, updateTra
 import { trafficSignApi } from '../../utils/api';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import type { TrafficSign, TrafficSignCategory } from './types/types';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 
 const AddEditTrafficSign: React.FC = () => {
   const navigate = useNavigate();
@@ -41,11 +42,15 @@ const AddEditTrafficSign: React.FC = () => {
     description: '',
     isActive: true
   });
+  const [initialFormData, setInitialFormData] = useState(formData);
   
   // Loading state
   const [loading, setLoading] = useState(isEditMode);
   const [imageUploading, setImageUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  useUnsavedChangesWarning({ hasUnsavedChanges });
   
   // Form validation için local snackbar (sadece validation hataları için)
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -58,13 +63,15 @@ const AddEditTrafficSign: React.FC = () => {
       setLoading(true);
       getTrafficSignById(id)
         .then(sign => {
-          setFormData({
+          const loadedData = {
             name: sign.name,
             categoryId: sign.categoryId,
             imageUrl: sign.imageUrl || '',
             description: sign.description || '',
             isActive: sign.isActive
-          });
+          };
+          setFormData(loadedData);
+          setInitialFormData(loadedData);
           setLoading(false);
         })
         .catch(error => {

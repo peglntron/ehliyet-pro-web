@@ -17,6 +17,7 @@ import PageBreadcrumb from '../../components/PageBreadcrumb';
 import { getLicenseClassById } from './api/useLicenseClasses';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import type { LicenseClass } from './types/types';
+import { useUnsavedChangesWarning } from '../../hooks/useUnsavedChangesWarning';
 
 const AddEditLicenseClass: React.FC = () => {
   const navigate = useNavigate();
@@ -48,10 +49,14 @@ const AddEditLicenseClass: React.FC = () => {
     iconUrl: '',
     isActive: true
   });
+  const [initialFormData, setInitialFormData] = useState(formData);
   
   // Loading state
   const [loading, setLoading] = useState(isEditMode);
   const [imageUploading, setImageUploading] = useState(false);
+  
+  const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
+  useUnsavedChangesWarning({ hasUnsavedChanges });
   
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -64,7 +69,7 @@ const AddEditLicenseClass: React.FC = () => {
       setLoading(true);
       getLicenseClassById(id)
         .then(licenseClass => {
-          setFormData({
+          const loadedData = {
             type: licenseClass.type,
             vehicle: licenseClass.vehicle,
             minAge: licenseClass.minAge,
@@ -75,7 +80,9 @@ const AddEditLicenseClass: React.FC = () => {
             color: licenseClass.color,
             iconUrl: licenseClass.iconUrl,
             isActive: licenseClass.isActive
-          });
+          };
+          setFormData(loadedData);
+          setInitialFormData(loadedData);
           setLoading(false);
         })
         .catch(error => {
