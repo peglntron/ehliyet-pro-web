@@ -69,19 +69,6 @@ const AddEditStudent: React.FC = () => {
   const hasUnsavedChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData);
   
   useUnsavedChangesWarning({ hasUnsavedChanges });
-    firstName: '',
-    lastName: '',
-    tcNo: '',
-    gender: 'male',
-    phone: '',
-    licenseType: '',
-    licenseClassId: '',          // UUID relation (opsiyonel - backend lookup yapar)
-    province: '',
-    district: '',
-    address: '',
-    notes: '',
-    status: 'active'
-  });
   
   // Düzenleme modunda veriyi yükle
   useEffect(() => {
