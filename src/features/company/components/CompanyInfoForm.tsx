@@ -26,6 +26,7 @@ interface CompanyInfoFormProps {
     email?: string;
     taxNumber?: string;
     owner: string;
+    ownerPhone: string;
     logo?: string;
   };
   errors: {
@@ -36,6 +37,7 @@ interface CompanyInfoFormProps {
     email?: string;
     taxNumber?: string;
     owner?: string;
+    ownerPhone?: string;
   };
   onChange: (data: Partial<CompanyInfoFormProps['formData']>) => void;
   onErrorChange: (errors: Partial<CompanyInfoFormProps['errors']>) => void;
@@ -385,7 +387,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
           />
         </Box>
         
-        {/* Şirket Sahibi, Email ve Vergi No */}
+        {/* Şirket Sahibi ve Telefon */}
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
           <Box sx={{ flex: 1 }}>
             <Typography 
@@ -396,17 +398,17 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
               sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
             >
               <PersonIcon fontSize="small" color="primary" />
-              Şirket Sahibi *
+              Şirket Sahibi (Ad Soyad) *
             </Typography>
             <TextField
               name="owner"
               value={formData.owner}
               onChange={handleChange}
               fullWidth
-              placeholder="Şirket sahibi adını girin..."
+              placeholder="Şirket sahibinin ad ve soyadını girin..."
               required
               error={!!errors.owner}
-              helperText={errors.owner}
+              helperText={errors.owner || 'Bu bilgilerden otomatik olarak yönetici kullanıcı oluşturulacaktır'}
               InputProps={{
                 sx: {
                   borderRadius: 2,
@@ -418,6 +420,36 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({
                     <PersonIcon fontSize="small" color="action" />
                   </InputAdornment>
                 )
+              }}
+            />
+          </Box>
+          
+          <Box sx={{ flex: 1 }}>
+            <Typography 
+              variant="subtitle1" 
+              fontWeight={600} 
+              color="text.primary" 
+              gutterBottom
+              sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+            >
+              <PersonIcon fontSize="small" color="primary" />
+              Şirket Sahibi Telefon *
+            </Typography>
+            <TextField
+              name="ownerPhone"
+              value={formData.ownerPhone}
+              onChange={handleChange}
+              fullWidth
+              placeholder="05XX XXX XX XX"
+              required
+              error={!!errors.ownerPhone}
+              helperText={errors.ownerPhone || 'Bu telefon numarası giriş yapmak için kullanılacaktır'}
+              InputProps={{
+                sx: {
+                  borderRadius: 2,
+                  height: 56,
+                  fontSize: '1rem'
+                }
               }}
             />
           </Box>

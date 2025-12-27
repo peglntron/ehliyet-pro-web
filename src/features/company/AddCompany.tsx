@@ -19,7 +19,6 @@ import LoadingIndicator from '../../components/LoadingIndicator';
 import CompanyInfoForm from './components/CompanyInfoForm';
 import LicenseInfoForm from './components/LicenseInfoForm';
 import LocationInfoForm from './components/LocationInfoForm';
-import UserInfoForm from './components/UserInfoForm';
 import AddLicenseModal from './components/AddLicenseModal';
 
 const AddCompany: React.FC = () => {
@@ -41,6 +40,7 @@ const AddCompany: React.FC = () => {
     registrationDate: string;
     licenseEndDate: string;
     owner: string;
+    ownerPhone: string;
     authorizedPerson?: string;
     website?: string;
     description?: string;
@@ -49,11 +49,6 @@ const AddCompany: React.FC = () => {
       longitude: string;
       mapLink?: string;
     };
-    // Kullanıcı bilgileri - ZORUNLU
-    userPhone: string;
-    userFirstName: string;
-    userLastName: string;
-    userRole: 'COMPANY_ADMIN' | 'COMPANY_USER';
     isActive: boolean;
   }>({
     name: '',
@@ -65,6 +60,7 @@ const AddCompany: React.FC = () => {
     registrationDate: new Date().toISOString().split('T')[0],
     licenseEndDate: '',
     owner: '',
+    ownerPhone: '',
     authorizedPerson: '',
     website: '',
     description: '',
@@ -73,10 +69,6 @@ const AddCompany: React.FC = () => {
       longitude: '',
       mapLink: ''
     },
-    userPhone: '',
-    userFirstName: '',
-    userLastName: '',
-    userRole: 'COMPANY_ADMIN',
     isActive: true
   });
   
@@ -90,9 +82,7 @@ const AddCompany: React.FC = () => {
     taxNumber?: string;
     licenseEndDate?: string;
     owner?: string;
-    userPhone?: string;
-    userFirstName?: string;
-    userLastName?: string;
+    ownerPhone?: string;
   }>({});
   
   // Snackbar state
@@ -157,12 +147,8 @@ const AddCompany: React.FC = () => {
     if (!formData.province) newErrors.province = 'İl seçimi gereklidir';
     if (!formData.district) newErrors.district = 'İlçe seçimi gereklidir';
     if (!formData.address) newErrors.address = 'Adres gereklidir';
-    if (!formData.owner) newErrors.owner = 'Şirket sahibi adı gereklidir';
-    
-    // Kullanıcı bilgileri - ZORUNLU
-    if (!formData.userPhone) newErrors.userPhone = 'Kullanıcı telefon numarası gereklidir';
-    if (!formData.userFirstName) newErrors.userFirstName = 'Kullanıcı adı gereklidir';
-    if (!formData.userLastName) newErrors.userLastName = 'Kullanıcı soyadı gereklidir';
+    if (!formData.owner) newErrors.owner = 'Şirket sahibi adı ve soyadı gereklidir';
+    if (!formData.ownerPhone) newErrors.ownerPhone = 'Şirket sahibi telefon numarası gereklidir';
     
     // Email formatı kontrolü (opsiyonel)
     if (formData.email) {
@@ -173,11 +159,18 @@ const AddCompany: React.FC = () => {
     }
     
     // Telefon formatı kontrolü
-    if (formData.userPhone) {
+    if (formData.ownerPhone) {
       const phoneRegex = /^[5-9][0-9]{9}$/;
-      if (!phoneRegex.test(formData.userPhone.replace(/\s+/g, ''))) {
-        newErrors.userPhone = 'Geçerli bir telefon numarası girin (örn: 5551234567)';
+      const cleanPhone = formData.ownerPhone.replace(/\s+/g, '');
+      if (!phoneRegex.test(cleanPhone)) {
+        newErrors.ownerPhone = 'Geçerli bir telefon numarası girin (örn: 5551234567)';
       }
+    }
+    
+    // İsim soyisim kontrolü - owner'dan ayır
+    const ownerParts = formData.owner.trim().split(/\s+/);
+    if (ownerParts.length < 2) {
+      newErrors.owner = 'Lütfen ad ve soyad girin';
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -194,6 +187,11 @@ const AddCompany: React.FC = () => {
     
     // State update için kısa bir bekleme
     await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Owner'dan ad ve soyad çıkar
+    const ownerParts = formData.owner.trim().split(/\s+/);
+    const firstName = ownerParts.slice(0, -1).join(' ') || ownerParts[0];
+    const lastName = ownerParts[ownerParts.length - 1];
     
     // Admin API ile işletme oluştur
     const submitData = {
@@ -212,10 +210,11 @@ const AddCompany: React.FC = () => {
       latitude: formData.location.latitude,
       longitude: formData.location.longitude,
       mapLink: formData.location.mapLink,
-      userPhone: formData.userPhone,
-      userFirstName: formData.userFirstName,
-      userLastName: formData.userLastName,
-      userRole: formData.userRole
+      // Şirket sahibi bilgilerinden kullanıcı oluştur
+      userPhone: formData.ownerPhone,
+      userFirstName: firstName,
+      userLastName: lastName,
+      userRole: 'COMPANY_ADMIN'
     };
 
     console.log('Submit Data:', submitData);
@@ -349,11 +348,6 @@ const AddCompany: React.FC = () => {
                 iconPosition="start"
               />
               <Tab 
-                icon={<PersonIcon />} 
-                label="Kullanıcı Bilgileri" 
-                iconPosition="start"
-              />
-              <Tab 
                 icon={<BadgeIcon />} 
                 label="Lisans Bilgileri" 
                 iconPosition="start"
@@ -377,18 +371,8 @@ const AddCompany: React.FC = () => {
                 />
               )}
               
-              {/* Kullanıcı Bilgileri Tab */}
-              {activeTab === 1 && (
-                <UserInfoForm 
-                  formData={formData}
-                  errors={errors}
-                  onChange={handleFormChange}
-                  onErrorChange={handleErrorChange}
-                />
-              )}
-              
               {/* Lisans Bilgileri Tab */}
-              {activeTab === 2 && (
+              {activeTab === 1 && (
                 <LicenseInfoForm 
                   formData={formData}
                   onChange={handleFormChange}
@@ -398,7 +382,7 @@ const AddCompany: React.FC = () => {
               )}
               
               {/* Konum Bilgileri Tab */}
-              {activeTab === 3 && (
+              {activeTab === 2 && (
                 <LocationInfoForm 
                   formData={formData}
                   onChange={handleFormChange}
