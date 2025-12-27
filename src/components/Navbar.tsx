@@ -37,6 +37,7 @@ const adminMenuGroups = [
       { text: 'Ehliyet Sınıfları', icon: <DriveEtaIcon />, path: '/license-classes' },
       { text: 'Gider Kalemleri', icon: <ListAltIcon />, path: '/expense-categories' },
       { text: 'İşletme Tanımlama', icon: <LayersIcon />, path: '/company' },
+      { text: 'Lisans Paketleri', icon: <ReceiptIcon />, path: '/license-packages' },
     ],
   },
 ];

@@ -231,14 +231,17 @@ const EditEducationInfoModal: React.FC<EditEducationInfoModalProps> = ({
                 disabled={loading}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {(selected as string[]).map((value) => (
-                      <Chip 
-                        key={value} 
-                        label={value} 
-                        size="small"
-                        sx={{ borderRadius: 1 }}
-                      />
-                    ))}
+                    {(selected as string[]).map((value) => {
+                      const option = licenseOptions.find(opt => opt.value === value);
+                      return (
+                        <Chip 
+                          key={value} 
+                          label={option?.label || value}
+                          size="small"
+                          sx={{ borderRadius: 1 }}
+                        />
+                      );
+                    })}
                   </Box>
                 )}
                 sx={{ borderRadius: 2 }}

@@ -54,6 +54,7 @@ import AdminProfilePage from './pages/AdminProfilePage';
 import CompanyAdminProfilePage from './pages/CompanyAdminProfilePage';
 import DrivingLessonsPage from './pages/DrivingLessonsPage';
 import InstructorDashboardPage from './pages/InstructorDashboardPage';
+import LicensePackages from './pages/admin/LicensePackages';
 
 function App() {
   // Number input scroll engellemesi - global
@@ -123,6 +124,9 @@ function App() {
             <Route path="/company/add" element={<ProtectedRoute><MainLayout><AddCompany /></MainLayout></ProtectedRoute>} />
             <Route path="/company/edit/:id" element={<ProtectedRoute><MainLayout><AddEditCompany /></MainLayout></ProtectedRoute>} />
             <Route path="/company/:id" element={<ProtectedRoute><MainLayout><CompanyDetail /></MainLayout></ProtectedRoute>}/>
+            
+            {/* Lisans Paketleri - Admin */}
+            <Route path="/license-packages" element={<ProtectedRoute><MainLayout><LicensePackages /></MainLayout></ProtectedRoute>} />
             
             {/* Kursiyer rotaları */}
             <Route path="/students" element={<ProtectedRoute><MainLayout><StudentList /></MainLayout></ProtectedRoute>}/>
