@@ -95,29 +95,49 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
       return { status: 'none', daysLeft: 0, color: 'info' as const };
     }
 
-    const today = new Date();
-    const licenseEnd = new Date(currentLicenseEndDate);
-    const timeDiff = licenseEnd.getTime() - today.getTime();
-    const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const licenseEnd = new Date(currentLicenseEndDate);
+      
+      // Geçersiz tarih kontrolü
+      if (isNaN(licenseEnd.getTime())) {
+        return { status: 'none', daysLeft: 0, color: 'info' as const };
+      }
+      
+      licenseEnd.setHours(0, 0, 0, 0);
+      const timeDiff = licenseEnd.getTime() - today.getTime();
+      const daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
 
-    if (daysLeft < 0) {
-      return { status: 'expired', daysLeft, color: 'error' as const };
-    } else if (daysLeft <= 7) {
-      return { status: 'expiring', daysLeft, color: 'warning' as const };
-    } else {
-      return { status: 'active', daysLeft, color: 'success' as const };
+      if (daysLeft < 0) {
+        return { status: 'expired', daysLeft, color: 'error' as const };
+      } else if (daysLeft <= 7) {
+        return { status: 'expiring', daysLeft, color: 'warning' as const };
+      } else {
+        return { status: 'active', daysLeft, color: 'success' as const };
+      }
+    } catch (error) {
+      console.error('License date calculation error:', error);
+      return { status: 'none', daysLeft: 0, color: 'info' as const };
     }
   };
 
   const { status, daysLeft, color } = getLicenseStatus();
 
   // Tarih formatlama
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('tr-TR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '-';
+      return date.toLocaleDateString('tr-TR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return '-';
+    }
   };
 
   return (

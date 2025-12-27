@@ -261,13 +261,19 @@ const CompanyDetail: React.FC = () => {
   };
 
   // Tarih formatını düzenleme
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('tr-TR', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric'
-    }).format(date);
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '-';
+      return new Intl.DateTimeFormat('tr-TR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric'
+      }).format(date);
+    } catch (error) {
+      return '-';
+    }
   };
 
   // Rol adını Türkçe olarak göster
