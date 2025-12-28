@@ -202,9 +202,9 @@ const AddEditCompany: React.FC = () => {
     if (!formData.owner) newErrors.owner = 'Şirket sahibi adı gereklidir';
     
     // Telefon formatı kontrolü (varsa)
-    const phoneRegex = /^0[2-9][0-9]{2}\s?[0-9]{3}\s?[0-9]{2}\s?[0-9]{2}$/;
-    if (formData.phone && !phoneRegex.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Geçerli bir telefon numarası girin (örn: 0212 123 45 67)';
+    const phoneRegex = /^[0-9]{10}$/;
+    if (formData.ownerPhone && !phoneRegex.test(formData.ownerPhone.replace(/\s/g, ''))) {
+      newErrors.ownerPhone = 'Geçerli bir telefon numarası girin (10 hane)';
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -373,14 +373,6 @@ const AddEditCompany: React.FC = () => {
           </Box>
         </form>
       )}
-      
-      {/* Kullanıcı Oluşturma Modalı */}
-      <UserCreateModal 
-        open={userCreateModalOpen}
-        onClose={() => setUserCreateModalOpen(false)}
-        onSuccess={handleUserCreated}
-        companyId={id || ''}
-      />
       
       {/* Unsaved Changes Dialog */}
       <Dialog
