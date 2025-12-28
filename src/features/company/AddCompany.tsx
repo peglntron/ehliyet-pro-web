@@ -80,28 +80,20 @@ const AddCompany: React.FC = () => {
     }));
   };
   
+  // Form değişikliklerini güncelle
+  const handleFormChange = (updatedData: Partial<typeof formData>) => {
+    setFormData(prev => ({
+      ...prev,
+      ...updatedData
+    }));
+  };
+  
   // Hata durumlarını güncelle
   const handleErrorChange = (updatedErrors: Partial<typeof errors>) => {
     setErrors(prev => ({
       ...prev,
       ...updatedErrors
     }));
-  };
-  
-  // Lisans ekleme modalını aç/kapat
-  const handleOpenLicenseModal = () => setLicenseModalOpen(true);
-  const handleCloseLicenseModal = () => setLicenseModalOpen(false);
-  
-  // Yeni lisans ekle
-  const handleAddLicense = (data: { packageId?: string; customDays?: number; amount?: number; description?: string }) => {
-    console.log('License data:', data);
-    
-    // Not: Bu modal sadece formdaki licenseEndDate'i göstermek için kullanılıyor
-    // Gerçek lisans kaydı company oluşturulduğunda backend'de yapılıyor
-    setSnackbarMessage('Lisans paketi seçildi! İşletme kaydedildiğinde uygulanacak.');
-    setSnackbarSeverity('info');
-    setSnackbarOpen(true);
-    handleCloseLicenseModal();
   };
   
   // Form gönderim işlemi
@@ -350,15 +342,6 @@ const AddCompany: React.FC = () => {
           </Box>
         </Box>
       )}
-      
-      {/* Lisans Ekleme Modal */}
-      <AddLicenseModal 
-        open={licenseModalOpen}
-        onClose={handleCloseLicenseModal}
-        onSubmit={handleAddLicense}
-        registrationDate={formData.registrationDate}
-        currentLicenseEndDate={formData.licenseEndDate || undefined}
-      />
       
       {/* Snackbar Alert - Her zaman göster */}
       <Snackbar
