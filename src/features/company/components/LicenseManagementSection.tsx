@@ -45,7 +45,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
 }) => {
   const [payments, setPayments] = useState<LicensePayment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<LicensePayment | null>(null);
 
