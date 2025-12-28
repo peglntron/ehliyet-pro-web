@@ -124,15 +124,12 @@ const AddEditCompany: React.FC = () => {
       setLoading(true);
       getCompanyById(id)
         .then(company => {
-          // COMPANY_ADMIN kullanıcısının phone'unu bul
-          const companyAdmin = company.users?.find(u => u.role === 'COMPANY_ADMIN');
-          
           const loadedData = {
             name: company.name || '',
             province: company.province || '',
             district: company.district || '',
             address: company.address || '',
-            ownerPhone: companyAdmin?.phone || '',
+            ownerPhone: company.ownerPhone || '',
             email: company.email || '',
             taxNumber: company.taxNumber || '',
             registrationDate: company.registrationDate ? new Date(company.registrationDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
