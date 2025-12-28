@@ -45,7 +45,6 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
 }) => {
   const [payments, setPayments] = useState<LicensePayment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showHistory, setShowHistory] = useState(true);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<LicensePayment | null>(null);
 
@@ -65,10 +64,10 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
   };
 
   useEffect(() => {
-    if (companyId && showHistory) {
+    if (companyId) {
       loadPayments();
     }
-  }, [companyId, showHistory]);
+  }, [companyId]);
 
   // Ödeme onaylama
   const handleConfirmPayment = async () => {
@@ -155,18 +154,6 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
         <Typography variant="h5" fontWeight={700} color="primary.main">
           Lisans Yönetimi
         </Typography>
-        
-        {!isNewCompany && companyId && (
-          <Button
-            startIcon={<HistoryIcon />}
-            onClick={() => setShowHistory(!showHistory)}
-            variant="outlined"
-            size="small"
-            sx={{ textTransform: 'none' }}
-          >
-            {showHistory ? 'Gizle' : 'Geçmiş'}
-          </Button>
-        )}
       </Box>
 
       {/* Lisans Durumu */}
@@ -225,7 +212,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
       )}
 
       {/* Ödeme Geçmişi */}
-      {showHistory && companyId && (
+      {companyId && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h6" fontWeight={600} gutterBottom>
             Ödeme Geçmişi
