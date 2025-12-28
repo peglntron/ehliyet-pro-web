@@ -163,8 +163,8 @@ const CompanyCard: React.FC<CompanyCardProps> = ({ company, getLicenseStatus, on
               <Box display="flex" alignItems="center" gap={0.5} minWidth={150}>
                 <PhoneIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                 <Typography variant="body2" color="text.secondary">
-                  {company.users?.find(u => u.role === 'COMPANY_ADMIN')?.phone 
-                    ? `+90 ${company.users.find(u => u.role === 'COMPANY_ADMIN')?.phone}` 
+                  {company.ownerPhone 
+                    ? `+90 ${company.ownerPhone}` 
                     : '-'}
                 </Typography>
               </Box>

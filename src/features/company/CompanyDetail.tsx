@@ -369,10 +369,10 @@ const CompanyDetail: React.FC = () => {
                       <Box sx={{ display: 'flex', gap: 2 }}>
                         <PhoneIcon color="primary" />
                         <Box>
-                          <Typography variant="subtitle2" fontWeight={600}>Telefon</Typography>
+                          <Typography variant="subtitle2" fontWeight={600}>Şirket Sahibi Telefonu</Typography>
                           <Typography variant="body2">
-                            {company.users?.find(u => u.role === 'COMPANY_ADMIN')?.phone 
-                              ? `+90 ${company.users.find(u => u.role === 'COMPANY_ADMIN')?.phone}` 
+                            {company.ownerPhone 
+                              ? `+90 ${company.ownerPhone}` 
                               : '-'}
                           </Typography>
                         </Box>
@@ -381,7 +381,7 @@ const CompanyDetail: React.FC = () => {
                       <Box sx={{ display: 'flex', gap: 2 }}>
                         <PersonIcon color="primary" />
                         <Box>
-                          <Typography variant="subtitle2" fontWeight={600}>Yetkili</Typography>
+                          <Typography variant="subtitle2" fontWeight={600}>Şirket Sahibi</Typography>
                           <Typography variant="body2">{company.owner}</Typography>
                         </Box>
                       </Box>

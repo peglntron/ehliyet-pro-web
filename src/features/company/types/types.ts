@@ -33,6 +33,7 @@ export interface Company {
   phones?: PhoneInfo[]; // Birden fazla telefon numarası açıklamalı
   users?: CompanyUser[]; // İşletme kullanıcıları
   owner: string;
+  ownerPhone?: string; // Şirket sahibi telefonu
   registrationDate: string;
   licenseEndDate: string;
   createdAt: string;

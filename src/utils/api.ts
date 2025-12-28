@@ -155,6 +155,7 @@ export interface Company {
   email?: string;
   taxNumber?: string;
   owner?: string;
+  ownerPhone?: string;
   registrationDate?: string;
   licenseEndDate?: string;
   logo?: string;

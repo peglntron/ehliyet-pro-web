@@ -13,6 +13,7 @@ const mapApiCompanyToLocal = (apiCompany: ApiCompany): Company => ({
   registrationDate: apiCompany.registrationDate?? '',
   licenseEndDate: apiCompany.licenseEndDate ?? '',
   owner: apiCompany.owner ?? '',
+  ownerPhone: apiCompany.ownerPhone,
   location: apiCompany.location as any || undefined,
   isActive: apiCompany.isActive,
   createdAt: apiCompany.createdAt,
