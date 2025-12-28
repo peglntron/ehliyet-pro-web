@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSnackbar } from '../../../contexts/SnackbarContext';
 import {
   Box, Typography, Paper, Button, Chip, Alert,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -44,6 +45,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
   onLicenseUpdated,
   isNewCompany = false
 }) => {
+  const { showSnackbar } = useSnackbar();
   const [payments, setPayments] = useState<LicensePayment[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -79,6 +81,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
       setConfirmDialogOpen(false);
       setSelectedPayment(null);
       loadPayments(); // Listeyi yenile
+      showSnackbar('Ödeme başarıyla onaylandı', 'success');
       
       // Parent component'e bildir
       if (onLicenseUpdated && selectedPayment.endDate) {
@@ -86,6 +89,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
       }
     } catch (error) {
       console.error('Error confirming payment:', error);
+      showSnackbar('Ödeme onaylanırken hata oluştu', 'error');
     }
   };
 
@@ -98,6 +102,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
     try {
       await deleteLicensePayment(paymentId);
       loadPayments(); // Listeyi yenile
+      showSnackbar('Lisans ödemesi başarıyla silindi', 'success');
       
       // Company data'yı da yenile (licenseEndDate güncellenmiş olabilir)
       if (onLicenseUpdated) {
@@ -106,7 +111,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
       }
     } catch (error) {
       console.error('Error deleting payment:', error);
-      alert('Lisans silinirken hata oluştu');
+      showSnackbar('Lisans ödemesi silinirken hata oluştu', 'error');
     }
   };
 
