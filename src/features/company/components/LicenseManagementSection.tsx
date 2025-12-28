@@ -49,6 +49,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
   const [payments, setPayments] = useState<LicensePayment[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<LicensePayment | null>(null);
 
   // Ödeme geçmişini yükle
@@ -93,21 +94,26 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
     }
   };
 
-  // Lisans silme
-  const handleDeletePayment = async (paymentId: string) => {
-    if (!window.confirm('Bu lisansı silmek istediğinizden emin misiniz?')) {
-      return;
-    }
+  // Lisans silme - dialog aç
+  const handleOpenDeleteDialog = (payment: LicensePayment) => {
+    setSelectedPayment(payment);
+    setDeleteDialogOpen(true);
+  };
+
+  // Lisans silme - onayla
+  const handleConfirmDelete = async () => {
+    if (!selectedPayment) return;
 
     try {
-      await deleteLicensePayment(paymentId);
+      const updatedCompany = await deleteLicensePayment(selectedPayment.id);
+      setDeleteDialogOpen(false);
+      setSelectedPayment(null);
       loadPayments(); // Listeyi yenile
       showSnackbar('Lisans ödemesi başarıyla silindi', 'success');
       
-      // Company data'yı da yenile (licenseEndDate güncellenmiş olabilir)
-      if (onLicenseUpdated) {
-        // Backend'den yeni licenseEndDate gelecek, şimdilik reload ettiriyoruz
-        window.location.reload();
+      // Parent component'e yeni licenseEndDate'i bildir
+      if (onLicenseUpdated && updatedCompany?.licenseEndDate) {
+        onLicenseUpdated(updatedCompany.licenseEndDate);
       }
     } catch (error) {
       console.error('Error deleting payment:', error);
@@ -299,7 +305,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
                               <IconButton
                                 size="small"
                                 color="error"
-                                onClick={() => handleDeletePayment(payment.id)}
+                                onClick={() => handleOpenDeleteDialog(payment)}
                               >
                                 <DeleteIcon fontSize="small" />
                               </IconButton>
@@ -347,6 +353,44 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
             startIcon={<CheckCircleIcon />}
           >
             Ödeme Alındı
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Lisans Silme Dialogu */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>
+          Lisans Sil
+          <IconButton
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bu lisansı silmek istediğinizden emin misiniz?
+          </Typography>
+          {selectedPayment && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'error.lighter', borderRadius: 1 }}>
+              <Typography variant="body2"><strong>Açıklama:</strong> {selectedPayment.description}</Typography>
+              <Typography variant="body2"><strong>Tutar:</strong> ₺{selectedPayment.amount.toLocaleString('tr-TR')}</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <strong>Uyarı:</strong> Bu işlem geri alınamaz!
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>İptal</Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            variant="contained" 
+            color="error"
+            startIcon={<DeleteIcon />}
+          >
+            Sil
           </Button>
         </DialogActions>
       </Dialog>
