@@ -12,9 +12,10 @@ import {
   Pending as PendingIcon,
   History as HistoryIcon,
   Payment as PaymentIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
-import { getLicensePayments, confirmPayment } from '../api/useCompanies';
+import { getLicensePayments, confirmPayment, deleteLicensePayment } from '../api/useCompanies';
 
 interface LicensePayment {
   id: string;
@@ -85,6 +86,27 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
       }
     } catch (error) {
       console.error('Error confirming payment:', error);
+    }
+  };
+
+  // Lisans silme
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!window.confirm('Bu lisansı silmek istediğinizden emin misiniz?')) {
+      return;
+    }
+
+    try {
+      await deleteLicensePayment(paymentId);
+      loadPayments(); // Listeyi yenile
+      
+      // Company data'yı da yenile (licenseEndDate güncellenmiş olabilir)
+      if (onLicenseUpdated) {
+        // Backend'den yeni licenseEndDate gelecek, şimdilik reload ettiriyoruz
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      alert('Lisans silinirken hata oluştu');
     }
   };
 
@@ -255,18 +277,29 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
                       </TableCell>
                       <TableCell align="right">
                         {!payment.isPaid && (
-                          <Tooltip title="Ödeme Alındı Olarak İşaretle">
-                            <IconButton
-                              size="small"
-                              color="success"
-                              onClick={() => {
-                                setSelectedPayment(payment);
-                                setConfirmDialogOpen(true);
-                              }}
-                            >
-                              <PaymentIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          <>
+                            <Tooltip title="Ödeme Alındı Olarak İşaretle">
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() => {
+                                  setSelectedPayment(payment);
+                                  setConfirmDialogOpen(true);
+                                }}
+                              >
+                                <PaymentIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Lisansı Sil">
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDeletePayment(payment.id)}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </>
                         )}
                       </TableCell>
                     </TableRow>

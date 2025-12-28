@@ -77,6 +77,7 @@ const CompanyDetail: React.FC = () => {
   const [ibanModalOpen, setIbanModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
+  const [licenseRefreshKey, setLicenseRefreshKey] = useState(0);
   const [phoneForm, setPhoneForm] = useState({ number: '', description: '' });
   const [ibanForm, setIbanForm] = useState({ iban: '', bankName: '', accountHolder: '', description: '' });
   const [locationForm, setLocationForm] = useState({ latitude: '', longitude: '', mapLink: '' });
@@ -634,6 +635,7 @@ const CompanyDetail: React.FC = () => {
               {/* Lisans İşlemleri Sekmesi */}
               <TabPanel value={tabValue} index={3}>
                 <LicenseManagementSection 
+                  key={licenseRefreshKey}
                   companyId={id}
                   currentLicenseEndDate={company?.licenseEndDate}
                   onAddLicense={() => setLicenseModalOpen(true)}
@@ -856,6 +858,7 @@ const CompanyDetail: React.FC = () => {
           if (id) {
             const updatedCompany = await getCompanyById(id);
             setCompany(updatedCompany);
+            setLicenseRefreshKey(prev => prev + 1); // Listeyi yenile
           }
           setLicenseModalOpen(false);
         }}

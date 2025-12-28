@@ -198,6 +198,20 @@ export const confirmPayment = async (
   }
 };
 
+export const deleteLicensePayment = async (paymentId: string): Promise<any> => {
+  try {
+    const response: ApiResponse<any> = 
+      await apiClient.delete(`/admin/license-payments/${paymentId}`);
+    if (response.success) {
+      return response.data;
+    }
+    throw new Error('Failed to delete license payment');
+  } catch (error) {
+    console.error('Error deleting license payment:', error);
+    throw error;
+  }
+};
+
 export const resetCompanyPassword = async (id: string): Promise<boolean> => {
   try {
     const response: ApiResponse = await apiClient.post(`/admin/companies/${id}/reset-password`);
