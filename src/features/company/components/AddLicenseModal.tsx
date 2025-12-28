@@ -12,7 +12,7 @@ import {
   CheckCircle as CheckCircleIcon,
   AttachMoney as MoneyIcon
 } from '@mui/icons-material';
-import { getLicensePackages } from '../api/useCompanies';
+import { getLicensePackages, renewLicense } from '../api/useCompanies';
 
 interface LicensePackage {
   id: string;
@@ -28,6 +28,7 @@ interface AddLicenseModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: { packageId?: string; customDays?: number; amount?: number; description?: string }) => void;
+  companyId: string;
   registrationDate: string;
   currentLicenseEndDate?: string;
 }
@@ -36,12 +37,14 @@ const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
   open, 
   onClose, 
   onSubmit,
+  companyId,
   registrationDate,
   currentLicenseEndDate
 }) => {
   const [selectedPackage, setSelectedPackage] = useState<LicensePackage | null>(null);
   const [packages, setPackages] = useState<LicensePackage[]>([]);
   const [loadingPackages, setLoadingPackages] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   
   const isRenewal = Boolean(currentLicenseEndDate);
   
@@ -101,14 +104,28 @@ const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
   };
   
   // Formu gönder
-  const handleSubmit = () => {
-    if (selectedPackage) {
-      // Paket seçildi
-      onSubmit({
-        packageId: selectedPackage.id,
-        amount: selectedPackage.price,
-        description: `${selectedPackage.name} lisans paketi`
-      });
+  const handleSubmit = async () => {
+    if (selectedPackage && companyId) {
+      setSubmitting(true);
+      try {
+        // Backend'e lisans ekleme isteği gönder
+        await renewLicense(companyId, {
+          packageId: selectedPackage.id,
+          amount: selectedPackage.price,
+          description: `${selectedPackage.name} lisans paketi`
+        });
+        
+        // Callback'i çağır (company data'yı yenilemek için)
+        onSubmit({
+          packageId: selectedPackage.id,
+          amount: selectedPackage.price,
+          description: `${selectedPackage.name} lisans paketi`
+        });
+      } catch (error) {
+        console.error('Lisans ekleme hatası:', error);
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
   
@@ -315,14 +332,14 @@ const AddLicenseModal: React.FC<AddLicenseModalProps> = ({
           variant="contained"
           color="primary"
           startIcon={isRenewal ? <RefreshIcon /> : <AddIcon />}
-          disabled={!isValid}
+          disabled={!isValid || submitting}
           sx={{ 
             borderRadius: 2,
             textTransform: 'none',
             fontWeight: 600
           }}
         >
-          {isRenewal ? 'Lisansı Yenile' : 'Lisansı Ekle'}
+          {submitting ? 'Ekleniyor...' : (isRenewal ? 'Lisansı Yenile' : 'Lisansı Ekle')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -140,38 +140,28 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
   };
 
   return (
-    <Paper 
-      elevation={0}
-      sx={{ 
-        mb: 3,
-        p: { xs: 2, md: 4 },
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'divider'
-      }}
-    >
+    <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" fontWeight={700} color="primary.main">
-          Lisans Yönetimi
+        <Typography variant="h6" fontWeight={600}>
+          Lisans İşlemleri
         </Typography>
+        {!isNewCompany && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={onAddLicense}
+            sx={{ borderRadius: 2, textTransform: 'none' }}
+          >
+            Lisans Ekle
+          </Button>
+        )}
       </Box>
 
       {/* Lisans Durumu */}
       {isNewCompany || !currentLicenseEndDate ? (
         <Alert 
           severity="info" 
-          action={
-            <Button
-              color="inherit"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={onAddLicense}
-              sx={{ textTransform: 'none', fontWeight: 600 }}
-            >
-              Lisans Ekle
-            </Button>
-          }
-          sx={{ borderRadius: 2 }}
+          sx={{ borderRadius: 2, mb: 3 }}
         >
           <Typography variant="body2" fontWeight={500}>
             {isNewCompany 
@@ -322,7 +312,7 @@ const LicenseManagementSection: React.FC<LicenseManagementSectionProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Box>
   );
 };
 
