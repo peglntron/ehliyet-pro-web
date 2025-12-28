@@ -173,6 +173,7 @@ const AddCompany: React.FC = () => {
       district: formData.district,
       taxNumber: formData.taxNumber,
       owner: formData.owner,
+      ownerPhone: formData.ownerPhone,
       registrationDate: formData.registrationDate,
       licenseEndDate: formData.licenseEndDate || undefined,
       authorizedPerson: formData.authorizedPerson,

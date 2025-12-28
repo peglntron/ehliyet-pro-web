@@ -18,13 +18,16 @@ import {
   PeopleAlt as PeopleAltIcon,
   Map,
   AccountBalance as BankIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  CardMembership as LicenseIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCompanyById, addCompanyPhone, addCompanyIban, deleteCompanyPhone, deleteCompanyIban, updateCompany } from './api/useCompanies';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import UserManagement from './components/UserManagement';
+import LicenseManagementSection from './components/LicenseManagementSection';
+import AddLicenseModal from './components/AddLicenseModal';
 import type { Company } from './types/types';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -73,6 +76,7 @@ const CompanyDetail: React.FC = () => {
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [ibanModalOpen, setIbanModalOpen] = useState(false);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
+  const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [phoneForm, setPhoneForm] = useState({ number: '', description: '' });
   const [ibanForm, setIbanForm] = useState({ iban: '', bankName: '', accountHolder: '', description: '' });
   const [locationForm, setLocationForm] = useState({ latitude: '', longitude: '', mapLink: '' });
@@ -463,6 +467,12 @@ const CompanyDetail: React.FC = () => {
                     sx={{ textTransform: 'none', fontWeight: 600, py: 2 }} 
                   />
                   <Tab 
+                    label="Lisans İşlemleri" 
+                    icon={<LicenseIcon />}
+                    iconPosition="start"
+                    sx={{ textTransform: 'none', fontWeight: 600, py: 2 }} 
+                  />
+                  <Tab 
                     label="Konum" 
                     icon={<LocationOnIcon />}
                     iconPosition="start"
@@ -621,8 +631,22 @@ const CompanyDetail: React.FC = () => {
                 </Box>
               </TabPanel>
 
-              {/* Konum Sekmesi */}
+              {/* Lisans İşlemleri Sekmesi */}
               <TabPanel value={tabValue} index={3}>
+                <LicenseManagementSection 
+                  companyId={id}
+                  currentLicenseEndDate={company?.licenseEndDate}
+                  onAddLicense={() => setLicenseModalOpen(true)}
+                  onLicenseUpdated={(newEndDate) => {
+                    if (company) {
+                      setCompany({ ...company, licenseEndDate: newEndDate });
+                    }
+                  }}
+                />
+              </TabPanel>
+
+              {/* Konum Sekmesi */}
+              <TabPanel value={tabValue} index={4}>
                 <Box sx={{ p: 3 }}>
                   <Typography variant="h6" fontWeight={600} gutterBottom>
                     Konum Bilgileri
@@ -673,7 +697,7 @@ const CompanyDetail: React.FC = () => {
               </TabPanel>
               
               {/* Aktiviteler Sekmesi */}
-              <TabPanel value={tabValue} index={4}>
+              <TabPanel value={tabValue} index={5}>
                 <Box sx={{ p: 3 }}>
                   <Typography variant="h6" fontWeight={600} gutterBottom>
                     Kurum Aktiviteleri
@@ -822,6 +846,23 @@ const CompanyDetail: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Lisans Ekle Modal */}
+      <AddLicenseModal 
+        open={licenseModalOpen}
+        onClose={() => setLicenseModalOpen(false)}
+        onSubmit={async (data) => {
+          // Reload company data after license added
+          if (id) {
+            const updatedCompany = await getCompanyById(id);
+            setCompany(updatedCompany);
+          }
+          setLicenseModalOpen(false);
+        }}
+        companyId={id || ''}
+        registrationDate={company?.registrationDate}
+        currentLicenseEndDate={company?.licenseEndDate}
+      />
     </Box>
   );
 };
