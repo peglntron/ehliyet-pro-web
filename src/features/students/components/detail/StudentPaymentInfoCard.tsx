@@ -382,7 +382,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                                 variant="contained"
                                                 size="small"
                                                 color="info"
-                                                onClick={() => onMarkPaymentPaid(installment.id)}
+                                                onClick={() => onInstallmentPayment(installment)}
                                                 sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
                                               >
                                                 Ödeme Al
