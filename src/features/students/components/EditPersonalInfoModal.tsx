@@ -5,7 +5,7 @@ import {
   MenuItem, IconButton, Typography, Divider, Alert, CircularProgress,
   Avatar
 } from '@mui/material';
-import { Close as CloseIcon, PhotoCamera as PhotoCameraIcon } from '@mui/icons-material';
+import { Close as CloseIcon, PhotoCamera as PhotoCameraIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import type { Student } from '../types/types';
 import { getInstructors } from '../../instructors/api/useInstructors';
 import { useLocations } from '../../../api/useLocations';
@@ -381,14 +381,31 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
               onChange={handlePhotoChange}
             />
             
-            <Button
-              variant="outlined"
-              startIcon={<PhotoCameraIcon />}
-              onClick={() => fileInputRef.current?.click()}
-              sx={{ borderRadius: 2, textTransform: 'none' }}
-            >
-              Fotoğraf Seç
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                variant="outlined"
+                startIcon={<PhotoCameraIcon />}
+                onClick={() => fileInputRef.current?.click()}
+                sx={{ borderRadius: 2, textTransform: 'none' }}
+              >
+                Fotoğraf Seç
+              </Button>
+              
+              {photoPreview && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => {
+                    setPhotoPreview('');
+                    setPhotoFile(null);
+                  }}
+                  sx={{ borderRadius: 2, textTransform: 'none' }}
+                >
+                  Sil
+                </Button>
+              )}
+            </Box>
             
             <Typography variant="caption" color="text.secondary">
               Maksimum dosya boyutu: 5MB
