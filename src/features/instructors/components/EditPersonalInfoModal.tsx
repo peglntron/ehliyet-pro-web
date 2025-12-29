@@ -110,6 +110,9 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
   const handleSubmit = async () => {
     if (!validateForm()) return;
     
+    console.log('Submit - formData.profilePhoto:', formData.profilePhoto);
+    console.log('Submit - selectedFile:', selectedFile);
+    
     setLoading(true);
     setError(null);
     
@@ -139,6 +142,7 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
       } else if (formData.profilePhoto === '') {
         // Fotoğraf silinmişse null olarak ayarla
         photoUrl = null as any;
+        console.log('Photo deleted, setting to null');
       }
       
       console.log('Updating instructor with data:', {
@@ -243,6 +247,7 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
                   startIcon={<DeleteIcon />}
                   size="small"
                   onClick={() => {
+                    console.log('Deleting photo, current value:', formData.profilePhoto);
                     setFormData(prev => ({ ...prev, profilePhoto: '' }));
                     setSelectedFile(null);
                   }}
