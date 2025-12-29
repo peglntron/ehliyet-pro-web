@@ -3,9 +3,9 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Grid, IconButton, Typography,
   Divider, CircularProgress, Alert, FormControl,
-  InputLabel, Select, MenuItem, Box, Chip
+  InputLabel, Select, MenuItem, Box, Chip, Paper,
+  FormControlLabel, Checkbox
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import type { Instructor } from '../../../types/instructor';
 import { INSTRUCTOR_SPECIALIZATIONS } from '../../../types/instructor';
@@ -54,13 +54,6 @@ const EditEducationInfoModal: React.FC<EditEducationInfoModalProps> = ({
     if (errors[name as string]) {
       setErrors(prev => ({ ...prev, [name as string]: '' }));
     }
-  };
-  
-  const handleLicenseChange = (event: SelectChangeEvent<string[]>) => {
-    setFormData(prev => ({
-      ...prev,
-      licenseTypes: event.target.value as string[]
-    }));
   };
   
   const validateForm = (): boolean => {
@@ -220,39 +213,80 @@ const EditEducationInfoModal: React.FC<EditEducationInfoModalProps> = ({
             </FormControl>
           </Grid>
           <Grid item xs={12}>
-            <FormControl fullWidth>
-              <InputLabel id="license-types-label">Ehliyet Sınıfları</InputLabel>
-              <Select
-                labelId="license-types-label"
-                multiple
-                name="licenseTypes"
-                value={formData.licenseTypes}
-                onChange={handleLicenseChange}
-                disabled={loading}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {(selected as string[]).map((value) => {
-                      const option = licenseOptions.find(opt => opt.value === value);
-                      return (
-                        <Chip 
-                          key={value} 
-                          label={option?.label || value}
-                          size="small"
-                          sx={{ borderRadius: 1 }}
-                        />
-                      );
-                    })}
-                  </Box>
-                )}
-                sx={{ borderRadius: 2 }}
-              >
+            <Paper 
+              variant="outlined" 
+              sx={{ 
+                p: 2,
+                backgroundColor: 'background.default',
+                borderRadius: 2
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Ehliyet Sınıfları (Birden fazla seçebilirsiniz)
+              </Typography>
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+                gap: 1,
+                mt: 1
+              }}>
                 {licenseOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
+                  <FormControlLabel
+                    key={option.value}
+                    control={
+                      <Checkbox
+                        checked={formData.licenseTypes?.includes(option.value) || false}
+                        onChange={(e) => {
+                          const currentTypes = formData.licenseTypes || [];
+                          if (e.target.checked) {
+                            setFormData(prev => ({
+                              ...prev,
+                              licenseTypes: [...currentTypes, option.value]
+                            }));
+                          } else {
+                            setFormData(prev => ({
+                              ...prev,
+                              licenseTypes: currentTypes.filter((t: string) => t !== option.value)
+                            }));
+                          }
+                        }}
+                        disabled={loading}
+                        size="small"
+                      />
+                    }
+                    label={option.value}
+                    sx={{
+                      m: 0,
+                      '& .MuiFormControlLabel-label': {
+                        fontSize: '0.875rem'
+                      }
+                    }}
+                  />
                 ))}
-              </Select>
-            </FormControl>
+              </Box>
+              {formData.licenseTypes && formData.licenseTypes.length > 0 && (
+                <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ width: '100%', mb: 0.5 }}>
+                    Seçilen sınıflar:
+                  </Typography>
+                  {formData.licenseTypes.map((type: string) => (
+                    <Chip
+                      key={type}
+                      label={type}
+                      size="small"
+                      color="primary"
+                      onDelete={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          licenseTypes: prev.licenseTypes?.filter((t: string) => t !== type)
+                        }));
+                      }}
+                      disabled={loading}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Paper>
           </Grid>
           <Grid item xs={12}>
             <TextField
