@@ -863,7 +863,7 @@ const CompanyDetail: React.FC = () => {
           setLicenseModalOpen(false);
         }}
         companyId={id || ''}
-        registrationDate={company?.registrationDate}
+        registrationDate={company?.registrationDate || ''}
         currentLicenseEndDate={company?.licenseEndDate}
       />
     </Box>

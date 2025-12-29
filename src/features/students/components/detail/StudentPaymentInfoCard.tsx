@@ -263,6 +263,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     
                     return (
                       <React.Fragment key={`installment-group-${groupKey}`}>
+                        {/* Divider */}
+                        <TableRow>
+                          <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
+                            <Divider sx={{ my: 1 }} />
+                          </TableCell>
+                        </TableRow>
                         {/* TAKSİT PLANI PARENT ROW */}
                         <TableRow sx={{ 
                           bgcolor: 'background.paper',
@@ -512,6 +518,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   // Child payment varsa accordion ile göster
                   return (
                     <React.Fragment key={payment.id}>
+                      {/* Divider */}
+                      <TableRow>
+                        <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
+                          <Divider sx={{ my: 1 }} />
+                        </TableCell>
+                      </TableRow>
                       <TableRow sx={{ 
                         bgcolor: 'background.paper',
                         borderLeft: '4px solid',
