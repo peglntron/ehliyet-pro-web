@@ -136,6 +136,9 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
           photoUrl = uploadResponse.data.data.url;
           console.log('Photo URL to save:', photoUrl);
         }
+      } else if (formData.profilePhoto === '') {
+        // Fotoğraf silinmişse null olarak ayarla
+        photoUrl = null as any;
       }
       
       console.log('Updating instructor with data:', {
