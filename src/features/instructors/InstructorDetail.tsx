@@ -237,11 +237,11 @@ const InstructorDetail: React.FC = () => {
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, mb: 3, mt: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
-              src={instructor.profileImage ? `${API_URL}${instructor.profileImage}` : undefined}
+              src={(instructor.profileImage || instructor.profilePhoto) ? `${API_URL}${instructor.profileImage || instructor.profilePhoto}` : undefined}
               alt={`${instructor.firstName} ${instructor.lastName}`}
               sx={{ width: 80, height: 80, border: '4px solid', borderColor: 'primary.main', boxShadow: 3 }}
             >
-              {!instructor.profilePhoto && `${instructor.firstName[0]}${instructor.lastName[0]}`}
+              {!(instructor.profileImage || instructor.profilePhoto) && `${instructor.firstName[0]}${instructor.lastName[0]}`}
             </Avatar>
             <Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
