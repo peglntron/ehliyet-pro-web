@@ -457,12 +457,12 @@ const AddEditInstructor: React.FC = () => {
                     </FormControl>
                   </Box>
 
-                  {/* Ehliyet Sınıfları Checkbox */}
+                  {/* Ehliyet Sınıfları */}
                   <Paper 
                     variant="outlined" 
                     sx={{ 
                       p: 2,
-                      backgroundColor: '#f8fafc',
+                      backgroundColor: 'background.default',
                       borderRadius: 2
                     }}
                   >
@@ -474,7 +474,7 @@ const AddEditInstructor: React.FC = () => {
                     ) : (
                       <Box sx={{ 
                         display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
                         gap: 1,
                         mt: 1
                       }}>
