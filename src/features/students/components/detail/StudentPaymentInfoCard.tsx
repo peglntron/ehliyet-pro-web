@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Box, Typography, Button, Paper, Chip,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Accordion, AccordionSummary, AccordionDetails, IconButton
+  Accordion, AccordionSummary, AccordionDetails, IconButton, Divider
 } from '@mui/material';
 import { Add as AddIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import type { Student, Installment, Payment } from '../../types/types';
