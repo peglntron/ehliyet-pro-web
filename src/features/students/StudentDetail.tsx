@@ -132,49 +132,49 @@ const StudentDetail: React.FC = () => {
     }
   };
   
-  // Helper: Ödenen toplam tutar (SADECE PAYMENT kayıtları + ödenmiş INSTALLMENT)
+  // Helper: Ödenen toplam tutar
   const calculatePaidAmount = (student: Student | null): number => {
     if (!student?.payments) return 0;
     
+    // PAID durumundaki tüm borçlar (DEBT, INSTALLMENT) + PAYMENT kayıtları
     const payments = student.payments.filter(p => 
-      p.type === 'PAYMENT' || 
-      (p.type === 'INSTALLMENT' && p.status === 'PAID')
+      (p.type === 'PAYMENT' && p.status === 'PAID') ||
+      ((p.type === 'DEBT' || p.type === 'INSTALLMENT') && p.status === 'PAID')
     );
     
     const total = payments.reduce((sum, payment) => sum + payment.amount, 0);
     
     console.log('=== ÖDEME HESAPLAMA ===');
-    console.log('PAYMENT kayıtları:', payments);
+    console.log('PAID kayıtları:', payments);
     console.log('Toplam ödenen:', total);
     
     return total;
   };
   
-  // Helper: Toplam borç hesaplama (SADECE DEBT + INSTALLMENT kayıtları)
+  // Helper: Toplam borç hesaplama (SADECE PENDING durumundaki borçlar)
   const calculateTotalDebt = (student: Student | null): number => {
     if (!student?.payments) return 0;
     
+    // Sadece PENDING durumundaki DEBT ve INSTALLMENT kayıtları
     const debts = student.payments.filter(p => 
-      p.type === 'DEBT' || p.type === 'INSTALLMENT'
+      (p.type === 'DEBT' || p.type === 'INSTALLMENT') && p.status === 'PENDING'
     );
     
     const total = debts.reduce((sum, p) => sum + (p.amount || 0), 0);
     
     console.log('=== BORÇ HESAPLAMA ===');
-    console.log('DEBT/INSTALLMENT kayıtları:', debts);
-    console.log('Toplam borç:', total);
+    console.log('PENDING DEBT/INSTALLMENT kayıtları:', debts);
+    console.log('Kalan borç:', total);
     
     return total;
   };
 
-  // Helper: Kalan borç hesaplama (Toplam Borç - Ödenen)
+  // Helper: Kalan borç hesaplama (artık direkt PENDING borçları döndürüyor)
   const calculateRemainingDebt = (student: Student | null): number => {
     if (!student || !student.payments) return 0;
     
-    const totalDebt = calculateTotalDebt(student);
-    const paidAmount = calculatePaidAmount(student);
-    
-    return Math.max(0, totalDebt - paidAmount);
+    // calculateTotalDebt zaten sadece PENDING borçları döndürüyor
+    return calculateTotalDebt(student);
   };
   
   // Sınav bilgilerini güncelleme işlemi başarılı olduğunda
