@@ -343,6 +343,10 @@ const StudentDetail: React.FC = () => {
   const processInstallmentPayment = async (installment: any, paymentMethod: 'cash' | 'credit' | 'bank' | 'pos') => {
     if (!student || !id) return;
     
+    console.log('=== processInstallmentPayment BAŞLADI ===');
+    console.log('Installment:', installment);
+    console.log('Payment Method:', paymentMethod);
+    
     try {
       // Backend'e taksit durumunu PAID olarak güncelle
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -354,6 +358,11 @@ const StudentDetail: React.FC = () => {
         'bank': 'BANK_TRANSFER',
         'pos': 'POS'
       };
+      
+      console.log('Backend isteği gönderiliyor:', {
+        url: `${API_URL}/api/payments/${installment.id}/mark-paid`,
+        method: methodMap[paymentMethod]
+      });
       
       const response = await fetch(`${API_URL}/api/payments/${installment.id}/mark-paid`, {
         method: 'PATCH',
@@ -369,19 +378,28 @@ const StudentDetail: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Backend hatası:', errorData);
         throw new Error(errorData.message || 'Taksit ödemesi güncellenemedi');
       }
 
+      const responseData = await response.json();
+      console.log('Backend yanıtı:', responseData);
+
       // Başarılı - öğrenci verisini yeniden yükle
+      console.log('Öğrenci verisi yeniden yükleniyor...');
       const updatedStudent = await getStudentById(id);
+      console.log('Güncellenmiş öğrenci verisi:', updatedStudent);
       setStudent(updatedStudent);
       
       setSnackbarMessage(`${installment.installmentNumber}. taksit başarıyla ödendi!`);
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
       setInstallmentPaymentModalOpen(false);
+      
+      console.log('=== processInstallmentPayment TAMAMLANDI ===');
     } catch (error) {
-      console.error('Taksit ödeme hatası:', error);
+      console.error('=== Taksit ödeme HATASI ===');
+      console.error('Hata:', error);
       setSnackbarMessage(error instanceof Error ? error.message : 'Taksit ödemesi alınırken hata oluştu');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
@@ -784,10 +802,7 @@ const StudentDetail: React.FC = () => {
               <Button
                 variant="outlined"
                 fullWidth
-                onClick={() => {
-                  processInstallmentPayment(selectedInstallment, 'cash');
-                  setInstallmentPaymentModalOpen(false);
-                }}
+                onClick={() => processInstallmentPayment(selectedInstallment, 'cash')}
                 sx={{ 
                   justifyContent: 'flex-start', 
                   textTransform: 'none',
@@ -801,10 +816,7 @@ const StudentDetail: React.FC = () => {
               <Button
                 variant="outlined"
                 fullWidth
-                onClick={() => {
-                  processInstallmentPayment(selectedInstallment, 'credit');
-                  setInstallmentPaymentModalOpen(false);
-                }}
+                onClick={() => processInstallmentPayment(selectedInstallment, 'credit')}
                 sx={{ 
                   justifyContent: 'flex-start', 
                   textTransform: 'none',
@@ -818,10 +830,7 @@ const StudentDetail: React.FC = () => {
               <Button
                 variant="outlined"
                 fullWidth
-                onClick={() => {
-                  processInstallmentPayment(selectedInstallment, 'pos');
-                  setInstallmentPaymentModalOpen(false);
-                }}
+                onClick={() => processInstallmentPayment(selectedInstallment, 'pos')}
                 sx={{ 
                   justifyContent: 'flex-start', 
                   textTransform: 'none',
@@ -835,10 +844,7 @@ const StudentDetail: React.FC = () => {
               <Button
                 variant="outlined"
                 fullWidth
-                onClick={() => {
-                  processInstallmentPayment(selectedInstallment, 'bank');
-                  setInstallmentPaymentModalOpen(false);
-                }}
+                onClick={() => processInstallmentPayment(selectedInstallment, 'bank')}
                 sx={{ 
                   justifyContent: 'flex-start', 
                   textTransform: 'none',

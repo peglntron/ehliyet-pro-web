@@ -221,20 +221,15 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   
                   // Taksitli borçları grupla (aynı description + totalInstallments)
                   student.payments?.forEach(p => {
-                    console.log('Checking payment:', p.id, 'installmentNumber:', p.installmentNumber, 'type:', p.type, 'totalInstallments:', p.totalInstallments, 'status:', p.status);
                     // DEBT veya INSTALLMENT tipinde ve installmentNumber varsa grupla (status'e bakmadan)
                     if (p.installmentNumber && (p.type === 'DEBT' || p.type === 'INSTALLMENT')) {
                       const baseKey = `${p.description}_${p.totalInstallments || 0}`;
-                      console.log('Found installment payment - baseKey:', baseKey);
                       if (!installmentGroups.has(baseKey)) {
                         installmentGroups.set(baseKey, []);
                       }
                       installmentGroups.get(baseKey)!.push(p);
                     }
                   });
-                  
-                  console.log('Installment groups:', installmentGroups);
-                  console.log('Total groups:', installmentGroups.size);
                   
                   return student.payments.map((payment, index) => {
                   // Eğer payment amount undefined ise skip et
