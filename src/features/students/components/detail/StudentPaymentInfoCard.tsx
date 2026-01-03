@@ -231,6 +231,9 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     }
                   });
                   
+                  // Görünen item sayısını hesapla (divider için ilk item kontrolü)
+                  let renderedItemCount = 0;
+                  
                   return student.payments.map((payment, index) => {
                   // Eğer payment amount undefined ise skip et
                   if (!payment || payment.amount === undefined || payment.amount === null) {
@@ -256,14 +259,19 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     const accordionId = `installment-${groupKey}`;
                     const isExpanded = expandedAccordions.has(accordionId);
                     
+                    const isFirstItem = renderedItemCount === 0;
+                    renderedItemCount++;
+                    
                     return (
                       <React.Fragment key={`installment-group-${groupKey}`}>
-                        {/* Divider */}
-                        <TableRow>
-                          <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
-                            <Divider sx={{ my: 1 }} />
-                          </TableCell>
-                        </TableRow>
+                        {/* Divider - sadece ilk item değilse */}
+                        {!isFirstItem && (
+                          <TableRow>
+                            <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
+                              <Divider sx={{ my: 1 }} />
+                            </TableCell>
+                          </TableRow>
+                        )}
                         {/* TAKSİT PLANI PARENT ROW */}
                         <TableRow sx={{ 
                           bgcolor: 'background.paper',
@@ -416,10 +424,22 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   const accordionId = `debt-${payment.id}`;
                   const isExpanded = expandedAccordions.has(accordionId);
                   
+                  const isFirstItem = renderedItemCount === 0;
+                  renderedItemCount++;
+                  
                   // Eğer child payment yoksa normal row göster
                   if (!hasChildren) {
                     return (
-                      <TableRow key={payment.id} sx={{ 
+                      <React.Fragment key={payment.id}>
+                        {/* Divider - sadece ilk item değilse */}
+                        {!isFirstItem && (
+                          <TableRow>
+                            <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
+                              <Divider sx={{ my: 1 }} />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        <TableRow sx={{ 
                         bgcolor: 'background.paper',
                         borderLeft: '4px solid',
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
@@ -513,18 +533,21 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           )}
                         </TableCell>
                       </TableRow>
+                      </React.Fragment>
                     );
                   }
                   
                   // Child payment varsa accordion ile göster
                   return (
                     <React.Fragment key={payment.id}>
-                      {/* Divider */}
-                      <TableRow>
-                        <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
-                          <Divider sx={{ my: 1 }} />
-                        </TableCell>
-                      </TableRow>
+                      {/* Divider - sadece ilk item değilse */}
+                      {!isFirstItem && (
+                        <TableRow>
+                          <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
+                            <Divider sx={{ my: 1 }} />
+                          </TableCell>
+                        </TableRow>
+                      )}
                       <TableRow sx={{ 
                         bgcolor: 'background.paper',
                         borderLeft: '4px solid',
