@@ -340,64 +340,52 @@ const StudentDetail: React.FC = () => {
   };
 
   // Gerçek taksit ödeme işlemi
-  const processInstallmentPayment = (installment: any, paymentMethod: 'cash' | 'credit' | 'bank' | 'pos') => {
-    if (!student) return;
+  const processInstallmentPayment = async (installment: any, paymentMethod: 'cash' | 'credit' | 'bank' | 'pos') => {
+    if (!student || !id) return;
     
-    // Öğrenci verisini güncelle
-    const updatedStudent = {
-      ...student,
-      installments: student.installments?.map(inst => 
-        inst.id === installment.id 
-          ? { 
-              ...inst, 
-              status: 'paid' as const,
-              paymentDate: new Date().toISOString().split('T')[0],
-              paymentMethod: paymentMethod
-            }
-          : inst
-      ),
-      // Yeni ödeme kaydı ekle
-      payments: [
-        ...(student.payments || []),
-        {
-          id: `payment_${Date.now()}`,
-          amount: installment.amount,
-          date: new Date().toISOString().split('T')[0],
-          method: paymentMethod,
-          status: 'PAID',
-          type: 'INSTALLMENT',
-          description: `${installment.installmentNumber}. Taksit Ödemesi`,
-          installmentId: installment.id,
-          isInstallment: true
-        } as Payment
-      ],
-      lastUpdated: new Date().toISOString()
-    } as Student;
-    
-    // Kalan borç hesapla
-    const updatedPaidAmount = calculatePaidAmount(updatedStudent);
-    const updatedRemainingDebt = calculateRemainingDebt(updatedStudent);
-    
-    // Eğer tüm borç ödendiyse durumu güncelle
-    if (updatedRemainingDebt <= 0) {
-      updatedStudent.status = 'completed';
-    }
+    try {
+      // Backend'e taksit durumunu PAID olarak güncelle
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      // PaymentMethod enum değerlerini backend formatına çevir
+      const methodMap: Record<string, string> = {
+        'cash': 'CASH',
+        'credit': 'CREDIT_CARD',
+        'bank': 'BANK_TRANSFER',
+        'pos': 'POS'
+      };
+      
+      const response = await fetch(`${API_URL}/api/payments/${installment.id}/mark-paid`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          method: methodMap[paymentMethod],
+          paymentDate: new Date().toISOString()
+        })
+      });
 
-    // API'ya güncelleme gönder (şimdilik mock)
-    console.log('Taksit ödeme tamamlandı:', {
-      installmentId: installment.id,
-      amount: installment.amount,
-      newPaidAmount: updatedPaidAmount,
-      remainingDebt: updatedRemainingDebt
-    });
-    
-    // State'i güncelle
-    setStudent(updatedStudent);
-    
-    // Başarı mesajı göster
-    setSnackbarMessage(`${installment.installmentNumber}. taksit (${installment.amount} TL) başarıyla ödendi!`);
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Taksit ödemesi güncellenemedi');
+      }
+
+      // Başarılı - öğrenci verisini yeniden yükle
+      const updatedStudent = await getStudentById(id);
+      setStudent(updatedStudent);
+      
+      setSnackbarMessage(`${installment.installmentNumber}. taksit başarıyla ödendi!`);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      setInstallmentPaymentModalOpen(false);
+    } catch (error) {
+      console.error('Taksit ödeme hatası:', error);
+      setSnackbarMessage(error instanceof Error ? error.message : 'Taksit ödemesi alınırken hata oluştu');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
   };
   
   // Ödemeyi gerçekleşti olarak işaretle - Modal aç

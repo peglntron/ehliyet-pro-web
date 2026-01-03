@@ -283,7 +283,8 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               sx={{ 
                                 boxShadow: 'none',
                                 '&:before': { display: 'none' },
-                                bgcolor: 'transparent'
+                                bgcolor: 'transparent',
+                                m: 0
                               }}
                             >
                               <AccordionSummary
@@ -297,11 +298,16 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                     my: 0,
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: 2
+                                    gap: 2,
+                                    '&.Mui-expanded': { my: 0 }
+                                  },
+                                  '& .MuiAccordionSummary-expandIconWrapper': {
+                                    transform: 'none',
+                                    '&.Mui-expanded': { transform: 'rotate(180deg)' }
                                   }
                                 }}
                               >
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, width: '100%' }}>
                                   <Typography variant="body1" fontWeight={700} sx={{ minWidth: 100 }}>
                                     {formatDate(payment.date)}
                                   </Typography>
@@ -321,13 +327,13 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                       {payment.description || 'Taksitli Borç'}
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
-                                      {group.length} Taksit
+                                      {group.length} Taksit • {group.filter(g => g.status === 'PAID').length} Ödendi
                                     </Typography>
                                   </Box>
                                 </Box>
                               </AccordionSummary>
                               <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
-                                <Table size="small">
+                                <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
                                   <TableBody>
                                     {group.map((installment) => {
                                       const instStatusInfo = getPaymentStatusInfo(installment.status);
@@ -537,7 +543,8 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             sx={{ 
                               boxShadow: 'none',
                               '&:before': { display: 'none' },
-                              bgcolor: 'transparent'
+                              bgcolor: 'transparent',
+                              m: 0
                             }}
                           >
                             <AccordionSummary
@@ -551,11 +558,16 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   my: 0,
                                   display: 'flex',
                                   alignItems: 'center',
-                                  gap: 2
+                                  gap: 2,
+                                  '&.Mui-expanded': { my: 0 }
+                                },
+                                '& .MuiAccordionSummary-expandIconWrapper': {
+                                  transform: 'none',
+                                  '&.Mui-expanded': { transform: 'rotate(180deg)' }
                                 }
                               }}
                             >
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, width: '100%' }}>
                                 <Typography variant="body1" fontWeight={700} sx={{ minWidth: 100 }}>
                                   {formatDate(payment.date)}
                                 </Typography>
@@ -574,7 +586,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                     {payment.description || '-'}
                                   </Typography>
                                   <Typography variant="caption" color="text.secondary">
-                                    {childPayments.length} Ödeme Kaydı
+                                    {childPayments.filter(cp => cp.status === 'PAID').reduce((sum, cp) => sum + cp.amount, 0).toLocaleString('tr-TR')} ₺ Ödendi • {childPayments.length} Kayıt
                                   </Typography>
                                 </Box>
                                 <Chip 
@@ -600,7 +612,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               </Box>
                             </AccordionSummary>
                             <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
-                              <Table size="small">
+                              <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
                                 <TableBody>
                                   {childPayments.map((childPayment) => {
                                     const childStatusInfo = getPaymentStatusInfo(childPayment.status);
