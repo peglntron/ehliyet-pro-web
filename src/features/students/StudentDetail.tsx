@@ -142,13 +142,7 @@ const StudentDetail: React.FC = () => {
       ((p.type === 'DEBT' || p.type === 'INSTALLMENT') && p.status === 'PAID')
     );
     
-    const total = payments.reduce((sum, payment) => sum + payment.amount, 0);
-    
-    console.log('=== ÖDEME HESAPLAMA ===');
-    console.log('PAID kayıtları:', payments);
-    console.log('Toplam ödenen:', total);
-    
-    return total;
+    return payments.reduce((sum, payment) => sum + payment.amount, 0);
   };
   
   // Helper: Toplam borç hesaplama (SADECE PENDING durumundaki borçlar)
@@ -160,13 +154,7 @@ const StudentDetail: React.FC = () => {
       (p.type === 'DEBT' || p.type === 'INSTALLMENT') && p.status === 'PENDING'
     );
     
-    const total = debts.reduce((sum, p) => sum + (p.amount || 0), 0);
-    
-    console.log('=== BORÇ HESAPLAMA ===');
-    console.log('PENDING DEBT/INSTALLMENT kayıtları:', debts);
-    console.log('Kalan borç:', total);
-    
-    return total;
+    return debts.reduce((sum, p) => sum + (p.amount || 0), 0);
   };
 
   // Helper: Kalan borç hesaplama (artık direkt PENDING borçları döndürüyor)
@@ -343,10 +331,6 @@ const StudentDetail: React.FC = () => {
   const processInstallmentPayment = async (installment: any, paymentMethod: 'cash' | 'credit' | 'bank' | 'pos') => {
     if (!student || !id) return;
     
-    console.log('=== processInstallmentPayment BAŞLADI ===');
-    console.log('Installment:', installment);
-    console.log('Payment Method:', paymentMethod);
-    
     try {
       // Backend'e taksit durumunu PAID olarak güncelle
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
@@ -358,11 +342,6 @@ const StudentDetail: React.FC = () => {
         'bank': 'BANK_TRANSFER',
         'pos': 'POS'
       };
-      
-      console.log('Backend isteği gönderiliyor:', {
-        url: `${API_URL}/api/payments/${installment.id}/mark-paid`,
-        method: methodMap[paymentMethod]
-      });
       
       const response = await fetch(`${API_URL}/api/payments/${installment.id}/mark-paid`, {
         method: 'PATCH',
@@ -378,28 +357,19 @@ const StudentDetail: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Backend hatası:', errorData);
         throw new Error(errorData.message || 'Taksit ödemesi güncellenemedi');
       }
 
-      const responseData = await response.json();
-      console.log('Backend yanıtı:', responseData);
-
       // Başarılı - öğrenci verisini yeniden yükle
-      console.log('Öğrenci verisi yeniden yükleniyor...');
       const updatedStudent = await getStudentById(id);
-      console.log('Güncellenmiş öğrenci verisi:', updatedStudent);
       setStudent(updatedStudent);
       
       setSnackbarMessage(`${installment.installmentNumber}. taksit başarıyla ödendi!`);
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
       setInstallmentPaymentModalOpen(false);
-      
-      console.log('=== processInstallmentPayment TAMAMLANDI ===');
     } catch (error) {
-      console.error('=== Taksit ödeme HATASI ===');
-      console.error('Hata:', error);
+      console.error('Taksit ödeme hatası:', error);
       setSnackbarMessage(error instanceof Error ? error.message : 'Taksit ödemesi alınırken hata oluştu');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
