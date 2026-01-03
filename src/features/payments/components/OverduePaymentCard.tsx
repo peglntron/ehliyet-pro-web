@@ -170,28 +170,28 @@ const OverduePaymentCard: React.FC<OverduePaymentCardProps> = ({
             
             <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
               <Box>
-                <Typography variant="caption" color="text.secondary">Toplam Tutar</Typography>
-                <Typography variant="body2" fontWeight={600} color="primary.main">
-                  {payment.totalAmount.toLocaleString('tr-TR')} ₺
+                <Typography variant="caption" color="text.secondary">Kalan Borç</Typography>
+                <Typography variant="h6" fontWeight={700} color="error.main">
+                  {payment.remainingAmount.toLocaleString('tr-TR')} ₺
                 </Typography>
               </Box>
               
               <Box>
-                <Typography variant="caption" color="text.secondary">Ödenen Tutar</Typography>
+                <Typography variant="caption" color="text.secondary">Ödenen</Typography>
                 <Typography variant="body2" fontWeight={600} color="success.main">
                   {payment.paidAmount.toLocaleString('tr-TR')} ₺
                 </Typography>
               </Box>
               
               <Box>
-                <Typography variant="caption" color="text.secondary">Kalan Borç</Typography>
-                <Typography variant="body2" fontWeight={600} color="error.main">
-                  {payment.remainingAmount.toLocaleString('tr-TR')} ₺
+                <Typography variant="caption" color="text.secondary">Toplam Tutar</Typography>
+                <Typography variant="body2" fontWeight={600} color="text.secondary">
+                  {payment.totalAmount.toLocaleString('tr-TR')} ₺
                 </Typography>
               </Box>
               
               <Box>
-                <Typography variant="caption" color="text.secondary">Geciken Ödeme</Typography>
+                <Typography variant="caption" color="text.secondary">Geciken</Typography>
                 <Typography variant="body2" fontWeight={600} color="error.main">
                   {payment.overdueInstallments.length} {payment.installments.some(i => i.installmentNumber) ? 'taksit' : 'ödeme'}
                 </Typography>

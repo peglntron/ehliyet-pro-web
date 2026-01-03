@@ -76,11 +76,14 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
               <TrendingUpIcon sx={{ color: 'white', fontSize: 24 }} />
             </Box>
             <Typography variant="body2" color="text.secondary" fontWeight={600}>
-              Geciken Tutar
+              Geciken Kalan Borç
             </Typography>
           </Box>
           <Typography variant="h4" fontWeight={700} color="error.main">
             {summary.totalOverdueAmount.toLocaleString('tr-TR')} ₺
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            Vadesi geçmiş, ödenmemiş tutar
           </Typography>
         </Paper>
       </Grid>
@@ -105,6 +108,9 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
           <Typography variant="h4" fontWeight={700} color="warning.main">
             {summary.totalUpcomingAmount.toLocaleString('tr-TR')} ₺
           </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            7 gün içinde vadesi dolacak
+          </Typography>
         </Paper>
       </Grid>
 
@@ -122,11 +128,14 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
               <AccountBalanceIcon sx={{ color: 'white', fontSize: 24 }} />
             </Box>
             <Typography variant="body2" color="text.secondary" fontWeight={600}>
-              Toplam Alacak
+              Toplam Kalan Borç
             </Typography>
           </Box>
           <Typography variant="h4" fontWeight={700} color="info.main">
             {summary.totalRemainingAmount.toLocaleString('tr-TR')} ₺
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+            Tüm öğrencilerin toplam kalan borcu
           </Typography>
         </Paper>
       </Grid>
