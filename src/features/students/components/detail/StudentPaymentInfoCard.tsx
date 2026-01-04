@@ -203,7 +203,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
         </Typography>
         {student?.payments && student.payments.length > 0 ? (
           <TableContainer sx={{ height: '100%', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-            <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
+            <Table stickyHeader size="small" sx={{ tableLayout: 'fixed', width: '100%' }}>
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600, width: '12%' }}>Tarih</TableCell>
@@ -293,7 +293,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             borderLeft: '4px solid',
                             borderColor: 'primary.main',
                             cursor: 'pointer',
-                            '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.02)' },
+                            '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' },
                             '& > td': { py: 1.5 }
                           }}
                         >
@@ -611,7 +611,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           borderLeft: '4px solid',
                           borderColor: payment.type === 'DEBT' ? 'error.main' : 'info.main',
                           cursor: 'pointer',
-                          '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.02)' },
+                          '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' },
                           '& > td': { py: 1.5 }
                         }}
                       >
