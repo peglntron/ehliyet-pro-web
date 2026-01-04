@@ -48,6 +48,8 @@ const StudentDetail: React.FC = () => {
   const [receivePaymentModalOpen, setReceivePaymentModalOpen] = useState(false);
   const [selectedDebt, setSelectedDebt] = useState<Payment | null>(null);
   const [confirmStatusDialogOpen, setConfirmStatusDialogOpen] = useState(false);
+  const [deletePaymentDialogOpen, setDeletePaymentDialogOpen] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState<string | null>(null);
   
   // Tab state
   const [activeTab, setActiveTab] = useState(0);
@@ -416,16 +418,20 @@ const StudentDetail: React.FC = () => {
     setSnackbarOpen(true);
   };
   
-  // Ödeme kaydını sil (sadece PENDING olanlar)
-  const handleDeletePayment = async (paymentId: string) => {
-    if (!window.confirm('Bu ödeme kaydını silmek istediğinizden emin misiniz?')) {
-      return;
-    }
+  // Ödeme kaydını sil modal aç
+  const handleDeletePayment = (paymentId: string) => {
+    setPaymentToDelete(paymentId);
+    setDeletePaymentDialogOpen(true);
+  };
+  
+  // Ödeme silmeyi onayla
+  const confirmDeletePayment = async () => {
+    if (!paymentToDelete) return;
     
     try {
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       
-      const response = await fetch(`${API_URL}/api/payments/${paymentId}`, {
+      const response = await fetch(`${API_URL}/api/payments/${paymentToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -448,10 +454,14 @@ const StudentDetail: React.FC = () => {
       setSnackbarMessage('Ödeme kaydı başarıyla silindi!');
       setSnackbarSeverity('success');
       setSnackbarOpen(true);
+      setDeletePaymentDialogOpen(false);
+      setPaymentToDelete(null);
     } catch (error: any) {
       setSnackbarMessage(error.message || 'Ödeme kaydı silinirken hata oluştu');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
+      setDeletePaymentDialogOpen(false);
+      setPaymentToDelete(null);
     }
   };
   
@@ -925,6 +935,45 @@ const StudentDetail: React.FC = () => {
             sx={{ textTransform: 'none' }}
           >
             {student?.status === 'active' ? 'Pasif Yap' : 'Aktif Yap'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* Ödeme Silme Onay Dialog */}
+      <Dialog
+        open={deletePaymentDialogOpen}
+        onClose={() => {
+          setDeletePaymentDialogOpen(false);
+          setPaymentToDelete(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          Ödeme Kaydını Sil
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Bu ödeme kaydını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => {
+              setDeletePaymentDialogOpen(false);
+              setPaymentToDelete(null);
+            }}
+            sx={{ textTransform: 'none' }}
+          >
+            İptal
+          </Button>
+          <Button 
+            onClick={confirmDeletePayment}
+            variant="contained"
+            color="error"
+            sx={{ textTransform: 'none' }}
+          >
+            Sil
           </Button>
         </DialogActions>
       </Dialog>
