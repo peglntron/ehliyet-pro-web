@@ -29,6 +29,8 @@ const ExpenseCategoriesPage: React.FC = () => {
   
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<ExpenseCategory | null>(null);
   const [formData, setFormData] = useState<ExpenseCategoryFormData>({
     name: '',
     description: '',
@@ -93,22 +95,29 @@ const ExpenseCategoriesPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (category: ExpenseCategory) => {
+  const handleDelete = (category: ExpenseCategory) => {
     if (category._count && category._count.expenses > 0) {
       showSnackbar(`Bu kaleme ait ${category._count.expenses} adet gider var. Önce giderleri silmelisiniz.`, 'error');
       return;
     }
 
-    if (!window.confirm(`"${category.name}" kalemini silmek istediğinizden emin misiniz?`)) {
-      return;
-    }
+    setCategoryToDelete(category);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!categoryToDelete) return;
 
     try {
-      await deleteExpenseCategory(category.id);
+      await deleteExpenseCategory(categoryToDelete.id);
       showSnackbar('Gider kalemi başarıyla silindi', 'success');
       refetch();
+      setDeleteDialogOpen(false);
+      setCategoryToDelete(null);
     } catch (error: any) {
       showSnackbar(error.message || 'Silme işlemi başarısız', 'error');
+      setDeleteDialogOpen(false);
+      setCategoryToDelete(null);
     }
   };
 
@@ -284,6 +293,45 @@ const ExpenseCategoriesPage: React.FC = () => {
             sx={{ borderRadius: 2 }}
           >
             {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Silme Onay Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setCategoryToDelete(null);
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          Gider Kalemini Sil
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            <strong>"{categoryToDelete?.name}"</strong> kalemini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button 
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setCategoryToDelete(null);
+            }}
+            sx={{ borderRadius: 2 }}
+          >
+            İptal
+          </Button>
+          <Button 
+            onClick={confirmDelete}
+            variant="contained"
+            color="error"
+            sx={{ borderRadius: 2 }}
+          >
+            Sil
           </Button>
         </DialogActions>
       </Dialog>
