@@ -50,12 +50,24 @@ const OverduePaymentsList: React.FC = () => {
 
   // Öğrencileri filtrele
   const filteredPayments = paymentStatuses.filter(payment => {
+    // Önce geciken veya yaklaşan ödemesi olmayanları eleme
+    const hasOverdueOrUpcoming = payment.overdueInstallments.length > 0 || payment.upcomingInstallments.length > 0;
+    if (!hasOverdueOrUpcoming) return false;
+    
     const matchesSearch = 
       payment.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.studentSurname.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.phone.includes(searchTerm);
     
-    const matchesStatus = paymentStatusFilter === 'all' || payment.paymentStatus === paymentStatusFilter;
+    // Status filtreleme mantığı
+    let matchesStatus = true;
+    if (paymentStatusFilter === 'all') {
+      matchesStatus = true;
+    } else if (paymentStatusFilter === 'overdue') {
+      matchesStatus = payment.overdueInstallments.length > 0;
+    } else if (paymentStatusFilter === 'upcoming') {
+      matchesStatus = payment.upcomingInstallments.length > 0;
+    }
     
     return matchesSearch && matchesStatus;
   });
@@ -107,13 +119,19 @@ const OverduePaymentsList: React.FC = () => {
 
   return (
     <Box sx={{ 
-      height: '100%',
+      height: '100vh',
       width: '100%',
-      overflow: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
       bgcolor: '#f8fafc',
-      boxSizing: 'border-box',
-      p: { xs: 2, md: 3 }
+      overflow: 'hidden'
     }}>
+      <Box sx={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        p: { xs: 2, md: 3 }
+      }}>
       {/* Standardized Header */}
       <Box sx={{
         display: 'flex',
@@ -233,6 +251,7 @@ const OverduePaymentsList: React.FC = () => {
           </Paper>
         </Box>
       )}
+      </Box>
     </Box>
   );
 };

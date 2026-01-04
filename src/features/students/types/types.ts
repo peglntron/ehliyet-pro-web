@@ -111,6 +111,7 @@ export interface Installment {
   paymentDate?: string; // Ödendiği tarih
   paymentMethod?: 'cash' | 'credit' | 'bank' | 'pos';
   paymentId?: string; // Payment tablosundaki ID
+  relatedDebtId?: string | null; // Hangi borç için bu taksit
 }
 
 export interface Notification {

@@ -113,7 +113,7 @@ const InstructorStudentListModal: React.FC<InstructorStudentListModalProps> = ({
                 <ListItemAvatar>
                   <Avatar 
                     sx={{ 
-                      bgcolor: item.student?.gender === 'male' ? 'primary.main' : 'secondary.main',
+                      bgcolor: item.studentGender === 'male' ? 'primary.main' : 'secondary.main',
                       width: 32,
                       height: 32
                     }}
@@ -128,9 +128,9 @@ const InstructorStudentListModal: React.FC<InstructorStudentListModalProps> = ({
                         {item.student?.firstName || item.student?.name} {item.student?.lastName || item.student?.surname}
                       </Typography>
                       <Chip
-                        label={item.student?.gender === 'male' ? 'Erkek' : 'Kadın'}
+                        label={item.studentGender === 'male' ? 'Erkek' : 'Kadın'}
                         size="small"
-                        color={item.student?.gender === 'male' ? 'primary' : 'secondary'}
+                        color={item.studentGender === 'male' ? 'primary' : 'secondary'}
                         variant="outlined"
                         sx={{ fontSize: '0.7rem', height: 20 }}
                       />

@@ -295,6 +295,24 @@ const StudentDetail: React.FC = () => {
 
   // Taksit ödeme modalını açma işlemi
   const handleInstallmentPayment = (installment: any) => {
+    // Taksit sırası kontrolü - önceki taksitler ödenmemiş mi?
+    if (installment.installmentNumber > 1) {
+      const previousInstallments = student?.payments?.filter(p => 
+        p.type === 'INSTALLMENT' &&
+        p.relatedDebtId === installment.relatedDebtId &&
+        p.installmentNumber < installment.installmentNumber &&
+        p.status === 'PENDING'
+      ) || [];
+
+      if (previousInstallments.length > 0) {
+        const unpaidNumbers = previousInstallments.map(p => p.installmentNumber).join(', ');
+        setSnackbarMessage(`${installment.installmentNumber}. taksiti ödemeden önce ${unpaidNumbers}. taksitleri ödemelisiniz.`);
+        setSnackbarSeverity('warning');
+        setSnackbarOpen(true);
+        return;
+      }
+    }
+
     setSelectedInstallment(installment);
     setInstallmentPaymentModalOpen(true);
   };
@@ -506,9 +524,9 @@ const StudentDetail: React.FC = () => {
   const paidAmount = student?.paidAmount ?? 0;
   const totalDebt = student?.totalDebt ?? 0;
   const remainingAmount = student?.remainingDebt ?? 0;
-  
+
   return (
-    <Box sx={{ 
+    <Box sx={{
       height: '100vh',
       width: '100%',
       bgcolor: '#f8fafc',

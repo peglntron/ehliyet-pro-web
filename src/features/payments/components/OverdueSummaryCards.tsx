@@ -16,7 +16,14 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
   return (
     <Grid container spacing={2} sx={{ mb: 3 }}>
       <Grid item xs={12} sm={6} md={3}>
-        <Paper sx={{ p: 2.5, borderRadius: 2, height: '100%' }}>
+        <Paper sx={{ 
+          p: 2.5, 
+          borderRadius: 2, 
+          height: '100%',
+          minHeight: 140,
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
             <Box sx={{ 
               bgcolor: 'primary.main', 
@@ -39,7 +46,14 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
       </Grid>
       
       <Grid item xs={12} sm={6} md={3}>
-        <Paper sx={{ p: 2.5, borderRadius: 2, height: '100%' }}>
+        <Paper sx={{ 
+          p: 2.5, 
+          borderRadius: 2, 
+          height: '100%',
+          minHeight: 140,
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
             <Box sx={{ 
               bgcolor: 'error.main', 
@@ -62,7 +76,14 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
       </Grid>
       
       <Grid item xs={12} sm={6} md={3}>
-        <Paper sx={{ p: 2.5, borderRadius: 2, height: '100%' }}>
+        <Paper sx={{ 
+          p: 2.5, 
+          borderRadius: 2, 
+          height: '100%',
+          minHeight: 140,
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
             <Box sx={{ 
               bgcolor: 'error.main', 
@@ -74,7 +95,7 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
             }}>
               <TrendingUpIcon sx={{ color: 'white', fontSize: 24 }} />
             </Box>
-            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+            <Typography variant="body2" color="text.secondary" fontWeight={600} noWrap>
               Geciken Kalan Borç
             </Typography>
           </Box>
@@ -82,13 +103,20 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
             {summary.totalOverdueAmount.toLocaleString('tr-TR')} ₺
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            Vadesi geçmiş, ödenmemiş tutar
+            Vadesi geçmiş tutar
           </Typography>
         </Paper>
       </Grid>
       
-      <Grid item xs={12} sm={6} md={2.4}>
-        <Paper sx={{ p: 2.5, borderRadius: 2, height: '100%' }}>
+      <Grid item xs={12} sm={6} md={3}>
+        <Paper sx={{ 
+          p: 2.5, 
+          borderRadius: 2, 
+          height: '100%',
+          minHeight: 140,
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
             <Box sx={{ 
               bgcolor: 'warning.main', 
@@ -100,7 +128,7 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
             }}>
               <ScheduleIcon sx={{ color: 'white', fontSize: 24 }} />
             </Box>
-            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+            <Typography variant="body2" color="text.secondary" fontWeight={600} noWrap>
               Yaklaşan Ödemeler
             </Typography>
           </Box>
@@ -108,7 +136,7 @@ const OverdueSummaryCards: React.FC<OverdueSummaryCardsProps> = ({ summary }) =>
             {summary.totalUpcomingAmount.toLocaleString('tr-TR')} ₺
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            7 gün içinde vadesi dolacak
+            7 gün içinde vadesi
           </Typography>
         </Paper>
       </Grid>

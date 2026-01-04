@@ -1,9 +1,9 @@
 export interface PaymentInstallment {
   id: string;
   studentId: string;
-  installmentNumber: number;
+  installmentNumber?: number; // Bazı kayıtlar DEBT olabilir, installmentNumber olmayabilir
   amount: number;
-  dueDate: string;
+  dueDate?: string; // Bazı kayıtlarda dueDate olmayabilir
   paidDate?: string;
   status: 'pending' | 'paid' | 'overdue' | 'partially_paid';
   paidAmount?: number;
@@ -37,7 +37,7 @@ export interface PaymentSummary {
 }
 
 export interface PaymentFilters {
-  status: 'all' | 'overdue' | 'upcoming' | 'partial';
+  status: 'all' | 'overdue' | 'upcoming';
   dayRange: number; // Kaç gün içindeki taksitler (7, 15, 30)
   minAmount?: number;
   maxAmount?: number;

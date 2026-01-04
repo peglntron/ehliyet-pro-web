@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Box, Typography, Button, Paper, Chip,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Accordion, AccordionSummary, AccordionDetails, IconButton, Divider
+  IconButton
 } from '@mui/material';
 import { Add as AddIcon, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import type { Student, Installment, Payment } from '../../types/types';
@@ -14,7 +14,7 @@ interface StudentPaymentInfoCardProps {
   remainingAmount: number;
   onAddPayment: () => void;
   onAddDebt: () => void; // YENİ: Borç ekleme
-  onInstallmentPayment: (installment: Installment) => void;
+  onInstallmentPayment: (installment: Installment | Payment) => void; // Hem Installment hem Payment kabul eder
   onMarkPaymentPaid: (paymentId: string) => void;
   onDeletePayment: (paymentId: string) => void; // YENİ: Ödeme silme
   formatDate: (date?: string) => string;
@@ -23,6 +23,24 @@ interface StudentPaymentInfoCardProps {
   getPaymentStatusInfo: (status: string) => { text: string; color: string };
   getPaymentMethodText: (method: string) => string;
 }
+
+// Yardımcı fonksiyon: Önceki taksitler ödendi mi kontrol et
+const canPayInstallment = (installment: Installment | Payment, allPayments: Payment[]): boolean => {
+  const instNumber = 'installmentNumber' in installment ? installment.installmentNumber : null;
+  if (!instNumber || instNumber <= 1) return true;
+  
+  const relatedDebt = 'relatedDebtId' in installment ? installment.relatedDebtId : null;
+  
+  const previousInstallments = allPayments.filter(p => 
+    p.type === 'INSTALLMENT' &&
+    p.relatedDebtId === relatedDebt &&
+    p.installmentNumber != null &&
+    p.installmentNumber < instNumber &&
+    p.status === 'PENDING'
+  );
+
+  return previousInstallments.length === 0;
+};
 
 const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
   student,
@@ -160,6 +178,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           variant="contained"
                           size="small"
                           onClick={() => onInstallmentPayment(installment)}
+                          disabled={!canPayInstallment(installment, student?.payments || [])}
                           sx={{ textTransform: 'none', minWidth: 'auto', px: 2 }}
                         >
                           Ödeme Al
@@ -431,6 +450,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                     size="small"
                                     color="info"
                                     onClick={() => onInstallmentPayment(installment)}
+                                    disabled={!canPayInstallment(installment, student?.payments || [])}
                                     sx={{ textTransform: 'none', minWidth: 80, px: 1.5 }}
                                   >
                                     Ödeme Al

@@ -64,6 +64,7 @@ const OverduePaymentCard: React.FC<OverduePaymentCardProps> = ({
     <Card 
       elevation={0}
       sx={{ 
+        minHeight: 120,
         borderRadius: 2,
         border: '1px solid',
         borderColor: statusInfo.color === 'error' ? '#f44336' : 
@@ -170,39 +171,41 @@ const OverduePaymentCard: React.FC<OverduePaymentCardProps> = ({
             
             <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
               <Box>
-                <Typography variant="caption" color="text.secondary">Kalan Borç</Typography>
-                <Typography variant="h6" fontWeight={700} color="error.main">
+                <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ mb: 0.5 }}>Kalan Borç</Typography>
+                <Typography variant="h6" color="error.main">
                   {payment.remainingAmount.toLocaleString('tr-TR')} ₺
                 </Typography>
               </Box>
               
               <Box>
-                <Typography variant="caption" color="text.secondary">Ödenen</Typography>
-                <Typography variant="body2" fontWeight={600} color="success.main">
+                <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ mb: 0.5 }}>Ödenen</Typography>
+                <Typography variant="h6" color="success.main">
                   {payment.paidAmount.toLocaleString('tr-TR')} ₺
                 </Typography>
               </Box>
               
               <Box>
-                <Typography variant="caption" color="text.secondary">Toplam Tutar</Typography>
-                <Typography variant="body2" fontWeight={600} color="text.secondary">
+                <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ mb: 0.5 }}>Toplam Tutar</Typography>
+                <Typography variant="h6" color="text.secondary">
                   {payment.totalAmount.toLocaleString('tr-TR')} ₺
                 </Typography>
               </Box>
               
               <Box>
-                <Typography variant="caption" color="text.secondary">Geciken</Typography>
-                <Typography variant="body2" fontWeight={600} color="error.main">
-                  {payment.overdueInstallments.length} {payment.installments.some(i => i.installmentNumber) ? 'taksit' : 'ödeme'}
+                <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ mb: 0.5 }}>Geciken</Typography>
+                <Typography variant="h6" color="error.main">
+                  {payment.overdueInstallments.length} Ödeme
                 </Typography>
               </Box>
               
-              {/* Sadece taksitli ödemesi olanlar için yaklaşan taksit göster */}
-              {payment.installments.some(i => i.installmentNumber) && (
+              {/* Yaklaşan ödemeler - sadece varsa göster */}
+              {payment.upcomingInstallments.length > 0 && (
                 <Box>
-                  <Typography variant="caption" color="text.secondary">Yaklaşan Taksit</Typography>
-                  <Typography variant="body2" fontWeight={600} color="warning.main">
-                    {payment.upcomingInstallments.length} taksit
+                  <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ mb: 0.5 }}>
+                    Yaklaşan {payment.upcomingInstallments.some(i => i.installmentNumber) ? 'Taksit' : 'Ödeme'}
+                  </Typography>
+                  <Typography variant="h6" color="warning.main">
+                    {payment.upcomingInstallments.length} {payment.upcomingInstallments.some(i => i.installmentNumber) ? 'taksit' : 'ödeme'}
                   </Typography>
                 </Box>
               )}
@@ -210,9 +213,9 @@ const OverduePaymentCard: React.FC<OverduePaymentCardProps> = ({
               {/* Sadece taksitli ödemesi olanlar için taksit durumu göster */}
               {payment.installments.some(i => i.installmentNumber) && (
                 <Box>
-                  <Typography variant="caption" color="text.secondary">Taksit Durumu</Typography>
-                  <Typography variant="body2" fontWeight={600} color="info.main">
-                    {payment.installments.filter(i => i.installmentNumber && i.status === 'paid').length}/
+                  <Typography variant="body2" color="text.secondary" fontWeight={600} sx={{ mb: 0.5 }}>Taksit Durumu</Typography>
+                  <Typography variant="h6" color="info.main">
+                    {payment.installments.filter(i => i.installmentNumber && (i.status === 'paid' || i.status === 'PAID')).length}/
                     {payment.installments.filter(i => i.installmentNumber).length} ödendi
                   </Typography>
                 </Box>

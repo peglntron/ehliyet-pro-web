@@ -30,7 +30,9 @@ const mapApiStudentToLocal = (apiStudent: any): Student => ({
     passedAtAttempt: apiStudent.drivingExamStatus === 'PASSED' ? (apiStudent.drivingExamAttempts || 1) : undefined
   },
   totalPayment: 0,
-  paidAmount: 0,
+  paidAmount: apiStudent.paidAmount || 0, // Backend'den gelen hesaplanmış değer
+  totalDebt: apiStudent.totalDebt || 0, // Backend'den gelen hesaplanmış değer
+  remainingDebt: apiStudent.remainingDebt || 0, // Backend'den gelen hesaplanmış değer
   createdAt: apiStudent.createdAt,
   lastUpdated: apiStudent.updatedAt,
   payments: []

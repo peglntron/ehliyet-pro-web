@@ -76,8 +76,15 @@ export const mapApiStudentToUI = (apiStudent: ApiStudent): UIStudent => {
       isInstallment: p.installmentNumber !== null,
       installmentNumber: p.installmentNumber,
       totalInstallments: p.totalInstallments,
-      relatedDebtId: p.relatedDebtId || null
-    }))
+      relatedDebtId: p.relatedDebtId || null,
+      createdAt: p.createdAt, // Kayıt oluşturulma tarihi
+      updatedAt: p.updatedAt  // Güncelleme tarihi
+    })),
+    
+    // Backend'den hesaplanan ödeme toplamları
+    totalDebt: (apiStudent as any).totalDebt || 0,
+    paidAmount: (apiStudent as any).paidAmount || 0,
+    remainingDebt: (apiStudent as any).remainingDebt || 0,
   };
 };
 

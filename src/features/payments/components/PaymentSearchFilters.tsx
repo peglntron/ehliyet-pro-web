@@ -80,13 +80,6 @@ const PaymentSearchFilters: React.FC<PaymentSearchFiltersProps> = ({
             onClick={() => onStatusFilterChange('upcoming')}
             sx={{ borderRadius: 2, cursor: 'pointer' }}
           />
-          <Chip 
-            label="Kısmi" 
-            color={statusFilter === 'partial' ? 'primary' : 'default'}
-            variant={statusFilter === 'partial' ? 'filled' : 'outlined'}
-            onClick={() => onStatusFilterChange('partial')}
-            sx={{ borderRadius: 2, cursor: 'pointer' }}
-          />
         </Box>
       </Box>
     </Paper>

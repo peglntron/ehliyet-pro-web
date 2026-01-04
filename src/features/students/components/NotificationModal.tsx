@@ -129,14 +129,27 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
       personalizedTitle = personalizedTitle.replace(/{name}/g, `${student.name} ${student.surname}`);
       personalizedContent = personalizedContent.replace(/{name}/g, `${student.name} ${student.surname}`);
       
-      // {examDate} - Sınav tarihi (öğrencinin drivingExamDate veya writtenExamDate)
-      const examDateRaw = student.drivingExamDate || student.writtenExamDate || new Date().toISOString();
-      const formattedExamDate = new Date(examDateRaw).toLocaleDateString('tr-TR');
-      personalizedContent = personalizedContent.replace(/{examDate}/g, formattedExamDate);
-      personalizedTitle = personalizedTitle.replace(/{examDate}/g, formattedExamDate);
+      // {examDate} ve {examTime} - Öğrencinin durumuna göre doğru sınav bilgilerini kullan
+      let examDate = 'Belirtilmemiş';
+      let examTime = 'Belirtilmemiş';
       
-      // {examTime} - Sınav saati (öğrencinin drivingExamTime veya writtenExamTime)
-      const examTime = student.drivingExamTime || student.writtenExamTime || '09:00';
+      // Yazılı sınav geçmemişse → Yazılı sınav bilgilerini kullan
+      if (student.writtenExam?.status !== 'passed') {
+        if (student.writtenExamDate) {
+          examDate = new Date(student.writtenExamDate).toLocaleDateString('tr-TR');
+          examTime = student.writtenExamTime || 'Belirtilmemiş';
+        }
+      } 
+      // Yazılı geçmiş, direksiyon geçmemişse → Direksiyon sınav bilgilerini kullan
+      else if (student.drivingExam?.status !== 'passed') {
+        if (student.drivingExamDate) {
+          examDate = new Date(student.drivingExamDate).toLocaleDateString('tr-TR');
+          examTime = student.drivingExamTime || 'Belirtilmemiş';
+        }
+      }
+      
+      personalizedContent = personalizedContent.replace(/{examDate}/g, examDate);
+      personalizedTitle = personalizedTitle.replace(/{examDate}/g, examDate);
       personalizedContent = personalizedContent.replace(/{examTime}/g, examTime);
       personalizedTitle = personalizedTitle.replace(/{examTime}/g, examTime);
       
@@ -145,20 +158,34 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
       personalizedContent = personalizedContent.replace(/{location}/g, location);
       personalizedTitle = personalizedTitle.replace(/{location}/g, location);
       
+      // {dueDate} - En yakın vade tarihi (ödenmemiş borç/taksit)
+      let dueDate = 'Belirtilmemiş';
+      if (student.payments && student.payments.length > 0) {
+        // PENDING durumundaki DEBT ve INSTALLMENT kayıtlarını bul
+        const pendingDebts = student.payments
+          .filter(p => (p.type === 'DEBT' || p.type === 'INSTALLMENT') && p.status === 'PENDING')
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        if (pendingDebts.length > 0) {
+          // En yakın vade tarihini al (kayıt kendi vade tarihini kullanıyor)
+          const nearestDue = pendingDebts[0];
+          dueDate = new Date(nearestDue.date).toLocaleDateString('tr-TR');
+        }
+      }
+      personalizedContent = personalizedContent.replace(/{dueDate}/g, dueDate);
+      personalizedTitle = personalizedTitle.replace(/{dueDate}/g, dueDate);
+      
       // {amount} - Bildirim tipine göre tutar
       let amount = '0';
       if (template.notificationType === 'PAYMENT') {
-        // Ödeme bildirimi ise: Geciken borç toplamı (overdue installments)
-        const overdueAmount = student.installments
-          ?.filter(inst => inst.status === 'overdue')
-          .reduce((sum, inst) => sum + inst.amount, 0) || 0;
-        amount = overdueAmount > 0 
-          ? overdueAmount.toFixed(2) 
-          : (student.remainingDebt?.toFixed(2) || '0'); // Geciken yoksa kalan borç
+        // Ödeme bildirimi ise: Kalan borç tutarını kullan
+        // remainingDebt backend'den hesaplanarak gelir
+        amount = student.remainingDebt?.toFixed(2) || student.totalPayment?.toFixed(2) || '0';
       } else {
         // Diğer bildirimler için: Kalan borç
-        amount = student.remainingDebt?.toFixed(2) || '0';
+        amount = student.remainingDebt?.toFixed(2) || student.totalPayment?.toFixed(2) || '0';
       }
+      
       personalizedContent = personalizedContent.replace(/{amount}/g, amount);
       personalizedTitle = personalizedTitle.replace(/{amount}/g, amount);
       
