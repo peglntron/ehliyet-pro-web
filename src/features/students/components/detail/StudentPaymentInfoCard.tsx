@@ -506,28 +506,42 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         </TableCell>
                         <TableCell>
                           <Box sx={{ display: 'flex', gap: 1 }}>
-                            {payment.type === 'DEBT' && isPending && (
-                              <>
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  color="info"
-                                  onClick={() => onMarkPaymentPaid(payment.id)}
-                                  sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
-                                >
-                                  Ödeme Al
-                                </Button>
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  color="error"
-                                  onClick={() => onDeletePayment(payment.id)}
-                                  sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
-                                >
-                                  Sil
-                                </Button>
-                              </>
-                            )}
+                            {payment.type === 'DEBT' && isPending && (() => {
+                              // Taksitli bir DEBT ise, herhangi bir taksit ödenmişse sil butonu gösterme
+                              let canDelete = true;
+                              if (payment.totalInstallments && payment.totalInstallments > 0) {
+                                const relatedInstallments = student?.payments?.filter(p => 
+                                  p.relatedDebtId === payment.id && p.type === 'INSTALLMENT'
+                                ) || [];
+                                const hasPaidInstallment = relatedInstallments.some(inst => inst.status === 'PAID');
+                                canDelete = !hasPaidInstallment;
+                              }
+                              
+                              return (
+                                <>
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    color="info"
+                                    onClick={() => onMarkPaymentPaid(payment.id)}
+                                    sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                                  >
+                                    Ödeme Al
+                                  </Button>
+                                  {canDelete && (
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      color="error"
+                                      onClick={() => onDeletePayment(payment.id)}
+                                      sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
+                                    >
+                                      Sil
+                                    </Button>
+                                  )}
+                                </>
+                              );
+                            })()}
                             {payment.type === 'DEBT' && isPaid && (
                               <Typography variant="body2" color="text.secondary">-</Typography>
                             )}
