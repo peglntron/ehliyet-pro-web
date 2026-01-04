@@ -272,13 +272,13 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     const hasPaidInstallment = group.some(g => g.status === 'PAID');
                     const allPending = group.every(g => g.status === 'PENDING');
                     
-                    const isFirstItem = renderedItemCount === 0;
+                    const shouldShowDivider = renderedItemCount > 0;
                     renderedItemCount++;
                     
                     return (
                       <React.Fragment key={`installment-group-${groupKey}`}>
                         {/* Divider - sadece ilk item değilse */}
-                        {!isFirstItem && (
+                        {shouldShowDivider && (
                           <TableRow>
                             <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
                               <Divider sx={{ my: 1 }} />
@@ -441,7 +441,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   const accordionId = `debt-${payment.id}`;
                   const isExpanded = expandedAccordions.has(accordionId);
                   
-                  const isFirstItem = renderedItemCount === 0;
+                  const shouldShowDivider = renderedItemCount > 0;
                   renderedItemCount++;
                   
                   // Eğer child payment yoksa normal row göster
@@ -449,7 +449,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     return (
                       <React.Fragment key={payment.id}>
                         {/* Divider - sadece ilk item değilse */}
-                        {!isFirstItem && (
+                        {shouldShowDivider && (
                           <TableRow>
                             <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
                               <Divider sx={{ my: 1 }} />
@@ -460,6 +460,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         bgcolor: 'background.paper',
                         borderLeft: '4px solid',
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
+                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.02)' },
                         '& > td': { py: 1 }
                       }}>
                         <TableCell sx={{ width: '12%' }}>
@@ -520,7 +521,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           />
                         </TableCell>
                         <TableCell sx={{ width: '10%' }}>
-                          <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                             {payment.type === 'DEBT' && isPending && (() => {
                               // Taksitli bir DEBT ise, herhangi bir taksit ödenmişse sil butonu gösterme
                               let canDelete = true;
@@ -539,9 +540,9 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                     size="small"
                                     color="info"
                                     onClick={() => onMarkPaymentPaid(payment.id)}
-                                    sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                                    sx={{ textTransform: 'none', minWidth: 'auto', px: 1, fontSize: '0.75rem' }}
                                   >
-                                    Ödeme Al
+                                    Öde
                                   </Button>
                                   {canDelete && (
                                     <Button
@@ -549,7 +550,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                       size="small"
                                       color="error"
                                       onClick={() => onDeletePayment(payment.id)}
-                                      sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
+                                      sx={{ textTransform: 'none', minWidth: 'auto', px: 1, fontSize: '0.75rem' }}
                                     >
                                       Sil
                                     </Button>
@@ -567,16 +568,16 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   size="small"
                                   color="success"
                                   onClick={() => onMarkPaymentPaid(payment.id)}
-                                  sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                                  sx={{ textTransform: 'none', minWidth: 'auto', px: 1, fontSize: '0.75rem' }}
                                 >
-                                  Ödeme Al
+                                  Öde
                                 </Button>
                                 <Button
                                   variant="outlined"
                                   size="small"
                                   color="error"
                                   onClick={() => onDeletePayment(payment.id)}
-                                  sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
+                                  sx={{ textTransform: 'none', minWidth: 'auto', px: 1, fontSize: '0.75rem' }}
                                 >
                                   Sil
                                 </Button>
@@ -596,7 +597,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   return (
                     <React.Fragment key={payment.id}>
                       {/* Divider - sadece ilk item değilse */}
-                      {!isFirstItem && (
+                      {shouldShowDivider && (
                         <TableRow>
                           <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
                             <Divider sx={{ my: 1 }} />
