@@ -39,6 +39,8 @@ const SettingsPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<EditingTemplate | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<{ id: string; name: string } | null>(null);
   const { showSnackbar } = useSnackbar();
   const { user } = useAuth();
   
@@ -110,6 +112,23 @@ const SettingsPage: React.FC = () => {
       setEditingTemplate(null);
     } catch (err) {
       showSnackbar(err instanceof Error ? err.message : 'Hata oluştu', 'error');
+    }
+  };
+
+  const handleDeleteClick = (id: string, name: string) => {
+    setTemplateToDelete({ id, name });
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!templateToDelete) return;
+    try {
+      await deleteTemplate(templateToDelete.id);
+      showSnackbar('Şablon silindi', 'success');
+      setConfirmDeleteOpen(false);
+      setTemplateToDelete(null);
+    } catch (err) {
+      showSnackbar(err instanceof Error ? err.message : 'Silme işlemi başarısız', 'error');
     }
   };
 
@@ -296,11 +315,7 @@ const SettingsPage: React.FC = () => {
                                     size="small"
                                     color="error"
                                     startIcon={<DeleteIcon />}
-                                    onClick={() => {
-                                      if (confirm('Silmek istediğinizden emin misiniz?')) deleteTemplate(t.id).then(() => {
-                                        showSnackbar('Silindi', 'success');
-                                      });
-                                    }}
+                                    onClick={() => handleDeleteClick(t.id, t.name)}
                                   >
                                     Sil
                                   </Button>
@@ -342,7 +357,7 @@ const SettingsPage: React.FC = () => {
                               <Box display="flex" justifyContent="space-between" alignItems="center">
                                 <Box display="flex" alignItems="center" gap={0.5}>
                                   <Switch checked={t.isActive} size="small" onChange={() => toggleActive(t.id).then(() => {
-                                    showSnackbar(`Şablon ${!t.isActive ? 'aktif' : 'pasif'} hale getirildi', 'success');
+                                    showSnackbar(`Şablon ${!t.isActive ? 'aktif' : 'pasif'} hale getirildi`, 'success');
                                   })} />
                                   <Typography variant="caption" color="text.secondary">
                                     {t.isActive ? 'Aktif' : 'Pasif'}
@@ -363,11 +378,7 @@ const SettingsPage: React.FC = () => {
                                     size="small"
                                     color="error"
                                     startIcon={<DeleteIcon />}
-                                    onClick={() => {
-                                      if (confirm('Silmek istediğinizden emin misiniz?')) deleteTemplate(t.id).then(() => {
-                                        showSnackbar('Silindi', 'success');
-                                      });
-                                    }}
+                                    onClick={() => handleDeleteClick(t.id, t.name)}
                                   >
                                     Sil
                                   </Button>
@@ -639,6 +650,30 @@ const SettingsPage: React.FC = () => {
           <Button onClick={handleSaveTemplate} variant="contained" startIcon={<SaveIcon />}
             disabled={!editingTemplate?.name.trim() || !editingTemplate?.title.trim() || !editingTemplate?.content.trim()}>
             Kaydet
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Silme Onay Dialog */}
+      <Dialog 
+        open={confirmDeleteOpen} 
+        onClose={() => setConfirmDeleteOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Şablonu Sil</DialogTitle>
+        <DialogContent>
+          <Typography>
+            <strong>{templateToDelete?.name}</strong> şablonunu silmek istediğinizden emin misiniz?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Bu işlem geri alınamaz.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={() => setConfirmDeleteOpen(false)}>İptal</Button>
+          <Button onClick={handleConfirmDelete} variant="contained" color="error" startIcon={<DeleteIcon />}>
+            Sil
           </Button>
         </DialogActions>
       </Dialog>
