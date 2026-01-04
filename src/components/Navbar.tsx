@@ -55,6 +55,7 @@ const companyMenuGroups = [
       { text: 'Araç Yönetimi', icon: <DirectionsCarIcon />, path: '/vehicles' },
       { text: 'Eşleştirme', icon: <AutoAwesome />, path: '/matching/saved' },
       { text: 'Ödemesi Gecikenler', icon: <MoneyOffIcon />, path: '/overdue-payments' },
+      { text: 'Gider Kalemleri', icon: <ListAltIcon />, path: '/expense-categories' },
       { text: 'Giderler', icon: <ReceiptIcon />, path: '/expenses' },
       { text: 'Bildirim Tarihçesi', icon: <NotificationsActiveIcon />, path: '/notifications' },
     ],
@@ -106,6 +107,7 @@ const Navbar: React.FC = () => {
           if (item.path === '/company/dashboard' && !permissions.canViewDashboard) return false;
           if (item.path === '/reports' && !permissions.canViewReports) return false;
           if (item.path === '/overdue-payments' && !permissions.canManageStudents) return false;
+          if (item.path === '/expense-categories' && !permissions.canViewExpenses) return false;
           if (item.path === '/expenses' && !permissions.canViewExpenses) return false;
           if (item.path === '/matching/saved' && !permissions.canManageMatching) return false;
           if (item.path === '/instructors' && !permissions.canViewInstructorDetails) return false;

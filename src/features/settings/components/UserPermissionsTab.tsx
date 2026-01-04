@@ -20,6 +20,7 @@ interface UserWithPermissions {
   firstName: string;
   lastName: string;
   phone: string;
+  role: string;
   permissions: UserPermissions;
 }
 
@@ -102,7 +103,7 @@ const UserPermissionsTab: React.FC = () => {
         <Box display="flex" alignItems="center" gap={1}>
           <PersonIcon fontSize="small" />
           <Typography variant="body2">
-            Henüz COMPANY_USER rolünde kullanıcı bulunmuyor.
+            Henüz kullanıcı bulunmuyor.
           </Typography>
         </Box>
       </Alert>
@@ -115,7 +116,7 @@ const UserPermissionsTab: React.FC = () => {
         <Box display="flex" alignItems="center" gap={1}>
           <SecurityIcon fontSize="small" />
           <Typography variant="body2">
-            Her kullanıcı için ayrı ayrı yetkilendirme yapabilirsiniz. 
+            Tüm kullanıcılar (Kurs Yöneticileri, Eğitmenler, Kurs Kullanıcıları) için ayrı ayrı yetkilendirme yapabilirsiniz. 
             Değişiklikler anında kaydedilir.
           </Typography>
         </Box>
@@ -128,6 +129,7 @@ const UserPermissionsTab: React.FC = () => {
               <TableCell sx={{ color: 'white', width: 50 }}></TableCell>
               <TableCell sx={{ color: 'white' }}>Kullanıcı</TableCell>
               <TableCell sx={{ color: 'white' }}>Telefon</TableCell>
+              <TableCell sx={{ color: 'white', textAlign: 'center' }}>Rol</TableCell>
               <TableCell sx={{ color: 'white', textAlign: 'center' }}>Aktif Yetkiler</TableCell>
             </TableRow>
           </TableHead>
@@ -161,6 +163,22 @@ const UserPermissionsTab: React.FC = () => {
                   <TableCell>{user.phone}</TableCell>
                   <TableCell align="center">
                     <Chip 
+                      label={
+                        user.role === 'COMPANY_ADMIN' ? 'Kurs Yöneticisi' :
+                        user.role === 'INSTRUCTOR' ? 'Eğitmen' :
+                        user.role === 'COMPANY_USER' ? 'Kurs Kullanıcısı' :
+                        user.role
+                      }
+                      color={
+                        user.role === 'COMPANY_ADMIN' ? 'error' :
+                        user.role === 'INSTRUCTOR' ? 'warning' :
+                        'default'
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    <Chip 
                       label={`${countActivePermissions(user.permissions)} / 10`}
                       color={countActivePermissions(user.permissions) > 5 ? 'success' : 'default'}
                       size="small"
@@ -168,7 +186,7 @@ const UserPermissionsTab: React.FC = () => {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={4} sx={{ p: 0, border: 0 }}>
+                  <TableCell colSpan={5} sx={{ p: 0, border: 0 }}>
                     <Collapse in={expandedUserId === user.id} timeout="auto" unmountOnExit>
                       <Box sx={{ p: 3, bgcolor: 'grey.50' }}>
                         <Table size="small">
