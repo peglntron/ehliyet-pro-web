@@ -157,10 +157,10 @@ const Navbar: React.FC = () => {
     >
       <Toolbar>
         <Box display="flex" alignItems="center" gap={1}>
-          <img src="/logo.png" alt="Logo" style={{ width: 148, height: 48 }} />
-          <Typography variant="h6" noWrap component="div">
+          <img src="/logo.png" alt="Logo" style={{ width: 200, height: 50 }} />
+          {/* <Typography variant="h6" noWrap component="div">
             Ehliyet.pro
-          </Typography>
+          </Typography> */}
         </Box>
       </Toolbar>
       <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)' }} />
@@ -207,6 +207,9 @@ const Navbar: React.FC = () => {
         © 2025 Ehliyet.Pro
         <Typography>
           developed by handhsoft.com
+        </Typography>
+        <Typography>
+          @THK
         </Typography>
       </Box>
     </Drawer>

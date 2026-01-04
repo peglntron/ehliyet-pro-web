@@ -97,6 +97,8 @@ export interface Payment {
   installmentNumber?: number | null; // Kaçıncı taksit (backend'den geliyor)
   totalInstallments?: number | null; // Toplam taksit sayısı
   relatedDebtId?: string | null; // Hangi borca ödeme yapıldı
+  createdAt?: string; // Kayıt oluşturulma tarihi (Prisma'dan geliyor)
+  updatedAt?: string; // Güncelleme tarihi (Prisma'dan geliyor)
 }
 
 export interface Installment {

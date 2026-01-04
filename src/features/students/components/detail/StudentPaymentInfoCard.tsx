@@ -221,10 +221,10 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   const processedInstallments = new Set<number>();
                   const installmentGroups = new Map<string, Payment[]>();
                   
-                  // Ödemeleri tarihe göre sırala (en yeni üstte)
+                  // Ödemeleri createdAt'e göre sırala (en yeni üstte)
                   const sortedPayments = [...(student.payments || [])].sort((a, b) => {
-                    const dateA = new Date(a.date).getTime();
-                    const dateB = new Date(b.date).getTime();
+                    const dateA = new Date(a.createdAt || a.date).getTime();
+                    const dateB = new Date(b.createdAt || b.date).getTime();
                     return dateB - dateA; // Azalan sıra - en yeni üstte
                   });
                   
@@ -271,6 +271,11 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     // Taksitlerden herhangi biri ödendi mi kontrol et
                     const hasPaidInstallment = group.some(g => g.status === 'PAID');
                     const allPending = group.every(g => g.status === 'PENDING');
+                    const allPaid = group.every(g => g.status === 'PAID');
+                    
+                    // Taksit planı için durum bilgisi
+                    const installmentPlanStatus = allPaid ? 'PAID' : 'PENDING';
+                    const installmentPlanStatusInfo = getPaymentStatusInfo(installmentPlanStatus);
                     
                     const shouldShowDivider = renderedItemCount > 0;
                     
@@ -289,22 +294,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             '& > td': { py: 1.5, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
                           }}
                         >
-                          <TableCell sx={{ width: '14%' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <IconButton size="small" sx={{ p: 0 }}>
-                                <ExpandMoreIcon 
-                                  sx={{ 
-                                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                                    transition: 'transform 0.3s'
-                                  }} 
-                                />
-                              </IconButton>
-                              <Typography variant="body2">
-                                {formatDate(payment.date)}
-                              </Typography>
-                            </Box>
+                          <TableCell sx={{ width: '10%' }}>
+                            <Typography variant="body2">
+                              {formatDate(payment.date)}
+                            </Typography>
                           </TableCell>
-                          <TableCell sx={{ width: '12%' }}>
+                          <TableCell sx={{ width: '14%' }}>
                             <Typography variant="body1" fontWeight={700} color="primary.main" fontSize="1.1rem">
                               {totalAmount.toLocaleString('tr-TR')} ₺
                             </Typography>
@@ -312,7 +307,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           <TableCell sx={{ width: '12%' }}>
                             <Typography variant="body2" color="text.secondary">-</Typography>
                           </TableCell>
-                          <TableCell sx={{ width: '14%' }}>
+                          <TableCell sx={{ width: '12%' }}>
                             <Chip 
                               label="TAKSİT PLANI" 
                               size="medium" 
@@ -332,23 +327,45 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             </Box>
                           </TableCell>
                           <TableCell sx={{ width: '14%' }}>
-                            {/* Durum - boş bırak */}
+                            <Chip 
+                              label={installmentPlanStatusInfo.text} 
+                              color={installmentPlanStatusInfo.color as any} 
+                              size="medium" 
+                              variant={installmentPlanStatusInfo.text === 'Ödendi' ? 'filled' : 'outlined'}
+                              sx={{ 
+                                borderRadius: 1,
+                                fontWeight: 700,
+                                fontSize: '0.85rem',
+                                height: 28,
+                                minWidth: 85
+                              }} 
+                            />
                           </TableCell>
                           <TableCell sx={{ width: '14%' }}>
-                            {allPending && (
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                color="error"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onDeletePayment(group[0].id);
-                                }}
-                                sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
-                              >
-                                Sil
-                              </Button>
-                            )}
+                            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', justifyContent: 'space-between' }}>
+                              {allPending && (
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  color="error"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeletePayment(group[0].id);
+                                  }}
+                                  sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
+                                >
+                                  Sil
+                                </Button>
+                              )}
+                              <IconButton size="small" sx={{ p: 0, ml: 'auto' }}>
+                                <ExpandMoreIcon 
+                                  sx={{ 
+                                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                    transition: 'transform 0.3s'
+                                  }} 
+                                />
+                              </IconButton>
+                            </Box>
                           </TableCell>
                         </TableRow>
                         {/* TAKSİT DETAYLARI */}
@@ -362,7 +379,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               key={installment.id}
                               sx={{ 
                                 bgcolor: 'rgba(0, 0, 0, 0.02)',
-                                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                                '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' }
                               }}
                             >
                               <TableCell sx={{ pl: 6, width: '14%' }}>
@@ -396,8 +413,15 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                 <Chip 
                                   label={instStatusInfo.text} 
                                   color={instStatusInfo.color as any} 
-                                  size="small" 
-                                  sx={{ borderRadius: 1 }} 
+                                  size="medium" 
+                                  variant={instStatusInfo.text === 'Ödendi' ? 'filled' : 'outlined'}
+                                  sx={{ 
+                                    borderRadius: 1,
+                                    fontWeight: 700,
+                                    fontSize: '0.85rem',
+                                    height: 28,
+                                    minWidth: 85
+                                  }} 
                                 />
                               </TableCell>
                               <TableCell sx={{ width: '14%' }}>
@@ -445,7 +469,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         borderLeft: '4px solid',
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
                         '&:hover': { 
-                          bgcolor: payment.type === 'DEBT' ? 'rgba(211, 47, 47, 0.08)' : payment.type === 'PAYMENT' ? 'rgba(46, 125, 50, 0.08)' : 'rgba(2, 136, 209, 0.08)'
+                          bgcolor: 'rgba(25, 118, 210, 0.08)'
                         },
                         '& > td': { py: 1, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
                       }}>
@@ -477,16 +501,16 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           ) : payment.type === 'INSTALLMENT' ? (
                             <Chip 
                               label="TAKSİT" 
-                              size="small" 
+                              size="medium" 
                               color="info"
-                              sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+                              sx={{ fontWeight: 700, fontSize: '0.85rem', borderRadius: 1, height: 28, minWidth: 85 }}
                             />
                           ) : (
                             <Chip 
                               label="ÖDEME" 
-                              size="small" 
+                              size="medium" 
                               color="success"
-                              sx={{ fontWeight: 600, fontSize: '0.75rem', borderRadius:1 }}
+                              sx={{ fontWeight: 700, fontSize: '0.85rem', borderRadius: 1, height: 28, minWidth: 85 }}
                             />
                           )}
                         </TableCell>
@@ -598,26 +622,16 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           borderLeft: '4px solid',
                           borderColor: payment.type === 'DEBT' ? 'error.main' : 'info.main',
                           cursor: 'pointer',
-                          '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' },
+                          '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' },
                           '& > td': { py: 1.5, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
                         }}
                       >
-                        <TableCell sx={{ width: '14%' }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <IconButton size="small" sx={{ p: 0 }}>
-                              <ExpandMoreIcon 
-                                sx={{ 
-                                  transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                                  transition: 'transform 0.3s'
-                                }} 
-                              />
-                            </IconButton>
-                            <Typography variant="body2">
-                              {formatDate(payment.date)}
-                            </Typography>
-                          </Box>
+                        <TableCell sx={{ width: '10%' }}>
+                          <Typography variant="body2">
+                            {formatDate(payment.date)}
+                          </Typography>
                         </TableCell>
-                        <TableCell sx={{ width: '12%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           <Typography variant="body1" fontWeight={700} fontSize="1.1rem">
                             {payment.amount.toLocaleString('tr-TR')} ₺
                           </Typography>
@@ -625,7 +639,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         <TableCell sx={{ width: '12%' }}>
                           <Typography variant="body2">{getPaymentMethodText(payment.method)}</Typography>
                         </TableCell>
-                        <TableCell sx={{ width: '14%' }}>
+                        <TableCell sx={{ width: '12%' }}>
                           <Chip 
                             label="BORÇ" 
                             size="medium"
@@ -647,25 +661,42 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           <Chip 
                             label={paymentStatusInfo.text} 
                             color={paymentStatusInfo.color as any} 
-                            size="small" 
-                            sx={{ borderRadius: 1 }} 
+                            size="medium" 
+                            variant={paymentStatusInfo.text === 'Ödendi' ? 'filled' : 'outlined'}
+                            sx={{ 
+                              borderRadius: 1,
+                              fontWeight: 700,
+                              fontSize: '0.85rem',
+                              height: 28,
+                              minWidth: 85
+                            }} 
                           />
                         </TableCell>
                         <TableCell sx={{ width: '14%' }}>
-                          {isPending && (
-                            <Button
-                              variant="contained"
-                              size="small"
-                              color="info"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onMarkPaymentPaid(payment.id);
-                              }}
-                              sx={{ textTransform: 'none', minWidth: 80, px: 1.5 }}
-                            >
-                              Öde
-                            </Button>
-                          )}
+                          <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', justifyContent: 'space-between' }}>
+                            {isPending && (
+                              <Button
+                                variant="contained"
+                                size="small"
+                                color="info"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onMarkPaymentPaid(payment.id);
+                                }}
+                                sx={{ textTransform: 'none', minWidth: 80, px: 1.5 }}
+                              >
+                                Öde
+                              </Button>
+                            )}
+                            <IconButton size="small" sx={{ p: 0, ml: 'auto' }}>
+                              <ExpandMoreIcon 
+                                sx={{ 
+                                  transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                  transition: 'transform 0.3s'
+                                }} 
+                              />
+                            </IconButton>
+                          </Box>
                         </TableCell>
                       </TableRow>
                       {/* CHILD PAYMENT DETAYLARI */}
@@ -676,7 +707,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             key={childPayment.id}
                             sx={{ 
                               bgcolor: 'rgba(0, 0, 0, 0.02)',
-                              '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                              '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' }
                             }}
                           >
                             <TableCell sx={{ pl: 6, width: '14%' }}>
