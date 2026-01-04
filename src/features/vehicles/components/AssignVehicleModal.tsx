@@ -77,11 +77,18 @@ const AssignVehicleModal: React.FC<AssignVehicleModalProps> = ({
       return;
     }
 
+    // KM kontrolü
+    const assignedKmValue = formData.assignedKm ? parseInt(formData.assignedKm) : currentKm;
+    if (assignedKmValue < currentKm) {
+      alert(`Zimmet KM'si (${assignedKmValue.toLocaleString('tr-TR')}) aracın mevcut KM'sinden (${currentKm.toLocaleString('tr-TR')}) düşük olamaz!`);
+      return;
+    }
+
     try {
       setSubmitting(true);
       await onAssign({
         instructorId: formData.instructorId,
-        assignedKm: formData.assignedKm ? parseInt(formData.assignedKm) : undefined,
+        assignedKm: assignedKmValue,
         assignedNotes: formData.assignedNotes || undefined,
       });
       onClose();

@@ -104,8 +104,12 @@ const NewExamStatusModal: React.FC<NewExamStatusModalProps> = ({
 
   // Sınav hakkı kontrolü
   const canTakeWrittenExam = localStudent.writtenExam.attempts < localStudent.writtenExam.maxAttempts;
+  
+  // Direksiyon sınavı için: Yazılı geçmiş olmalı VE aktif eğitmen ataması olmalı
+  const hasActiveInstructor = localStudent.instructorAssignments?.some(a => a.isActive) || false;
   const canTakeDrivingExam = localStudent.drivingExam.attempts < localStudent.drivingExam.maxAttempts && 
-                            localStudent.writtenExam.status === 'passed';
+                            localStudent.writtenExam.status === 'passed' &&
+                            hasActiveInstructor;
 
   return (
     <Dialog 
@@ -318,6 +322,13 @@ const NewExamStatusModal: React.FC<NewExamStatusModalProps> = ({
                   {localStudent.writtenExam.status !== 'passed' && (
                     <Alert severity="info" sx={{ mb: 2 }}>
                       Önce yazılı sınavı geçmelisiniz
+                    </Alert>
+                  )}
+
+                  {/* Eğitmen ataması uyarısı */}
+                  {localStudent.writtenExam.status === 'passed' && !hasActiveInstructor && (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      Direksiyon sınavına girebilmek için önce bir eğitmen ataması yapılmalıdır
                     </Alert>
                   )}
 
