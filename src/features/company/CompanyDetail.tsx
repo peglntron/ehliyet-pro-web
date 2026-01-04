@@ -3,7 +3,8 @@ import {
   Box, Typography, Paper, Tabs, Tab, Button,
   Chip, IconButton, TextField,
   Grid, Dialog, DialogTitle, 
-  DialogContent, DialogActions
+  DialogContent, DialogActions, CircularProgress,
+  Alert, Card, CardContent
 } from '@mui/material';
 import { useSnackbar } from '../../contexts/SnackbarContext';
 import {
@@ -80,6 +81,8 @@ const CompanyDetail: React.FC = () => {
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
   const [licenseRefreshKey, setLicenseRefreshKey] = useState(0);
+  const [notificationTemplates, setNotificationTemplates] = useState<any[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [phoneForm, setPhoneForm] = useState({ number: '', description: '' });
   const [ibanForm, setIbanForm] = useState({ iban: '', bankName: '', accountHolder: '', description: '' });
   const [locationForm, setLocationForm] = useState({ latitude: '', longitude: '', mapLink: '' });
@@ -252,6 +255,39 @@ const CompanyDetail: React.FC = () => {
         });
     }
   }, [id]);
+
+  // Bildirim şablonlarını yükle
+  const fetchNotificationTemplates = async () => {
+    if (!id) return;
+    setTemplatesLoading(true);
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const response = await fetch(`/api/notification-templates?companyId=${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) throw new Error('Şablonlar getirilemedi');
+
+      const result = await response.json();
+      if (result.success) {
+        setNotificationTemplates(result.data.all || []);
+      }
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+    } finally {
+      setTemplatesLoading(false);
+    }
+  };
+
+  // Tab değiştiğinde şablonları yükle
+  useEffect(() => {
+    if (tabValue === 6 && id) {
+      fetchNotificationTemplates();
+    }
+  }, [tabValue, id]);
 
   // Tarih formatını düzenleme
   const formatDate = (dateString: string | null | undefined): string => {
@@ -724,33 +760,87 @@ const CompanyDetail: React.FC = () => {
                   <Typography variant="body2" color="text.secondary" mb={3}>
                     Bu işletme için varsayılan bildirim şablonlarını oluşturabilirsiniz.
                   </Typography>
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={async () => {
-                      try {
-                        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-                        const response = await fetch(`/api/notification-templates/default/create-for-company/${id}`, {
-                          method: 'POST',
-                          headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
+
+                  {notificationTemplates.length === 0 && !templatesLoading && (
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                          const response = await fetch(`/api/notification-templates/default/create-for-company/${id}`, {
+                            method: 'POST',
+                            headers: {
+                              'Authorization': `Bearer ${token}`,
+                              'Content-Type': 'application/json'
+                            }
+                          });
+
+                          if (!response.ok) throw new Error('Şablonlar oluşturulamadı');
+
+                          const result = await response.json();
+                          if (result.success) {
+                            showSnackbar('Varsayılan bildirim şablonları başarıyla oluşturuldu', 'success');
+                            fetchNotificationTemplates();
                           }
-                        });
-
-                        if (!response.ok) throw new Error('Şablonlar oluşturulamadı');
-
-                        const result = await response.json();
-                        if (result.success) {
-                          showSnackbar('Varsayılan bildirim şablonları başarıyla oluşturuldu', 'success');
+                        } catch (error) {
+                          showSnackbar('Şablonlar oluşturulurken hata oluştu', 'error');
                         }
-                      } catch (error) {
-                        showSnackbar('Şablonlar oluşturulurken hata oluştu', 'error');
-                      }
-                    }}
-                  >
-                    Varsayılan Şablonları Oluştur
-                  </Button>
+                      }}
+                    >
+                      Varsayılan Şablonları Oluştur
+                    </Button>
+                  )}
+
+                  {templatesLoading && (
+                    <Box display="flex" justifyContent="center" p={3}>
+                      <CircularProgress />
+                    </Box>
+                  )}
+
+                  {!templatesLoading && notificationTemplates.length > 0 && (
+                    <Box>
+                      <Alert severity="success" sx={{ mb: 3 }}>
+                        Bu işletme için {notificationTemplates.length} adet bildirim şablonu tanımlanmış.
+                      </Alert>
+                      <Box display="flex" flexDirection="column" gap={2}>
+                        {notificationTemplates.map((template: any) => (
+                          <Card key={template.id} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                            <CardContent>
+                              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                                <Box flex={1}>
+                                  <Box display="flex" alignItems="center" gap={1} mb={1}>
+                                    <Typography variant="subtitle1" fontWeight={600}>
+                                      {template.name}
+                                    </Typography>
+                                    {template.isDefault && (
+                                      <Chip label="Varsayılan" size="small" color="primary" />
+                                    )}
+                                    <Chip 
+                                      label={template.targetType === 'COMPANY_STUDENT' ? 'Öğrenci' : 'Eğitmen'} 
+                                      size="small" 
+                                      variant="outlined"
+                                    />
+                                  </Box>
+                                  <Typography variant="body2" color="text.secondary" mb={1}>
+                                    <strong>Başlık:</strong> {template.title}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {template.content}
+                                  </Typography>
+                                </Box>
+                                <Chip 
+                                  label={template.isActive ? 'Aktif' : 'Pasif'}
+                                  color={template.isActive ? 'success' : 'default'}
+                                  size="small"
+                                />
+                              </Box>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
                 </Box>
               </TabPanel>
             </Paper>
