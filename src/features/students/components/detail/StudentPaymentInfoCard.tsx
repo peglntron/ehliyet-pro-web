@@ -286,7 +286,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         <TableRow 
                           onClick={() => handleAccordionToggle(accordionId)}
                           sx={{ 
-                            bgcolor: 'background.paper',
+                            bgcolor: 'rgba(76, 175, 80, 0.08)',
                             borderLeft: '4px solid',
                             borderColor: 'primary.main',
                             cursor: 'pointer',
@@ -465,13 +465,13 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     return (
                       <React.Fragment key={payment.id}>
                         <TableRow sx={{ 
-                        bgcolor: 'background.paper',
+                        bgcolor: 'rgba(139, 195, 74, 0.06)',
                         borderLeft: '4px solid',
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
                         '&:hover': { 
                           bgcolor: 'rgba(25, 118, 210, 0.08)'
                         },
-                        '& > td': { py: 1, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
+                        '& > td': { py: 1.5, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
                       }}>
                         <TableCell sx={{ width: '10%' }}>
                           <Typography variant="body2">
@@ -618,7 +618,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                       <TableRow
                         onClick={() => handleAccordionToggle(accordionId)}
                         sx={{ 
-                          bgcolor: 'background.paper',
+                          bgcolor: 'rgba(46, 125, 50, 0.1)',
                           borderLeft: '4px solid',
                           borderColor: payment.type === 'DEBT' ? 'error.main' : 'info.main',
                           cursor: 'pointer',
