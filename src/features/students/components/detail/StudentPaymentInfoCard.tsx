@@ -276,14 +276,6 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     
                     return (
                       <React.Fragment key={`installment-group-${groupKey}`}>
-                        {/* Divider - sadece ilk item değilse */}
-                        {shouldShowDivider && (
-                          <TableRow>
-                            <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
-                              <Divider sx={{ my: 1 }} />
-                            </TableCell>
-                          </TableRow>
-                        )}
                         {(() => { renderedItemCount++; return null; })()}
                         {/* TAKSİT PLANI BAŞLIK SATIRI */}
                         <TableRow 
@@ -294,7 +286,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             borderColor: 'primary.main',
                             cursor: 'pointer',
                             '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' },
-                            '& > td': { py: 1.5 }
+                            '& > td': { py: 1.5, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
                           }}
                         >
                           <TableCell sx={{ width: '14%' }}>
@@ -448,20 +440,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     renderedItemCount++;
                     return (
                       <React.Fragment key={payment.id}>
-                        {/* Divider - sadece ilk item değilse */}
-                        {shouldShowDivider && (
-                          <TableRow>
-                            <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
-                              <Divider sx={{ my: 1 }} />
-                            </TableCell>
-                          </TableRow>
-                        )}
                         <TableRow sx={{ 
                         bgcolor: 'background.paper',
                         borderLeft: '4px solid',
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
                         '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.02)' },
-                        '& > td': { py: 1 }
+                        '& > td': { py: 1, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
                       }}>
                         <TableCell sx={{ width: '10%' }}>
                           <Typography variant="body2">
@@ -521,7 +505,9 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             sx={{ 
                               borderRadius: 1,
                               fontWeight: 700,
-                              fontSize: '0.8rem'
+                              fontSize: '0.85rem',
+                              height: 28,
+                              minWidth: 85
                             }} 
                           />
                         </TableCell>
@@ -602,14 +588,6 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   renderedItemCount++;
                   return (
                     <React.Fragment key={payment.id}>
-                      {/* Divider - sadece ilk item değilse */}
-                      {shouldShowDivider && (
-                        <TableRow>
-                          <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
-                            <Divider sx={{ my: 1 }} />
-                          </TableCell>
-                        </TableRow>
-                      )}
                       {/* BORÇ BAŞLIK SATIRI */}
                       <TableRow
                         onClick={() => handleAccordionToggle(accordionId)}
@@ -619,7 +597,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           borderColor: payment.type === 'DEBT' ? 'error.main' : 'info.main',
                           cursor: 'pointer',
                           '&:hover': { bgcolor: 'rgba(211, 47, 47, 0.08)' },
-                          '& > td': { py: 1.5 }
+                          '& > td': { py: 1.5, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
                         }}
                       >
                         <TableCell sx={{ width: '14%' }}>
