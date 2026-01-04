@@ -12,6 +12,7 @@ import {
   MenuItem,
   Box,
   CircularProgress,
+  Alert,
 } from '@mui/material';
 import { getInstructors } from '../../instructors/api/useInstructors';
 
@@ -39,6 +40,7 @@ const AssignVehicleModal: React.FC<AssignVehicleModalProps> = ({
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     instructorId: '',
     assignedKm: '',
@@ -48,6 +50,7 @@ const AssignVehicleModal: React.FC<AssignVehicleModalProps> = ({
   useEffect(() => {
     if (open) {
       loadInstructors();
+      setError('');
       // Reset form when modal opens
       setFormData({
         instructorId: '',
@@ -72,15 +75,17 @@ const AssignVehicleModal: React.FC<AssignVehicleModalProps> = ({
   };
 
   const handleSubmit = async () => {
+    setError('');
+    
     if (!formData.instructorId) {
-      alert('Lütfen eğitmen seçin');
+      setError('Lütfen eğitmen seçin');
       return;
     }
 
     // KM kontrolü
     const assignedKmValue = formData.assignedKm ? parseInt(formData.assignedKm) : currentKm;
     if (assignedKmValue < currentKm) {
-      alert(`Zimmet KM'si (${assignedKmValue.toLocaleString('tr-TR')}) aracın mevcut KM'sinden (${currentKm.toLocaleString('tr-TR')}) düşük olamaz!`);
+      setError(`Zimmet KM'si (${assignedKmValue.toLocaleString('tr-TR')}) aracın mevcut KM'sinden (${currentKm.toLocaleString('tr-TR')}) düşük olamaz!`);
       return;
     }
 
@@ -94,6 +99,7 @@ const AssignVehicleModal: React.FC<AssignVehicleModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Zimmet hatası:', error);
+      setError('Zimmet işlemi başarısız oldu');
     } finally {
       setSubmitting(false);
     }
@@ -109,6 +115,12 @@ const AssignVehicleModal: React.FC<AssignVehicleModalProps> = ({
           </Box>
         ) : (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            {error && (
+              <Alert severity="error" onClose={() => setError('')}>
+                {error}
+              </Alert>
+            )}
+            
             <FormControl fullWidth required>
               <InputLabel>Eğitmen Seçin</InputLabel>
               <Select
