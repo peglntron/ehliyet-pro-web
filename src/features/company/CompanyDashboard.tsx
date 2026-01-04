@@ -248,8 +248,8 @@ const CompanyDashboard: React.FC = () => {
   ];
 
   // Debug için veriler console'da yazdırılıyor
-  console.log('Dashboard Stats:', stats);
-  console.log('Instructor Stats:', instructorStats);
+  // console.log('Dashboard Stats:', stats);
+  // console.log('Instructor Stats:', instructorStats);
 
   return (
     <Box sx={{ 

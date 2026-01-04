@@ -57,7 +57,7 @@ const AddEditStudent: React.FC = () => {
     address: '',
     province: '',
     district: '',
-    gender: 'MALE' as const,
+    gender: 'MALE' as 'MALE' | 'FEMALE',
     birthDate: '',
     licenseType: '',
     licenseClassId: '',
@@ -80,15 +80,17 @@ const AddEditStudent: React.FC = () => {
             firstName: student.name || '',
             lastName: student.surname || '',
             tcNo: student.tcNo || '',
-            gender: student.gender || 'male',
             phone: student.phone ? student.phone.replace('+90', '') : '',
-            licenseType: student.licenseType || '',
-            licenseClassId: student.licenseClassId || '',
+            email: '',
+            address: student.address || '',
             province: student.province || '',
             district: student.district || '',
-            address: student.address || '',
+            gender: (student.gender?.toUpperCase() || 'MALE') as 'MALE' | 'FEMALE',
+            birthDate: '',
+            licenseType: student.licenseType || '',
+            licenseClassId: student.licenseClassId || '',
             notes: student.notes || '',
-            status: student.status || 'active'
+            startDate: new Date().toISOString().split('T')[0]
           };
           setFormData(loadedData);
           setInitialFormData(loadedData);
@@ -159,14 +161,11 @@ const AddEditStudent: React.FC = () => {
   // Form gönderimi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('🔴 handleSubmit çağrıldı!');
-    console.log('Form data:', formData);
+  
     
     // Basit validasyon
     if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.tcNo.trim() || 
         !formData.phone.trim() || !formData.licenseType.trim()) {
-      console.log('❌ Validasyon hatası - eksik alanlar');
       showSnackbar('Lütfen gerekli alanları doldurun', 'error');
       return;
     }
@@ -175,7 +174,6 @@ const AddEditStudent: React.FC = () => {
     const phoneRegex = /^5\d{9}$/; // 5XXXXXXXXX (10 hane)
     const cleanPhone = formData.phone.replace(/\s/g, '');
     if (!phoneRegex.test(cleanPhone)) {
-      console.log('❌ Telefon validasyon hatası:', cleanPhone);
       showSnackbar('Lütfen geçerli bir telefon numarası girin (5XXXXXXXXX - 10 hane)', 'error');
       return;
     }
@@ -195,7 +193,7 @@ const AddEditStudent: React.FC = () => {
         lastName: formData.lastName.trim(),
         tcNo: formData.tcNo.trim(),
         phone: formData.phone.replace(/\s/g, ''), // Sadece boşlukları temizle, 0 ekleme
-        gender: formData.gender === 'male' ? 'MALE' : 'FEMALE',
+        gender: formData.gender, // Artık direkt MALE veya FEMALE
         birthDate: new Date('2000-01-01').toISOString(), // Varsayılan doğum tarihi
         licenseType: formData.licenseType,        // String "B" (backward compat)
         licenseClassId: formData.licenseClassId,  // UUID (yeni)
@@ -437,8 +435,8 @@ const AddEditStudent: React.FC = () => {
                         label="Cinsiyet *"
                         required
                       >
-                        <MenuItem value="male">Erkek</MenuItem>
-                        <MenuItem value="female">Kadın</MenuItem>
+                        <MenuItem value="MALE">Erkek</MenuItem>
+                        <MenuItem value="FEMALE">Kadın</MenuItem>
                       </Select>
                     </FormControl>
                   </Box>

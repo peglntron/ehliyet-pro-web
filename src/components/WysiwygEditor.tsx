@@ -156,9 +156,9 @@ const WysiwygEditor: React.FC<WysiwygEditorProps> = ({
         }
         
         const data = await response.json();
-        console.log('Upload response:', data);
+        // console.log('Upload response:', data);
         const imageUrl = data.data?.url || data.url;
-        console.log('Image URL:', imageUrl);
+        // console.log('Image URL:', imageUrl);
         
         if (imageUrl) {
           // Tam URL oluştur

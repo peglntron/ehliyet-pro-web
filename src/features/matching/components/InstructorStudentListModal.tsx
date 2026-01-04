@@ -42,14 +42,32 @@ const InstructorStudentListModal: React.FC<InstructorStudentListModalProps> = ({
 }) => {
   if (!instructor) return null;
 
+  console.log('🔍 [InstructorStudentListModal] Debug:', {
+    instructorId: instructor.id,
+    instructorName: `${instructor.firstName} ${instructor.lastName}`,
+    totalMatchingResults: matchingResults.length,
+    totalStudents: students.length,
+    matchingResultsForInstructor: matchingResults.filter(m => m.instructorId === instructor.id).length
+  });
+
   // Bu eğitmene atanan öğrencileri bul
   const assignedStudents = matchingResults
     .filter(match => match.instructorId === instructor.id)
     .map(match => {
       const student = students.find(s => s.id === match.studentId);
+      console.log('🔍 [Student Lookup]', {
+        studentId: match.studentId,
+        studentName: match.studentName,
+        foundInStudentsArray: !!student,
+        studentData: student ? `${student.firstName || student.name} ${student.lastName || student.surname}` : 'NOT FOUND',
+        phoneField: student ? student.phone : 'NO STUDENT',
+        allStudentFields: student ? Object.keys(student) : []
+      });
       return { ...match, student };
     })
     .filter(item => item.student);
+
+  console.log('✅ [Final assignedStudents]:', assignedStudents.length);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -118,14 +136,14 @@ const InstructorStudentListModal: React.FC<InstructorStudentListModalProps> = ({
                       height: 32
                     }}
                   >
-                    {item.student?.name?.charAt(0)}
+                    {(item.student?.firstName || item.student?.name)?.charAt(0)}
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
                   primary={
                     <Box display="flex" alignItems="center" gap={1}>
                       <Typography variant="subtitle2" fontWeight={600}>
-                        {item.student?.name} {item.student?.surname}
+                        {item.student?.firstName || item.student?.name} {item.student?.lastName || item.student?.surname}
                       </Typography>
                       <Chip
                         label={item.student?.gender === 'male' ? 'Erkek' : 'Kadın'}

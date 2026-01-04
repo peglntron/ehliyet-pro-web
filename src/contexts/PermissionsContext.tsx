@@ -18,12 +18,12 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState(true);
 
   const fetchPermissions = async () => {
-    console.log('[PermissionsContext] fetchPermissions called, user:', user?.role);
+    // console.log('[PermissionsContext] fetchPermissions called, user:', user?.role);
     setLoading(true); // Her zaman loading'i true yap
     
     // ADMIN ve INSTRUCTOR için yetkiler gerekmez
     if (!user || user.role === 'ADMIN' || user.role === 'INSTRUCTOR') {
-      console.log('[PermissionsContext] ADMIN/INSTRUCTOR or no user, setting defaults');
+      // console.log('[PermissionsContext] ADMIN/INSTRUCTOR or no user, setting defaults');
       setPermissions(DEFAULT_USER_PERMISSIONS);
       setLoading(false);
       return;
@@ -31,7 +31,7 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // COMPANY_ADMIN - Tüm yetkiler açık
     if (user.role === 'COMPANY_ADMIN') {
-      console.log('[PermissionsContext] COMPANY_ADMIN detected, setting all permissions');
+      // console.log('[PermissionsContext] COMPANY_ADMIN detected, setting all permissions');
       setPermissions({
         canViewReports: true,
         canViewExpenses: true,

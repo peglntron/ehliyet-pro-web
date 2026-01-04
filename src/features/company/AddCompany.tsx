@@ -153,7 +153,7 @@ const AddCompany: React.FC = () => {
     }
     
     // Loading state'i hemen set et
-    console.log('Setting loading to true');
+    // console.log('Setting loading to true');
     setLoading(true);
     
     // State update için kısa bir bekleme
@@ -181,11 +181,11 @@ const AddCompany: React.FC = () => {
       description: formData.description
     };
 
-    console.log('Submit Data:', submitData);
+    // console.log('Submit Data:', submitData);
 
     try {
       const result = await createCompany(submitData);
-      console.log('Success result:', result);
+      // console.log('Success result:', result);
       
       setSnackbarMessage(`İşletme başarıyla oluşturuldu!`);
       setSnackbarSeverity('success');

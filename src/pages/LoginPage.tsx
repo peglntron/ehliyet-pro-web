@@ -56,13 +56,13 @@ const LoginPage: React.FC = () => {
       // ADMIN için permissions beklemeden direkt yönlendir (tüm izinleri var)
       // COMPANY_ADMIN için ekstra kontrol: permissions gerçekten yüklendi mi?
       if (user.role === 'COMPANY_ADMIN' && !permissions.canViewDashboard) {
-        console.log('[LoginPage] COMPANY_ADMIN but permissions not loaded yet, waiting...');
+        // console.log('[LoginPage] COMPANY_ADMIN but permissions not loaded yet, waiting...');
         return; // Henüz permissions yüklenmemiş, bekle
       }
       
       // Önceki sayfa kontrolü - rol-specific dashboard'ları ignore et
       const fromPath = (location.state as any)?.from?.pathname;
-      console.log('[LoginPage] fromPath:', fromPath, 'User role:', user.role);
+      // console.log('[LoginPage] fromPath:', fromPath, 'User role:', user.role);
       
       // Rol-specific dashboard'lar ve login/root sayfaları ignore edilmeli
       const roleDashboards = ['/company/dashboard', '/admin/dashboard', '/instructor/dashboard'];
@@ -71,7 +71,7 @@ const LoginPage: React.FC = () => {
         ? getDefaultRouteForRole(user.role, permissions)
         : fromPath;
       
-      console.log('[LoginPage] Redirecting to:', targetPath, 'Role:', user.role, 'Permissions:', permissions);
+      // console.log('[LoginPage] Redirecting to:', targetPath, 'Role:', user.role, 'Permissions:', permissions);
       navigate(targetPath, { replace: true });
     }
   }, [user, permissions, permissionsLoading, navigate, location]);

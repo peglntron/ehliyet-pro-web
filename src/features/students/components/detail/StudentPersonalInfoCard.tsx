@@ -28,13 +28,6 @@ const StudentPersonalInfoCard: React.FC<StudentPersonalInfoCardProps> = ({
     ? `${activeAssignment.instructor.firstName} ${activeAssignment.instructor.lastName}`
     : (student?.instructorName || 'Henüz eğitmen atanmadı');
   
-  console.log('StudentPersonalInfoCard render:', {
-    studentId: student?.id,
-    instructorAssignments: student?.instructorAssignments,
-    activeAssignment,
-    instructorName
-  });
-  
   return (
     <Paper
       elevation={0}

@@ -234,9 +234,7 @@ const AddEditTrafficSign: React.FC = () => {
         // Eğer resim seçilmişse ve traffic sign oluşturulduysa, resmi upload et
         if (selectedFile && newTrafficSign?.id) {
           try {
-            console.log('Uploading image for traffic sign:', newTrafficSign.id); // Debug log
             const uploadResponse = await trafficSignApi.uploadImage(newTrafficSign.id, selectedFile);
-            console.log('Image upload response:', uploadResponse); // Debug log
           } catch (uploadError) {
             console.warn('Resim yükleme başarısız, ama traffic sign oluşturuldu:', uploadError);
             navigate('/traffic-signs?success=created&warning=image-failed');

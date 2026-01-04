@@ -1,10 +1,9 @@
 import React from 'react';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
-import Link from '@mui/material/Link';
-import { useLocation, Link as RouterLink } from 'react-router-dom';
 import { Box, Chip } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../contexts/PermissionsContext';
 
@@ -21,17 +20,6 @@ const formatTitle = (title: string): string => {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 };
-
-// Doğrudan erişilebilen sayfalar, diğerleri ana sayfaya yönlendirilecek
-const validRoutes = [
-  '/questions',
-  '/lessons',
-  '/units',
-  '/traffic-signs',
-  '/students',
-  '/late-payments',
-  '/notified'
-];
 
 const PageBreadcrumb: React.FC<PageBreadcrumbProps> = ({ className, skipHome = false }) => {
   const location = useLocation();
@@ -118,41 +106,29 @@ const PageBreadcrumb: React.FC<PageBreadcrumbProps> = ({ className, skipHome = f
               }}
             />
           ) : idx === 0 && item.title === 'Ana Sayfa' ? (
-            <Link
+            <Box
               key={idx}
-              component={RouterLink}
-              to={item.url}
-              underline="none"
               sx={{ 
                 display: 'flex',
                 alignItems: 'center',
                 color: 'text.secondary',
                 fontSize: '0.85rem',
-                fontWeight: 500,
-                '&:hover': {
-                  color: 'primary.main'
-                }
+                fontWeight: 500
               }}
             >
               <HomeIcon fontSize="small" sx={{ mr: 0.5 }} />
-            </Link>
+            </Box>
           ) : (
-            <Link
+            <Box
               key={idx}
-              component={RouterLink}
-              to={validRoutes.includes(item.url) ? item.url : '/'}  // Eğer geçerli bir rota değilse ana sayfaya yönlendir
-              underline="none"
               sx={{ 
                 color: 'text.secondary',
                 fontSize: '0.85rem',
-                fontWeight: 500,
-                '&:hover': {
-                  color: 'primary.main'
-                }
+                fontWeight: 500
               }}
             >
               {item.title}
-            </Link>
+            </Box>
           )
         )}
       </Breadcrumbs>

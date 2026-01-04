@@ -1105,7 +1105,6 @@ const CompanyInfo: React.FC = () => {
                   }
                 };
 
-                console.log('API\'ye gönderilecek updateData:', updateData);
                 await updateCompanyInfo(updateData);
                 setEditDialog(false);
                 

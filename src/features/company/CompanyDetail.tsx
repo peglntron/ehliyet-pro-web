@@ -19,7 +19,8 @@ import {
   Map,
   AccountBalance as BankIcon,
   Add as AddIcon,
-  CardMembership as LicenseIcon
+  CardMembership as LicenseIcon,
+  KeyboardDoubleArrowLeftOutlined
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCompanyById, addCompanyPhone, addCompanyIban, deleteCompanyPhone, deleteCompanyIban, updateCompany } from './api/useCompanies';
@@ -239,9 +240,6 @@ const CompanyDetail: React.FC = () => {
       setLoading(true);
       getCompanyById(id)
         .then(data => {
-          console.log('=== COMPANY DATA FROM API ===', data);
-          console.log('Phones:', data.phones);
-          console.log('Ibans:', data.ibans);
           setCompany(data);
           setLoading(false);
         })

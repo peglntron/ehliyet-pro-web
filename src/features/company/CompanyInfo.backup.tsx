@@ -1085,7 +1085,6 @@ const CompanyInfo: React.FC = () => {
           <Button
             onClick={async () => {
               try {
-                console.log('Kaydet butonu tıklandı, formData:', formData);
                 // Logo upload işlemi burada yapılabilir
                 const updateData = {
                   name: formData.name,

@@ -110,8 +110,8 @@ const EditPersonalInfoModal: React.FC<EditPersonalInfoModalProps> = ({
   const handleSubmit = async () => {
     if (!validateForm()) return;
     
-    console.log('Submit - formData.profilePhoto:', formData.profilePhoto);
-    console.log('Submit - selectedFile:', selectedFile);
+    // console.log('Submit - formData.profilePhoto:', formData.profilePhoto);
+    // console.log('Submit - selectedFile:', selectedFile);
     
     setLoading(true);
     setError(null);
