@@ -312,10 +312,8 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   '&.Mui-expanded': { minHeight: 'auto' },
                                   '& .MuiAccordionSummary-content': { 
                                     my: 0,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 2,
-                                    '&.Mui-expanded': { my: 0 }
+                                    '&.Mui-expanded': { my: 0 },
+                                    width: '100%'
                                   },
                                   '& .MuiAccordionSummary-expandIconWrapper': {
                                     transform: 'none',
@@ -323,22 +321,30 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   }
                                 }}
                               >
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flex: 1, width: '100%' }}>
-                                  <Typography variant="body1" fontWeight={700} sx={{ minWidth: 100 }}>
-                                    {formatDate(payment.date)}
-                                  </Typography>
-                                  <Typography variant="body1" fontWeight={700} color="primary.main" fontSize="1.1rem" sx={{ minWidth: 120 }}>
-                                    {totalAmount.toLocaleString('tr-TR')} ₺
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>-</Typography>
-                                  <Chip 
-                                    label="TAKSİT PLANI" 
-                                    size="medium" 
-                                    color="primary"
-                                    variant='outlined'
-                                    sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius: 1, minWidth: 120 }}
-                                  />
-                                  <Box sx={{ flex: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                  <Box sx={{ width: '12%', pr: 1 }}>
+                                    <Typography variant="body1" fontWeight={700}>
+                                      {formatDate(payment.date)}
+                                    </Typography>
+                                  </Box>
+                                  <Box sx={{ width: '12%', pr: 1 }}>
+                                    <Typography variant="body1" fontWeight={700} color="primary.main" fontSize="1.1rem">
+                                      {totalAmount.toLocaleString('tr-TR')} ₺
+                                    </Typography>
+                                  </Box>
+                                  <Box sx={{ width: '14%', pr: 1 }}>
+                                    <Typography variant="body2" color="text.secondary">-</Typography>
+                                  </Box>
+                                  <Box sx={{ width: '12%', pr: 1 }}>
+                                    <Chip 
+                                      label="TAKSİT PLANI" 
+                                      size="medium" 
+                                      color="primary"
+                                      variant='outlined'
+                                      sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius: 1 }}
+                                    />
+                                  </Box>
+                                  <Box sx={{ width: '24%', pr: 1 }}>
                                     <Typography variant="body1" fontWeight={700}>
                                       {group[0]?.description || 'Taksitli Borç'}
                                     </Typography>
@@ -346,21 +352,25 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                       {group.length} Taksit • {group.filter(g => g.status === 'PAID').length} Ödendi
                                     </Typography>
                                   </Box>
-                                  {allPending && (
-                                    <Button
-                                      variant="outlined"
-                                      size="small"
-                                      color="error"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        // İlk taksit ID'sini sil
-                                        onDeletePayment(group[0].id);
-                                      }}
-                                      sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
-                                    >
-                                      Sil
-                                    </Button>
-                                  )}
+                                  <Box sx={{ width: '10%', pr: 1 }}>
+                                    {/* Durum - boş bırak */}
+                                  </Box>
+                                  <Box sx={{ width: '16%', display: 'flex', justifyContent: 'flex-start' }}>
+                                    {allPending && (
+                                      <Button
+                                        variant="outlined"
+                                        size="small"
+                                        color="error"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onDeletePayment(group[0].id);
+                                        }}
+                                        sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
+                                      >
+                                        Sil
+                                      </Button>
+                                    )}
+                                  </Box>
                                 </Box>
                               </AccordionSummary>
                               <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
