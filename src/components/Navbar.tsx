@@ -157,7 +157,7 @@ const Navbar: React.FC = () => {
     >
       <Toolbar>
         <Box display="flex" alignItems="center" gap={1}>
-          <img src="/logo.png" alt="Logo" style={{ width: 48, height: 48 }} />
+          <img src="/logo.png" alt="Logo" style={{ width: 148, height: 48 }} />
           <Typography variant="h6" noWrap component="div">
             Ehliyet.pro
           </Typography>

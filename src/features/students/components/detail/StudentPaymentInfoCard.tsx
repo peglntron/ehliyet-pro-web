@@ -318,7 +318,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               size="medium" 
                               color="primary"
                               variant='outlined'
-                              sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius: 1 }}
+                              sx={{ fontWeight: 700, fontSize: '0.85rem', borderRadius: 1, height: 28, minWidth: 85 }}
                             />
                           </TableCell>
                           <TableCell sx={{ width: '22%' }}>
@@ -472,7 +472,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               label="BORÇ" 
                               size="medium"
                               color="error"
-                              sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius:1}}
+                              sx={{ fontWeight: 700, fontSize: '0.85rem', borderRadius: 1, height: 28, minWidth: 85 }}
                             />
                           ) : payment.type === 'INSTALLMENT' ? (
                             <Chip 
@@ -630,7 +630,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             label="BORÇ" 
                             size="medium"
                             color="error"
-                            sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius: 1 }}
+                            sx={{ fontWeight: 700, fontSize: '0.85rem', borderRadius: 1, height: 28, minWidth: 85 }}
                           />
                         </TableCell>
                         <TableCell sx={{ width: '22%' }}>
