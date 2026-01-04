@@ -162,7 +162,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           onClick={() => onInstallmentPayment(installment)}
                           sx={{ textTransform: 'none', minWidth: 'auto', px: 2 }}
                         >
-                          Öde
+                          Ödeme Al
                         </Button>
                       )}
                       {installment.status === 'paid' && installment.paymentDate && (
@@ -206,13 +206,13 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
             <Table stickyHeader size="small" sx={{ tableLayout: 'fixed', width: '100%' }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 600, width: '12%' }}>Tarih</TableCell>
-                  <TableCell sx={{ fontWeight: 600, width: '16%' }}>Tutar</TableCell>
-                  <TableCell sx={{ fontWeight: 600, width: '14%' }}>Ödeme Yöntemi</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '10%' }}>Tarih</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '14%' }}>Tutar</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '12%' }}>Ödeme Yöntemi</TableCell>
                   <TableCell sx={{ fontWeight: 600, width: '12%' }}>Tip</TableCell>
-                  <TableCell sx={{ fontWeight: 600, width: '20%' }}>Açıklama</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '22%' }}>Açıklama</TableCell>
                   <TableCell sx={{ fontWeight: 600, width: '10%' }}>Durum</TableCell>
-                  <TableCell sx={{ fontWeight: 600, width: '10%' }}>İşlem</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '14%' }}>İşlem</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -273,7 +273,6 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     const allPending = group.every(g => g.status === 'PENDING');
                     
                     const shouldShowDivider = renderedItemCount > 0;
-                    renderedItemCount++;
                     
                     return (
                       <React.Fragment key={`installment-group-${groupKey}`}>
@@ -285,6 +284,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             </TableCell>
                           </TableRow>
                         )}
+                        {(() => { renderedItemCount++; return null; })()}
                         {/* TAKSİT PLANI BAŞLIK SATIRI */}
                         <TableRow 
                           onClick={() => handleAccordionToggle(accordionId)}
@@ -297,7 +297,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             '& > td': { py: 1.5 }
                           }}
                         >
-                          <TableCell sx={{ width: '12%' }}>
+                          <TableCell sx={{ width: '14%' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                               <IconButton size="small" sx={{ p: 0 }}>
                                 <ExpandMoreIcon 
@@ -307,20 +307,20 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   }} 
                                 />
                               </IconButton>
-                              <Typography variant="body1" fontWeight={700}>
+                              <Typography variant="body2">
                                 {formatDate(payment.date)}
                               </Typography>
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ width: '16%' }}>
+                          <TableCell sx={{ width: '12%' }}>
                             <Typography variant="body1" fontWeight={700} color="primary.main" fontSize="1.1rem">
                               {totalAmount.toLocaleString('tr-TR')} ₺
                             </Typography>
                           </TableCell>
-                          <TableCell sx={{ width: '14%' }}>
+                          <TableCell sx={{ width: '12%' }}>
                             <Typography variant="body2" color="text.secondary">-</Typography>
                           </TableCell>
-                          <TableCell sx={{ width: '12%' }}>
+                          <TableCell sx={{ width: '14%' }}>
                             <Chip 
                               label="TAKSİT PLANI" 
                               size="medium" 
@@ -329,7 +329,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius: 1 }}
                             />
                           </TableCell>
-                          <TableCell sx={{ width: '20%' }}>
+                          <TableCell sx={{ width: '22%' }}>
                             <Box>
                               <Typography variant="body1" fontWeight={700}>
                                 {group[0]?.description || 'Taksitli Borç'}
@@ -339,10 +339,10 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               </Typography>
                             </Box>
                           </TableCell>
-                          <TableCell sx={{ width: '10%' }}>
+                          <TableCell sx={{ width: '14%' }}>
                             {/* Durum - boş bırak */}
                           </TableCell>
-                          <TableCell sx={{ width: '10%' }}>
+                          <TableCell sx={{ width: '14%' }}>
                             {allPending && (
                               <Button
                                 variant="outlined"
@@ -373,21 +373,21 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                 '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
                               }}
                             >
-                              <TableCell sx={{ pl: 6, width: '12%' }}>
+                              <TableCell sx={{ pl: 6, width: '14%' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                   <Typography variant="body2" color="text.secondary">↳</Typography>
                                   <Typography variant="body2">{formatDate(installment.date)}</Typography>
                                 </Box>
                               </TableCell>
-                              <TableCell sx={{ width: '16%' }}>
+                              <TableCell sx={{ width: '12%' }}>
                                 <Typography variant="body2" fontWeight={600}>
                                   {installment.amount.toLocaleString('tr-TR')} ₺
                                 </Typography>
                               </TableCell>
-                              <TableCell sx={{ width: '14%' }}>
+                              <TableCell sx={{ width: '12%' }}>
                                 <Typography variant="body2">{getPaymentMethodText(installment.method)}</Typography>
                               </TableCell>
-                              <TableCell sx={{ width: '12%' }}>
+                              <TableCell sx={{ width: '14%' }}>
                                 <Chip 
                                   label={`${installment.installmentNumber}. Taksit`}
                                   size="small" 
@@ -395,12 +395,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   sx={{ fontWeight: 600, fontSize: '0.7rem', borderRadius: 1 }}
                                 />
                               </TableCell>
-                              <TableCell sx={{ width: '20%' }}>
+                              <TableCell sx={{ width: '22%' }}>
                                 <Typography variant="body2" color="text.secondary">
                                   {installment.description || '-'}
                                 </Typography>
                               </TableCell>
-                              <TableCell sx={{ width: '10%' }}>
+                              <TableCell sx={{ width: '14%' }}>
                                 <Chip 
                                   label={instStatusInfo.text} 
                                   color={instStatusInfo.color as any} 
@@ -408,7 +408,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   sx={{ borderRadius: 1 }} 
                                 />
                               </TableCell>
-                              <TableCell sx={{ width: '10%' }}>
+                              <TableCell sx={{ width: '14%' }}>
                                 {instIsPending && (
                                   <Button
                                     variant="contained"
@@ -417,7 +417,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                     onClick={() => onInstallmentPayment(installment)}
                                     sx={{ textTransform: 'none', minWidth: 80, px: 1.5 }}
                                   >
-                                    Öde
+                                    Ödeme Al
                                   </Button>
                                 )}
                                 {instIsPaid && (
@@ -442,10 +442,10 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   const isExpanded = expandedAccordions.has(accordionId);
                   
                   const shouldShowDivider = renderedItemCount > 0;
-                  renderedItemCount++;
                   
                   // Eğer child payment yoksa normal row göster
                   if (!hasChildren) {
+                    renderedItemCount++;
                     return (
                       <React.Fragment key={payment.id}>
                         {/* Divider - sadece ilk item değilse */}
@@ -463,12 +463,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.02)' },
                         '& > td': { py: 1 }
                       }}>
-                        <TableCell sx={{ width: '12%' }}>
-                          <Typography variant="body1" fontWeight={700}>
+                        <TableCell sx={{ width: '10%' }}>
+                          <Typography variant="body2">
                             {formatDate(payment.date)}
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ width: '16%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           <Typography 
                             variant="body1" 
                             fontWeight={700}
@@ -477,10 +477,10 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             {payment.amount.toLocaleString('tr-TR')} ₺
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ width: '14%' }}>
+                        <TableCell sx={{ width: '12%' }}>
                           <Typography variant="body2">{getPaymentMethodText(payment.method)}</Typography>
                         </TableCell>
-                        <TableCell sx={{ width: '12%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           {payment.type === 'DEBT' ? (
                             <Chip 
                               label="BORÇ" 
@@ -504,7 +504,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             />
                           )}
                         </TableCell>
-                        <TableCell sx={{ width: '20%' }}>
+                        <TableCell sx={{ width: '22%' }}>
                           <Typography 
                             variant="body1"
                             fontWeight={700}
@@ -512,15 +512,20 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             {payment.description || '-'}
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ width: '10%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           <Chip 
                             label={paymentStatusInfo.text} 
                             color={paymentStatusInfo.color as any} 
-                            size="small" 
-                            sx={{ borderRadius: 1 }} 
+                            size="medium" 
+                            variant={paymentStatusInfo.text === 'Ödendi' ? 'filled' : 'outlined'}
+                            sx={{ 
+                              borderRadius: 1,
+                              fontWeight: 700,
+                              fontSize: '0.8rem'
+                            }} 
                           />
                         </TableCell>
-                        <TableCell sx={{ width: '10%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                             {payment.type === 'DEBT' && isPending && (() => {
                               // Taksitli bir DEBT ise, herhangi bir taksit ödenmişse sil butonu gösterme
@@ -540,9 +545,9 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                     size="small"
                                     color="info"
                                     onClick={() => onMarkPaymentPaid(payment.id)}
-                                    sx={{ textTransform: 'none', minWidth: 'auto', px: 1, fontSize: '0.75rem' }}
+                                    sx={{ textTransform: 'none', minWidth: 50, px: 1.5, fontSize: '0.8rem' }}
                                   >
-                                    Öde
+                                    Ödeme Al
                                   </Button>
                                   {canDelete && (
                                     <Button
@@ -550,7 +555,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                       size="small"
                                       color="error"
                                       onClick={() => onDeletePayment(payment.id)}
-                                      sx={{ textTransform: 'none', minWidth: 'auto', px: 1, fontSize: '0.75rem' }}
+                                      sx={{ textTransform: 'none', minWidth: 50, px: 1.5, fontSize: '0.8rem' }}
                                     >
                                       Sil
                                     </Button>
@@ -568,16 +573,16 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   size="small"
                                   color="success"
                                   onClick={() => onMarkPaymentPaid(payment.id)}
-                                  sx={{ textTransform: 'none', minWidth: 'auto', px: 1, fontSize: '0.75rem' }}
+                                  sx={{ textTransform: 'none', minWidth: 50, px: 1.5, fontSize: '0.8rem' }}
                                 >
-                                  Öde
+                                  Ödeme Al
                                 </Button>
                                 <Button
                                   variant="outlined"
                                   size="small"
                                   color="error"
                                   onClick={() => onDeletePayment(payment.id)}
-                                  sx={{ textTransform: 'none', minWidth: 'auto', px: 1, fontSize: '0.75rem' }}
+                                  sx={{ textTransform: 'none', minWidth: 50, px: 1.5, fontSize: '0.8rem' }}
                                 >
                                   Sil
                                 </Button>
@@ -594,6 +599,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   }
                   
                   // Child payment varsa - başlık satırı + detaylar
+                  renderedItemCount++;
                   return (
                     <React.Fragment key={payment.id}>
                       {/* Divider - sadece ilk item değilse */}
@@ -616,7 +622,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           '& > td': { py: 1.5 }
                         }}
                       >
-                        <TableCell sx={{ width: '12%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                             <IconButton size="small" sx={{ p: 0 }}>
                               <ExpandMoreIcon 
@@ -626,20 +632,20 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                 }} 
                               />
                             </IconButton>
-                            <Typography variant="body1" fontWeight={700}>
+                            <Typography variant="body2">
                               {formatDate(payment.date)}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell sx={{ width: '16%' }}>
+                        <TableCell sx={{ width: '12%' }}>
                           <Typography variant="body1" fontWeight={700} fontSize="1.1rem">
                             {payment.amount.toLocaleString('tr-TR')} ₺
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ width: '14%' }}>
+                        <TableCell sx={{ width: '12%' }}>
                           <Typography variant="body2">{getPaymentMethodText(payment.method)}</Typography>
                         </TableCell>
-                        <TableCell sx={{ width: '12%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           <Chip 
                             label="BORÇ" 
                             size="medium"
@@ -647,7 +653,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             sx={{ fontWeight: 700, fontSize: '0.8rem', borderRadius: 1 }}
                           />
                         </TableCell>
-                        <TableCell sx={{ width: '20%' }}>
+                        <TableCell sx={{ width: '22%' }}>
                           <Box>
                             <Typography variant="body1" fontWeight={700}>
                               {payment.description || '-'}
@@ -657,7 +663,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell sx={{ width: '10%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           <Chip 
                             label={paymentStatusInfo.text} 
                             color={paymentStatusInfo.color as any} 
@@ -665,7 +671,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             sx={{ borderRadius: 1 }} 
                           />
                         </TableCell>
-                        <TableCell sx={{ width: '10%' }}>
+                        <TableCell sx={{ width: '14%' }}>
                           {isPending && (
                             <Button
                               variant="contained"
@@ -693,21 +699,21 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
                             }}
                           >
-                            <TableCell sx={{ pl: 6, width: '12%' }}>
+                            <TableCell sx={{ pl: 6, width: '14%' }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Typography variant="body2" color="text.secondary">↳</Typography>
                                 <Typography variant="body2">{formatDate(childPayment.date)}</Typography>
                               </Box>
                             </TableCell>
-                            <TableCell sx={{ width: '16%' }}>
+                            <TableCell sx={{ width: '12%' }}>
                               <Typography variant="body2" fontWeight={600} color="success.main">
                                 {childPayment.amount.toLocaleString('tr-TR')} ₺
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ width: '14%' }}>
+                            <TableCell sx={{ width: '12%' }}>
                               <Typography variant="body2">{getPaymentMethodText(childPayment.method)}</Typography>
                             </TableCell>
-                            <TableCell sx={{ width: '12%' }}>
+                            <TableCell sx={{ width: '14%' }}>
                               <Chip 
                                 label="ÖDEME" 
                                 size="small" 
@@ -715,12 +721,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                 sx={{ fontWeight: 600, fontSize: '0.7rem', borderRadius: 1 }}
                               />
                             </TableCell>
-                            <TableCell sx={{ width: '20%' }}>
+                            <TableCell sx={{ width: '22%' }}>
                               <Typography variant="body2" color="text.secondary">
                                 {childPayment.description || 'Kısmi Ödeme'}
                               </Typography>
                             </TableCell>
-                            <TableCell sx={{ width: '10%' }}>
+                            <TableCell sx={{ width: '14%' }}>
                               <Chip 
                                 label={childStatusInfo.text} 
                                 color={childStatusInfo.color as any} 
@@ -728,7 +734,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                 sx={{ borderRadius: 1 }} 
                               />
                             </TableCell>
-                            <TableCell sx={{ width: '10%' }}>
+                            <TableCell sx={{ width: '14%' }}>
                               <Typography variant="body2" color="text.secondary">-</Typography>
                             </TableCell>
                           </TableRow>
