@@ -369,10 +369,11 @@ const StudentList: React.FC = () => {
               <Box sx={{ width: 50, mr: 1 }}></Box> {/* Avatar alanı */}
               <Box sx={{ width: '22%', fontWeight: 600, pr: 2 }}>Ad Soyad / TC No</Box>
               <Box sx={{ width: '13%', fontWeight: 600, pr: 2 }}>Telefon</Box>
+              <Box sx={{ width: '8%', fontWeight: 600, pr: 2 }}>Ehliyet</Box>
               <Box sx={{ width: '13%', fontWeight: 600, pr: 2 }}>Sınav Tarihi</Box>
               <Box sx={{ width: '14%', fontWeight: 600, pr: 1 }}>Durum</Box>
-              <Box sx={{ width: '10%', fontWeight: 600, pr: 1, textAlign: 'right' }}>Ödeme Planı</Box> {/* Ödeme Planı başlığı eklendi Borç Kaydı kaldırıldı */}
-              <Box sx={{ width: '28%', fontWeight: 600, textAlign: 'right' }}>İşlemler</Box>
+              <Box sx={{ width: '10%', fontWeight: 600, pr: 1, textAlign: 'right' }}>Ödeme Planı</Box>
+              <Box sx={{ width: '20%', fontWeight: 600, textAlign: 'right' }}>İşlemler</Box>
             </Box>
             
             {/* Kursiyer Listesi */}

@@ -205,8 +205,8 @@ const StudentListItem: React.FC<StudentListItemProps> = ({
             </Avatar>
           </Box>
           
-          {/* Ad Soyad / TC No - 22% */}
-          <Box sx={{ width: '22%', pr: 2 }}>
+          {/* Ad Soyad / TC No - 20% */}
+          <Box sx={{ width: '20%', pr: 2 }}>
             <Typography variant="subtitle1" fontWeight={600} noWrap>
               {student.name} {student.surname}
             </Typography>
@@ -220,6 +220,17 @@ const StudentListItem: React.FC<StudentListItemProps> = ({
             <Typography variant="body2" sx={{ whiteSpace: 'nowrap' }}>
               {student.phone ? `+90 ${student.phone.replace(/^\+?90/, '').replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4')}` : '-'}
             </Typography>
+          </Box>
+          
+          {/* Ehliyet Sınıfı - 8% */}
+          <Box sx={{ width: '8%', pr: 2 }}>
+            <Chip
+              label={student.licenseType}
+              size="small"
+              color="primary"
+              variant="outlined"
+              sx={{ fontSize: '0.75rem', height: 22, fontWeight: 600 }}
+            />
           </Box>
           
           {/* Sınav Tarihi - 13% */}
@@ -303,8 +314,8 @@ const StudentListItem: React.FC<StudentListItemProps> = ({
             )}
           </Box>
           
-          {/* İşlemler - 28% */}
-          <Box sx={{ width: '28%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+          {/* İşlemler - 20% */}
+          <Box sx={{ width: '20%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
             <Box
               onClick={(e) => e.stopPropagation()}
               sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}

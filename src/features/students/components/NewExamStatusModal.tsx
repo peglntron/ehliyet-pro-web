@@ -64,7 +64,6 @@ const NewExamStatusModal: React.FC<NewExamStatusModalProps> = ({
       setProcessing(true);
       
       // Backend'e istek gönder ve sonucu al
-      const currentDate = new Date().toISOString().split('T')[0];
       let updatedStudent: Student;
       
       if (action === 'reset') {
@@ -73,13 +72,13 @@ const NewExamStatusModal: React.FC<NewExamStatusModalProps> = ({
         updatedStudent = await updateWrittenExamStatus(
           localStudent.id, 
           action === 'pass' ? 'PASSED' : 'FAILED',
-          currentDate
+          undefined // Tarih girilmediğinde null olarak kaydet
         );
       } else {
         updatedStudent = await updateDrivingExamStatus(
           localStudent.id,
           action === 'pass' ? 'PASSED' : 'FAILED', 
-          currentDate
+          undefined // Tarih girilmediğinde null olarak kaydet
         );
       }
       

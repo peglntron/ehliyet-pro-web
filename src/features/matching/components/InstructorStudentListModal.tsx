@@ -42,32 +42,14 @@ const InstructorStudentListModal: React.FC<InstructorStudentListModalProps> = ({
 }) => {
   if (!instructor) return null;
 
-  console.log('🔍 [InstructorStudentListModal] Debug:', {
-    instructorId: instructor.id,
-    instructorName: `${instructor.firstName} ${instructor.lastName}`,
-    totalMatchingResults: matchingResults.length,
-    totalStudents: students.length,
-    matchingResultsForInstructor: matchingResults.filter(m => m.instructorId === instructor.id).length
-  });
-
   // Bu eğitmene atanan öğrencileri bul
   const assignedStudents = matchingResults
     .filter(match => match.instructorId === instructor.id)
     .map(match => {
       const student = students.find(s => s.id === match.studentId);
-      console.log('🔍 [Student Lookup]', {
-        studentId: match.studentId,
-        studentName: match.studentName,
-        foundInStudentsArray: !!student,
-        studentData: student ? `${student.firstName || student.name} ${student.lastName || student.surname}` : 'NOT FOUND',
-        phoneField: student ? student.phone : 'NO STUDENT',
-        allStudentFields: student ? Object.keys(student) : []
-      });
       return { ...match, student };
     })
     .filter(item => item.student);
-
-  console.log('✅ [Final assignedStudents]:', assignedStudents.length);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>

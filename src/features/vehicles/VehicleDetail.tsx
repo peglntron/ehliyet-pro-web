@@ -168,7 +168,8 @@ const VehicleDetail: React.FC = () => {
   const getFuelTypeText = (type: string) => {
     switch (type) {
       case 'DIESEL': return 'Dizel';
-      case 'GASOLINE': return 'Benzin';
+      case 'GASOLINE':
+      case 'PETROL': return 'Benzin';
       case 'HYBRID': return 'Hibrit';
       case 'ELECTRIC': return 'Elektrik';
       case 'LPG': return 'LPG';

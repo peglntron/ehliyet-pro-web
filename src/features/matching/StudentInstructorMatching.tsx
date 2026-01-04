@@ -588,7 +588,7 @@ const StudentInstructorMatching: React.FC = () => {
                 </Box>
                 
                 {/* Eşleştirmeyi Başlat Butonu */}
-                <Button
+                {/* <Button
                   variant="contained"
                   color="primary"
                   size="large"
@@ -607,7 +607,7 @@ const StudentInstructorMatching: React.FC = () => {
                   }}
                 >
                   Eşleştirmeyi Başlat
-                </Button>
+                </Button> */}
               </Box>
               
               {/* Seçim uyarıları */}
@@ -634,10 +634,11 @@ const StudentInstructorMatching: React.FC = () => {
                   onInstructorToggle={handleInstructorToggle}
                   onSelectAllStudents={handleSelectAllStudents}
                   onDeselectAllStudents={handleDeselectAllStudents}
-                    onSelectAllInstructors={handleSelectAllInstructors}
-                    onDeselectAllInstructors={handleDeselectAllInstructors}
-                    licenseTypes={matchingRequest.licenseTypes}
-                  />
+                  onSelectAllInstructors={handleSelectAllInstructors}
+                  onDeselectAllInstructors={handleDeselectAllInstructors}
+                  licenseTypes={matchingRequest.licenseTypes}
+                  prioritizeFirstDrivingAttempt={matchingRequest.prioritizeFirstDrivingAttempt || false}
+                />
                 </Box>
             </Box>
           </Box>

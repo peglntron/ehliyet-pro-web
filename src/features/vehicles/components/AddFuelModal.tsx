@@ -104,7 +104,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Kilometr"
+                label="Kilometre"
                 type="number"
                 value={formData.currentKm}
                 onChange={(e) => setFormData({ ...formData, currentKm: e.target.value })}

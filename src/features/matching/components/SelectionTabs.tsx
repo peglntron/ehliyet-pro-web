@@ -19,6 +19,7 @@ interface StudentSelectionTabProps {
   onSelectAll: () => void;
   onDeselectAll: () => void;
   licenseTypes: string[]; // Çoklu ehliyet türü
+  prioritizeFirstDrivingAttempt: boolean;
 }
 
 interface InstructorSelectionTabProps {
@@ -42,6 +43,7 @@ interface SelectionTabsProps {
   onSelectAllInstructors: () => void;
   onDeselectAllInstructors: () => void;
   licenseTypes: string[]; // Çoklu ehliyet türü
+  prioritizeFirstDrivingAttempt: boolean;
 }
 
 const StudentSelectionTab: React.FC<StudentSelectionTabProps> = ({
@@ -50,7 +52,8 @@ const StudentSelectionTab: React.FC<StudentSelectionTabProps> = ({
   onStudentToggle,
   onSelectAll,
   onDeselectAll,
-  licenseTypes
+  licenseTypes,
+  prioritizeFirstDrivingAttempt
 }) => {
   // Seçilen ehliyet sınıfları için yazılı sınavı geçmiş öğrencileri göster
   const eligibleStudents = students.filter(student => {
@@ -94,6 +97,11 @@ const StudentSelectionTab: React.FC<StudentSelectionTabProps> = ({
     }))
   });
 
+  // Direksiyon sınavından kalan öğrenci sayısı
+  const disabledStudentsCount = prioritizeFirstDrivingAttempt 
+    ? eligibleStudents.filter(s => (s.drivingExamAttempts ?? s.drivingExam?.attempts ?? 0) > 0).length 
+    : 0;
+
   return (
     <Box>
       {/* Üst Kontroller */}
@@ -126,9 +134,26 @@ const StudentSelectionTab: React.FC<StudentSelectionTabProps> = ({
         {selectedStudentIds.size} öğrenci seçildi ({licenseTypes.join(', ')} sınıfları, yazılı sınav geçmiş)
       </Alert>
 
+      {/* Direksiyon Sınavından Kalan Öğrenci Uyarısı */}
+      {prioritizeFirstDrivingAttempt && disabledStudentsCount > 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <Typography variant="body2" fontWeight={600} gutterBottom>
+            "Sadece İlk Direksiyon Hakkı Olanları Seç" parametresi aktif
+          </Typography>
+          <Typography variant="body2">
+            {disabledStudentsCount} öğrenci direksiyon sınavından kaldığı için seçilemiyor. 
+            Bu öğrencileri seçmek istiyorsanız yukarıdaki parametreyi kapatın.
+          </Typography>
+        </Alert>
+      )}
+
       {/* Öğrenci Listesi */}
       <Box>
-        {eligibleStudents.map(student => (
+        {eligibleStudents.map(student => {
+          const drivingAttempts = student.drivingExamAttempts ?? student.drivingExam?.attempts ?? 0;
+          const isDisabled = prioritizeFirstDrivingAttempt && drivingAttempts > 0;
+          
+          return (
           <Paper
             key={student.id}
             elevation={0}
@@ -137,13 +162,15 @@ const StudentSelectionTab: React.FC<StudentSelectionTabProps> = ({
               mb: 1,
               border: '1px solid',
               borderColor: selectedStudentIds.has(student.id) ? 'primary.main' : 'divider',
-              backgroundColor: selectedStudentIds.has(student.id) ? 'primary.50' : 'background.paper',
-              cursor: 'pointer',
+              backgroundColor: isDisabled ? 'grey.100' : (selectedStudentIds.has(student.id) ? 'primary.50' : 'background.paper'),
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              opacity: isDisabled ? 0.6 : 1,
               '&:hover': {
-                backgroundColor: selectedStudentIds.has(student.id) ? 'primary.100' : 'grey.50'
+                backgroundColor: isDisabled ? 'grey.100' : (selectedStudentIds.has(student.id) ? 'primary.100' : 'grey.50')
               }
             }}
-            onClick={() => onStudentToggle(student.id)}
+            onClick={() => !isDisabled && onStudentToggle(student.id)}
+            title={isDisabled ? 'Bu öğrenci direksiyon sınavından kaldığı için "Sadece İlk Direksiyon Hakkı Olanları Seç" parametresi açıkken seçilemez.' : ''}
           >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Box>
@@ -173,13 +200,22 @@ const StudentSelectionTab: React.FC<StudentSelectionTabProps> = ({
                     color={student.gender?.toLowerCase() === 'male' ? 'primary' : 'secondary'}
                     variant="outlined"
                   />
+                  {isDisabled && (
+                    <Chip
+                      label="Direksiyondan Kaldı"
+                      size="small"
+                      color="warning"
+                      variant="filled"
+                    />
+                  )}
                 </Box>
               </Box>
               <FormControlLabel
                 control={
                   <Checkbox
                     checked={selectedStudentIds.has(student.id)}
-                    onChange={() => onStudentToggle(student.id)}
+                    onChange={() => !isDisabled && onStudentToggle(student.id)}
+                    disabled={isDisabled}
                   />
                 }
                 label=""
@@ -187,7 +223,8 @@ const StudentSelectionTab: React.FC<StudentSelectionTabProps> = ({
               />
             </Box>
           </Paper>
-        ))}
+          );
+        })}
       </Box>
     </Box>
   );
@@ -321,7 +358,8 @@ const SelectionTabs: React.FC<SelectionTabsProps> = ({
   onDeselectAllStudents,
   onSelectAllInstructors,
   onDeselectAllInstructors,
-  licenseTypes
+  licenseTypes,
+  prioritizeFirstDrivingAttempt
 }) => {
   const [activeTab, setActiveTab] = useState(0);
 
@@ -357,6 +395,7 @@ const SelectionTabs: React.FC<SelectionTabsProps> = ({
             onSelectAll={onSelectAllStudents}
             onDeselectAll={onDeselectAllStudents}
             licenseTypes={licenseTypes}
+            prioritizeFirstDrivingAttempt={prioritizeFirstDrivingAttempt}
           />
         )}
         {activeTab === 1 && (

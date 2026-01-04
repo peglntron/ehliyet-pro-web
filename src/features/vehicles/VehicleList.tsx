@@ -179,6 +179,7 @@ const VehicleList: React.FC = () => {
       case 'DIESEL':
         return 'Dizel';
       case 'GASOLINE':
+      case 'PETROL':
         return 'Benzin';
       case 'HYBRID':
         return 'Hibrit';
