@@ -203,16 +203,16 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
         </Typography>
         {student?.payments && student.payments.length > 0 ? (
           <TableContainer sx={{ height: '100%', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
-            <Table stickyHeader size="small">
+            <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>Tarih</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Tutar</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Ödeme Yöntemi</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Tip</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Açıklama</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Durum</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>İşlem</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '12%' }}>Tarih</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '12%' }}>Tutar</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '14%' }}>Ödeme Yöntemi</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '12%' }}>Tip</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '24%' }}>Açıklama</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '10%' }}>Durum</TableCell>
+                  <TableCell sx={{ fontWeight: 600, width: '16%' }}>İşlem</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -338,7 +338,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                 </Box>
                               </AccordionSummary>
                               <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
-                                <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
+                                <Table size="small">
                                   <TableBody>
                                     {group.map((installment) => {
                                       const instStatusInfo = getPaymentStatusInfo(installment.status);
@@ -352,21 +352,21 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                             '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
                                           }}
                                         >
-                                          <TableCell sx={{ pl: 6, width: 120 }}>
+                                          <TableCell sx={{ pl: 6, width: '12%' }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                               <Typography variant="body2" color="text.secondary">↳</Typography>
                                               <Typography variant="body2">{formatDate(installment.date)}</Typography>
                                             </Box>
                                           </TableCell>
-                                          <TableCell sx={{ width: 140 }}>
+                                          <TableCell sx={{ width: '12%' }}>
                                             <Typography variant="body2" fontWeight={600}>
                                               {installment.amount.toLocaleString('tr-TR')} ₺
                                             </Typography>
                                           </TableCell>
-                                          <TableCell sx={{ width: 120 }}>
+                                          <TableCell sx={{ width: '14%' }}>
                                             <Typography variant="body2">{getPaymentMethodText(installment.method)}</Typography>
                                           </TableCell>
-                                          <TableCell sx={{ width: 140 }}>
+                                          <TableCell sx={{ width: '12%' }}>
                                             <Chip 
                                               label={`${installment.installmentNumber}. Taksit`}
                                               size="small" 
@@ -374,12 +374,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                               sx={{ fontWeight: 600, fontSize: '0.7rem', borderRadius: 1 }}
                                             />
                                           </TableCell>
-                                          <TableCell>
+                                          <TableCell sx={{ width: '24%' }}>
                                             <Typography variant="body2" color="text.secondary">
                                               {installment.description || '-'}
                                             </Typography>
                                           </TableCell>
-                                          <TableCell sx={{ width: 100 }}>
+                                          <TableCell sx={{ width: '10%' }}>
                                             <Chip 
                                               label={instStatusInfo.text} 
                                               color={instStatusInfo.color as any} 
@@ -387,7 +387,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                               sx={{ borderRadius: 1 }} 
                                             />
                                           </TableCell>
-                                          <TableCell sx={{ width: 120 }}>
+                                          <TableCell sx={{ width: '16%' }}>
                                             {instIsPending && (
                                               <Button
                                                 variant="contained"
@@ -670,7 +670,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               </Box>
                             </AccordionSummary>
                             <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
-                              <Table size="small" sx={{ width: '100%', tableLayout: 'fixed' }}>
+                              <Table size="small">
                                 <TableBody>
                                   {childPayments.map((childPayment) => {
                                     const childStatusInfo = getPaymentStatusInfo(childPayment.status);
@@ -681,21 +681,21 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                           '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
                                         }}
                                       >
-                                        <TableCell sx={{ pl: 6, width: 120 }}>
+                                        <TableCell sx={{ pl: 6, width: '12%' }}>
                                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                             <Typography variant="body2" color="text.secondary">↳</Typography>
                                             <Typography variant="body2">{formatDate(childPayment.date)}</Typography>
                                           </Box>
                                         </TableCell>
-                                        <TableCell sx={{ width: 140 }}>
+                                        <TableCell sx={{ width: '12%' }}>
                                           <Typography variant="body2" fontWeight={600} color="success.main">
                                             {childPayment.amount.toLocaleString('tr-TR')} ₺
                                           </Typography>
                                         </TableCell>
-                                        <TableCell sx={{ width: 120 }}>
+                                        <TableCell sx={{ width: '14%' }}>
                                           <Typography variant="body2">{getPaymentMethodText(childPayment.method)}</Typography>
                                         </TableCell>
-                                        <TableCell sx={{ width: 100 }}>
+                                        <TableCell sx={{ width: '12%' }}>
                                           <Chip 
                                             label="ÖDEME" 
                                             size="small" 
@@ -703,12 +703,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                             sx={{ fontWeight: 600, fontSize: '0.7rem', borderRadius: 1 }}
                                           />
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell sx={{ width: '24%' }}>
                                           <Typography variant="body2" color="text.secondary">
                                             {childPayment.description || 'Kısmi Ödeme'}
                                           </Typography>
                                         </TableCell>
-                                        <TableCell sx={{ width: 100 }}>
+                                        <TableCell sx={{ width: '10%' }}>
                                           <Chip 
                                             label={childStatusInfo.text} 
                                             color={childStatusInfo.color as any} 
@@ -716,7 +716,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                             sx={{ borderRadius: 1 }} 
                                           />
                                         </TableCell>
-                                        <TableCell sx={{ width: 120 }}>
+                                        <TableCell sx={{ width: '16%' }}>
                                           <Typography variant="body2" color="text.secondary">-</Typography>
                                         </TableCell>
                                       </TableRow>
