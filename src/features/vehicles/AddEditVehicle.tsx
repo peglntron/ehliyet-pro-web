@@ -320,22 +320,6 @@ const AddEditVehicle: React.FC = () => {
                 pattern: '[0-9]*'
               }}
             />
-
-            {isEdit && (
-              <FormControl fullWidth>
-                <InputLabel>Araç Durumu</InputLabel>
-                <Select
-                  value={formData.status === 'ASSIGNED' || formData.status === 'AVAILABLE' ? 'AVAILABLE' : formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  label="Araç Durumu"
-                >
-                  <MenuItem value="AVAILABLE">Aktif (Kullanılabilir)</MenuItem>
-                  <MenuItem value="MAINTENANCE">Bakımda</MenuItem>
-                  <MenuItem value="REPAIR">Tamirde</MenuItem>
-                  <MenuItem value="INACTIVE">Hizmet Dışı</MenuItem>
-                </Select>
-              </FormControl>
-            )}
           </Box>
 
           <Typography variant="h6" gutterBottom sx={{ mt: 4, mb: 2 }}>
