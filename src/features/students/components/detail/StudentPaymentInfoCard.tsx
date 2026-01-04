@@ -444,7 +444,9 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         bgcolor: 'background.paper',
                         borderLeft: '4px solid',
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
-                        '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.02)' },
+                        '&:hover': { 
+                          bgcolor: payment.type === 'DEBT' ? 'rgba(211, 47, 47, 0.08)' : payment.type === 'PAYMENT' ? 'rgba(46, 125, 50, 0.08)' : 'rgba(2, 136, 209, 0.08)'
+                        },
                         '& > td': { py: 1, borderTop: shouldShowDivider ? '1px solid rgba(224, 224, 224, 1)' : 'none' }
                       }}>
                         <TableCell sx={{ width: '10%' }}>
