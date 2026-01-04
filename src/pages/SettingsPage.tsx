@@ -404,12 +404,12 @@ const SettingsPage: React.FC = () => {
                     <Table>
                       <TableHead>
                         <TableRow sx={{ bgcolor: 'grey.50' }}>
-                          <TableCell><strong>Hedef</strong></TableCell>
-                          <TableCell><strong>Şablon Adı</strong></TableCell>
-                          <TableCell align="center"><strong>Gün Önce Hatırlat</strong></TableCell>
-                          <TableCell align="center"><strong>Gününde Hatırlat</strong></TableCell>
-                          <TableCell align="center"><strong>Bildirim Durumu</strong></TableCell>
-                          <TableCell align="center"><strong>İşlem</strong></TableCell>
+                          <TableCell sx={{ fontSize: '0.95rem' }}><strong>Hedef</strong></TableCell>
+                          <TableCell sx={{ fontSize: '0.95rem' }}><strong>Şablon Adı</strong></TableCell>
+                          <TableCell align="center" sx={{ fontSize: '0.95rem' }}><strong>Kaç Gün Önce</strong></TableCell>
+                          <TableCell align="center" sx={{ fontSize: '0.95rem', minWidth: 220 }}><strong>Sınav Gününde Hatırlat</strong></TableCell>
+                          <TableCell align="center" sx={{ fontSize: '0.95rem' }}><strong>Bildirim Durumu</strong></TableCell>
+                          <TableCell align="center" sx={{ fontSize: '0.95rem' }}><strong>İşlem</strong></TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -441,16 +441,16 @@ const SettingsPage: React.FC = () => {
                               <TableCell align="center">
                                 <TextField
                                   type="number"
-                                  size="small"
+                                  size="medium"
                                   value={state.reminderDaysBefore ?? ''}
                                   onChange={(e) => updateDefaultTemplateState(template.id, 'reminderDaysBefore', parseInt(e.target.value) || null)}
-                                  inputProps={{ min: 0, max: 30, style: { textAlign: 'center' } }}
-                                  sx={{ width: 80 }}
+                                  inputProps={{ min: 0, max: 30, style: { textAlign: 'center', fontSize: '0.95rem' } }}
+                                  sx={{ width: 100 }}
                                   placeholder="-"
                                 />
                               </TableCell>
                               <TableCell align="center">
-                                <Box display="flex" alignItems="center" justifyContent="center" gap={1} flexDirection="column">
+                                <Box display="flex" alignItems="center" justifyContent="center" gap={1.5}>
                                   <FormControlLabel
                                     control={
                                       <Switch
@@ -459,18 +459,17 @@ const SettingsPage: React.FC = () => {
                                         onChange={(e) => updateDefaultTemplateState(template.id, 'enableReminderOnDay', e.target.checked)}
                                       />
                                     }
-                                    label={<Typography variant="caption">{state.enableReminderOnDay ? 'Aktif' : 'Pasif'}</Typography>}
+                                    label={<Typography variant="body2">{state.enableReminderOnDay ? 'Saat:' : 'Kapalı'}</Typography>}
                                   />
-                                  {state.enableReminderOnDay && (
-                                    <TextField
-                                      type="time"
-                                      size="small"
-                                      value={state.reminderTime || ''}
-                                      onChange={(e) => updateDefaultTemplateState(template.id, 'reminderTime', e.target.value)}
-                                      inputProps={{ style: { textAlign: 'center' } }}
-                                      sx={{ width: 120 }}
-                                    />
-                                  )}
+                                  <TextField
+                                    type="time"
+                                    size="medium"
+                                    value={state.reminderTime || ''}
+                                    onChange={(e) => updateDefaultTemplateState(template.id, 'reminderTime', e.target.value)}
+                                    disabled={!state.enableReminderOnDay}
+                                    inputProps={{ style: { textAlign: 'center', fontSize: '0.95rem' } }}
+                                    sx={{ width: 140 }}
+                                  />
                                 </Box>
                               </TableCell>
                               <TableCell align="center">
@@ -480,7 +479,7 @@ const SettingsPage: React.FC = () => {
                                     onChange={(e) => updateDefaultTemplateState(template.id, 'isActive', e.target.checked)}
                                     size="small"
                                   />
-                                  <Typography variant="caption" color="text.secondary">
+                                  <Typography variant="body2" color="text.secondary">
                                     {state.isActive ? 'Aktif' : 'Pasif'}
                                   </Typography>
                                 </Box>
