@@ -221,8 +221,15 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   const processedInstallments = new Set<number>();
                   const installmentGroups = new Map<string, Payment[]>();
                   
+                  // Ödemeleri tarihe göre sırala (en yeni üstte)
+                  const sortedPayments = [...(student.payments || [])].sort((a, b) => {
+                    const dateA = new Date(a.date).getTime();
+                    const dateB = new Date(b.date).getTime();
+                    return dateB - dateA; // Azalan sıra - en yeni üstte
+                  });
+                  
                   // Taksitli borçları grupla (aynı description + totalInstallments)
-                  student.payments?.forEach(p => {
+                  sortedPayments.forEach(p => {
                     // DEBT veya INSTALLMENT tipinde ve installmentNumber varsa grupla (status'e bakmadan)
                     if (p.installmentNumber && (p.type === 'DEBT' || p.type === 'INSTALLMENT')) {
                       const baseKey = `${p.description}_${p.totalInstallments || 0}`;
@@ -236,7 +243,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                   // Görünen item sayısını hesapla (divider için ilk item kontrolü)
                   let renderedItemCount = 0;
                   
-                  return student.payments.map((payment, index) => {
+                  return sortedPayments.map((payment, index) => {
                   // Eğer payment amount undefined ise skip et
                   if (!payment || payment.amount === undefined || payment.amount === null) {
                     return null;
@@ -260,6 +267,10 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     const totalAmount = group.reduce((sum, p) => sum + p.amount, 0);
                     const accordionId = `installment-${groupKey}`;
                     const isExpanded = expandedAccordions.has(accordionId);
+                    
+                    // Taksitlerden herhangi biri ödendi mi kontrol et
+                    const hasPaidInstallment = group.some(g => g.status === 'PAID');
+                    const allPending = group.every(g => g.status === 'PENDING');
                     
                     const isFirstItem = renderedItemCount === 0;
                     renderedItemCount++;
@@ -329,16 +340,31 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                                   />
                                   <Box sx={{ flex: 1 }}>
                                     <Typography variant="body1" fontWeight={700}>
-                                      {payment.description || 'Taksitli Borç'}
+                                      {group[0]?.description || 'Taksitli Borç'}
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
                                       {group.length} Taksit • {group.filter(g => g.status === 'PAID').length} Ödendi
                                     </Typography>
                                   </Box>
+                                  {allPending && (
+                                    <Button
+                                      variant="outlined"
+                                      size="small"
+                                      color="error"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        // İlk taksit ID'sini sil
+                                        onDeletePayment(group[0].id);
+                                      }}
+                                      sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
+                                    >
+                                      Sil
+                                    </Button>
+                                  )}
                                 </Box>
                               </AccordionSummary>
                               <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
-                                <Table size="small">
+                                <Table size="small" sx={{ tableLayout: 'fixed' }}>
                                   <TableBody>
                                     {group.map((installment) => {
                                       const instStatusInfo = getPaymentStatusInfo(installment.status);
@@ -670,7 +696,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                               </Box>
                             </AccordionSummary>
                             <AccordionDetails sx={{ p: 0, bgcolor: 'rgba(0, 0, 0, 0.02)' }}>
-                              <Table size="small">
+                              <Table size="small" sx={{ tableLayout: 'fixed' }}>
                                 <TableBody>
                                   {childPayments.map((childPayment) => {
                                     const childStatusInfo = getPaymentStatusInfo(childPayment.status);
