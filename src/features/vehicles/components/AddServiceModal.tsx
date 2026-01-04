@@ -70,7 +70,6 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
         nextServiceKm: formData.nextServiceKm ? parseInt(formData.nextServiceKm) : undefined,
         nextServiceDate: formData.nextServiceDate || undefined,
       };
-      console.log('Gönderilen servis verisi:', serviceData);
       await onAdd(serviceData);
       onClose();
     } catch (error) {

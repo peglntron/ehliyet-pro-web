@@ -719,12 +719,19 @@ const VehicleDetail: React.FC = () => {
         open={Boolean(statusMenuAnchor)}
         onClose={() => setStatusMenuAnchor(null)}
       >
-        {vehicle.status !== 'ASSIGNED' && (
+        {!vehicle.currentInstructorId ? (
           <MenuItem 
             onClick={() => handleStatusChange('AVAILABLE')}
             selected={vehicle.status === 'AVAILABLE'}
           >
             Müsait
+          </MenuItem>
+        ) : (
+          <MenuItem 
+            onClick={() => handleStatusChange('ASSIGNED')}
+            selected={vehicle.status === 'ASSIGNED'}
+          >
+            Zimmetli
           </MenuItem>
         )}
         <MenuItem 

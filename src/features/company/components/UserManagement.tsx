@@ -78,8 +78,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ companyId, onUserCreate
 
   // Kullanıcı durumunu değiştir
   const handleToggleStatus = async (user: CompanyUser) => {
-    try {
-      console.log('Toggling user status:', user.id, 'isActive:', user.isActive, '-> new:', !user.isActive); // Debug
+    try {-
       await updateCompanyUser(user.id, { isActive: !user.isActive });
       showSnackbar(
         `${user.firstName} ${user.lastName} ${!user.isActive ? 'aktif' : 'pasif'} yapıldı`,
