@@ -74,9 +74,10 @@ export interface Student {
   drivingExamTime?: string;
   
   totalPayment?: number;
-  paidAmount?: number;
+  totalDebt?: number; // Backend'den hesaplanan toplam borç
+  paidAmount?: number; // Backend'den hesaplanan ödenen miktar
   initialPayment?: number; // İlk ödeme
-  remainingDebt?: number; // Kalan borç
+  remainingDebt?: number; // Backend'den hesaplanan kalan borç
   installmentCount?: number; // Taksit sayısı
   installments?: Installment[]; // Taksitler
   createdAt: string;

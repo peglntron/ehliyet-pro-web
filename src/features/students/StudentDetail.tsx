@@ -135,38 +135,6 @@ const StudentDetail: React.FC = () => {
   };
   
   // Helper: Ödenen toplam tutar
-  const calculatePaidAmount = (student: Student | null): number => {
-    if (!student?.payments) return 0;
-    
-    // PAID durumundaki tüm borçlar (DEBT, INSTALLMENT) + PAYMENT kayıtları
-    const payments = student.payments.filter(p => 
-      (p.type === 'PAYMENT' && p.status === 'PAID') ||
-      ((p.type === 'DEBT' || p.type === 'INSTALLMENT') && p.status === 'PAID')
-    );
-    
-    return payments.reduce((sum, payment) => sum + payment.amount, 0);
-  };
-  
-  // Helper: Toplam borç hesaplama (SADECE PENDING durumundaki borçlar)
-  const calculateTotalDebt = (student: Student | null): number => {
-    if (!student?.payments) return 0;
-    
-    // Sadece PENDING durumundaki DEBT ve INSTALLMENT kayıtları
-    const debts = student.payments.filter(p => 
-      (p.type === 'DEBT' || p.type === 'INSTALLMENT') && p.status === 'PENDING'
-    );
-    
-    return debts.reduce((sum, p) => sum + (p.amount || 0), 0);
-  };
-
-  // Helper: Kalan borç hesaplama (artık direkt PENDING borçları döndürüyor)
-  const calculateRemainingDebt = (student: Student | null): number => {
-    if (!student || !student.payments) return 0;
-    
-    // calculateTotalDebt zaten sadece PENDING borçları döndürüyor
-    return calculateTotalDebt(student);
-  };
-  
   // Sınav bilgilerini güncelleme işlemi başarılı olduğunda
   const handleExamInfoUpdated = async (updatedStudent: Partial<Student>) => {
     if (!student || !id) return;
@@ -533,11 +501,11 @@ const StudentDetail: React.FC = () => {
     );
   }
   
-  // Hesaplanan değerler
+  // Hesaplanan değerler - Backend'den geliyor
   const statusInfo = getStatusInfo(student?.status || '');
-  const paidAmount = calculatePaidAmount(student);
-  const totalDebt = calculateTotalDebt(student);
-  const remainingAmount = calculateRemainingDebt(student);
+  const paidAmount = student?.paidAmount ?? 0;
+  const totalDebt = student?.totalDebt ?? 0;
+  const remainingAmount = student?.remainingDebt ?? 0;
   
   return (
     <Box sx={{ 

@@ -286,7 +286,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         <TableRow 
                           onClick={() => handleAccordionToggle(accordionId)}
                           sx={{ 
-                            bgcolor: 'rgba(76, 175, 80, 0.08)',
+                            bgcolor: renderedItemCount % 2 === 0 ? 'rgba(186, 104, 200, 0.04)' : 'rgba(156, 39, 176, 0.06)',
                             borderLeft: '4px solid',
                             borderColor: 'primary.main',
                             cursor: 'pointer',
@@ -465,7 +465,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                     return (
                       <React.Fragment key={payment.id}>
                         <TableRow sx={{ 
-                        bgcolor: 'rgba(139, 195, 74, 0.06)',
+                        bgcolor: renderedItemCount % 2 === 0 ? 'rgba(186, 104, 200, 0.04)' : 'rgba(156, 39, 176, 0.06)',
                         borderLeft: '4px solid',
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
                         '&:hover': { 
@@ -618,7 +618,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                       <TableRow
                         onClick={() => handleAccordionToggle(accordionId)}
                         sx={{ 
-                          bgcolor: 'rgba(46, 125, 50, 0.1)',
+                          bgcolor: renderedItemCount % 2 === 0 ? 'rgba(186, 104, 200, 0.04)' : 'rgba(156, 39, 176, 0.06)',
                           borderLeft: '4px solid',
                           borderColor: payment.type === 'DEBT' ? 'error.main' : 'info.main',
                           cursor: 'pointer',
