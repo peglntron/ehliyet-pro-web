@@ -27,10 +27,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
   const [formData, setFormData] = useState({
     fuelDate: new Date().toISOString().split('T')[0],
     currentKm: '',
-    liters: '',
-    pricePerLiter: '',
     totalCost: '',
-    station: '',
     receiptNo: '',
     notes: '',
   });
@@ -40,27 +37,16 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
       setFormData({
         fuelDate: new Date().toISOString().split('T')[0],
         currentKm: currentKm.toString(),
-        liters: '',
-        pricePerLiter: '',
         totalCost: '',
-        station: '',
         receiptNo: '',
         notes: '',
       });
     }
   }, [open, currentKm]);
 
-  // Otomatik toplam hesaplama
-  useEffect(() => {
-    if (formData.liters && formData.pricePerLiter) {
-      const total = parseFloat(formData.liters) * parseFloat(formData.pricePerLiter);
-      setFormData(prev => ({ ...prev, totalCost: total.toFixed(2) }));
-    }
-  }, [formData.liters, formData.pricePerLiter]);
-
   const handleSubmit = async () => {
-    if (!formData.liters) {
-      alert('Lütfen litre miktarını girin');
+    if (!formData.totalCost) {
+      alert('Lütfen toplam tutarı girin');
       return;
     }
 
@@ -69,10 +55,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
       await onAdd({
         fuelDate: formData.fuelDate,
         currentKm: formData.currentKm ? parseInt(formData.currentKm) : undefined,
-        liters: parseFloat(formData.liters),
-        pricePerLiter: formData.pricePerLiter ? parseFloat(formData.pricePerLiter) : undefined,
         totalCost: formData.totalCost ? parseFloat(formData.totalCost) : undefined,
-        station: formData.station || undefined,
         receiptNo: formData.receiptNo || undefined,
         notes: formData.notes || undefined,
       });
@@ -93,6 +76,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
+                required
                 label="Tarih"
                 type="date"
                 value={formData.fuelDate}
@@ -104,6 +88,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
+                required
                 label="Kilometre"
                 type="number"
                 value={formData.currentKm}
@@ -112,48 +97,15 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
               />
             </Grid>
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 required
-                label="Litre"
-                type="number"
-                value={formData.liters}
-                onChange={(e) => setFormData({ ...formData, liters: e.target.value })}
-                inputProps={{ step: '0.01' }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Litre Fiyatı (₺)"
-                type="number"
-                value={formData.pricePerLiter}
-                onChange={(e) => setFormData({ ...formData, pricePerLiter: e.target.value })}
-                inputProps={{ step: '0.01' }}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={4}>
-              <TextField
-                fullWidth
-                label="Toplam (₺)"
+                label="Toplam Tutar (₺)"
                 type="number"
                 value={formData.totalCost}
                 onChange={(e) => setFormData({ ...formData, totalCost: e.target.value })}
                 inputProps={{ step: '0.01' }}
-                helperText="Otomatik hesaplanır"
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="İstasyon"
-                value={formData.station}
-                onChange={(e) => setFormData({ ...formData, station: e.target.value })}
-                placeholder="Petrol Ofisi, Shell, vb..."
               />
             </Grid>
 
@@ -171,9 +123,10 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
                 fullWidth
                 label="Notlar"
                 multiline
-                rows={2}
+                rows={3}
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Yakıt kaydı ile ilgili notlar..."
               />
             </Grid>
           </Grid>
@@ -186,7 +139,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={submitting || !formData.liters}
+          disabled={submitting || !formData.totalCost}
         >
           {submitting ? 'Kaydediliyor...' : 'Kaydet'}
         </Button>
