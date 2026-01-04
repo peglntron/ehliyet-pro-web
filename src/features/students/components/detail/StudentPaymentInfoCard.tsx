@@ -447,12 +447,12 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                         borderColor: payment.type === 'DEBT' ? 'error.main' : payment.type === 'PAYMENT' ? 'success.main' : 'info.main',
                         '& > td': { py: 1 }
                       }}>
-                        <TableCell>
+                        <TableCell sx={{ width: '12%' }}>
                           <Typography variant="body1" fontWeight={700}>
                             {formatDate(payment.date)}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ width: '12%' }}>
                           <Typography 
                             variant="body1" 
                             fontWeight={700}
@@ -461,10 +461,10 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             {payment.amount.toLocaleString('tr-TR')} ₺
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ width: '14%' }}>
                           <Typography variant="body2">{getPaymentMethodText(payment.method)}</Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ width: '12%' }}>
                           {payment.type === 'DEBT' ? (
                             <Chip 
                               label="BORÇ" 
@@ -488,7 +488,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             />
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ width: '24%' }}>
                           <Typography 
                             variant="body1"
                             fontWeight={700}
@@ -496,7 +496,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             {payment.description || '-'}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ width: '10%' }}>
                           <Chip 
                             label={paymentStatusInfo.text} 
                             color={paymentStatusInfo.color as any} 
@@ -504,7 +504,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                             sx={{ borderRadius: 1 }} 
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ width: '16%' }}>
                           <Box sx={{ display: 'flex', gap: 1 }}>
                             {payment.type === 'DEBT' && isPending && (() => {
                               // Taksitli bir DEBT ise, herhangi bir taksit ödenmişse sil butonu gösterme
