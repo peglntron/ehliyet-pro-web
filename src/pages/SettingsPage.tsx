@@ -438,7 +438,6 @@ const SettingsPage: React.FC = () => {
                                   <Typography variant="caption" color="text.secondary">{template.title}</Typography>
                                 </Box>
                               </TableCell>
-                              </TableCell>
                               <TableCell align="center">
                                 <TextField
                                   type="number"
