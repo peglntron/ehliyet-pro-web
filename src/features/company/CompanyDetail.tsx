@@ -284,7 +284,7 @@ const CompanyDetail: React.FC = () => {
 
   // Tab değiştiğinde şablonları yükle
   useEffect(() => {
-    if (tabValue === 6 && id) {
+    if (tabValue === 5 && id) {
       fetchNotificationTemplates();
     }
   }, [tabValue, id]);
@@ -515,12 +515,6 @@ const CompanyDetail: React.FC = () => {
                     sx={{ textTransform: 'none', fontWeight: 600, py: 2 }} 
                   />
                   <Tab 
-                    label="Aktiviteler" 
-                    icon={<BusinessIcon />}
-                    iconPosition="start"
-                    sx={{ textTransform: 'none', fontWeight: 600, py: 2 }} 
-                  />
-                  <Tab 
                     label="Bildirim Şablonları" 
                     icon={<NotificationsIcon />}
                     iconPosition="start"
@@ -739,20 +733,8 @@ const CompanyDetail: React.FC = () => {
                 </Box>
               </TabPanel>
               
-              {/* Aktiviteler Sekmesi */}
-              <TabPanel value={tabValue} index={5}>
-                <Box sx={{ p: 3 }}>
-                  <Typography variant="h6" fontWeight={600} gutterBottom>
-                    Kurum Aktiviteleri
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Bu kuruma ait aktivite kayıtları burada görüntülenecektir.
-                  </Typography>
-                </Box>
-              </TabPanel>
-
               {/* Bildirim Şablonları Sekmesi */}
-              <TabPanel value={tabValue} index={6}>
+              <TabPanel value={tabValue} index={5}>
                 <Box sx={{ p: 3 }}>
                   <Typography variant="h6" fontWeight={600} gutterBottom>
                     Bildirim Şablonları Yönetimi

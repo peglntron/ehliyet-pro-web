@@ -176,7 +176,6 @@ const ExpenseCategoriesPage: React.FC = () => {
               <TableRow>
                 <TableCell><strong>Kalem Adı</strong></TableCell>
                 <TableCell><strong>Açıklama</strong></TableCell>
-                <TableCell align="center"><strong>Kullanım Sayısı</strong></TableCell>
                 <TableCell align="center"><strong>Durum</strong></TableCell>
                 <TableCell align="right"><strong>İşlemler</strong></TableCell>
               </TableRow>
@@ -184,7 +183,7 @@ const ExpenseCategoriesPage: React.FC = () => {
             <TableBody>
               {categories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={4} align="center" sx={{ py: 8 }}>
                     <Typography variant="h6" color="text.secondary">
                       Henüz gider kalemi eklenmemiş
                     </Typography>
@@ -203,13 +202,6 @@ const ExpenseCategoriesPage: React.FC = () => {
                       <Typography variant="body2" color="text.secondary">
                         {category.description || '-'}
                       </Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={category._count?.expenses || 0}
-                        size="small"
-                        color={category._count?.expenses ? 'info' : 'default'}
-                      />
                     </TableCell>
                     <TableCell align="center">
                       <Chip

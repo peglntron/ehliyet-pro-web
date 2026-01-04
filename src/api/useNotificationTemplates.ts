@@ -14,6 +14,7 @@ export interface NotificationTemplate {
   isDefault?: boolean;
   reminderDaysBefore?: number | null;
   reminderTime?: string | null;
+  enableReminderOnDay?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,6 +38,9 @@ export interface NotificationTemplateUpdate {
   triggerType?: 'MANUAL' | 'AUTO';
   autoTriggerCondition?: string;
   isActive?: boolean;
+  reminderDaysBefore?: number | null;
+  reminderTime?: string | null;
+  enableReminderOnDay?: boolean;
 }
 
 const API_BASE_URL = '/api/notification-templates';

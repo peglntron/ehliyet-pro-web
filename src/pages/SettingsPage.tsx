@@ -44,6 +44,9 @@ const SettingsPage: React.FC = () => {
   const { showSnackbar } = useSnackbar();
   const { user } = useAuth();
   
+  // Varsayılan şablonlar için state
+  const [defaultTemplateStates, setDefaultTemplateStates] = useState<{ [key: string]: any }>({});
+  
   // Genel Parametreler için local state
   const [localCompanySettings, setLocalCompanySettings] = useState<any>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -76,6 +79,22 @@ const SettingsPage: React.FC = () => {
       setHasUnsavedChanges(false);
     }
   }, [companySettings]);
+
+  // Varsayılan şablonları yüklendiğinde state'i başlat
+  useEffect(() => {
+    if (templates.length > 0) {
+      const states: { [key: string]: any } = {};
+      templates.filter(t => t.isDefault).forEach(template => {
+        states[template.id] = {
+          reminderDaysBefore: template.reminderDaysBefore,
+          reminderTime: template.reminderTime,
+          enableReminderOnDay: template.enableReminderOnDay || false,
+          isActive: template.isActive
+        };
+      });
+      setDefaultTemplateStates(states);
+    }
+  }, [templates]);
 
   const handleCompanySettingChange = (field: string, value: any) => {
     setLocalCompanySettings((prev: any) => ({ ...prev, [field]: value }));
@@ -132,6 +151,32 @@ const SettingsPage: React.FC = () => {
     }
   };
 
+  // Varsayılan şablon state güncelleme
+  const updateDefaultTemplateState = (id: string, field: string, value: any) => {
+    setDefaultTemplateStates(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value }
+    }));
+  };
+
+  // Varsayılan şablon backend'e kaydet
+  const saveDefaultTemplate = async (id: string) => {
+    const state = defaultTemplateStates[id];
+    if (!state) return;
+
+    try {
+      await updateTemplate(id, {
+        reminderDaysBefore: state.reminderDaysBefore || null,
+        reminderTime: state.enableReminderOnDay ? state.reminderTime : null,
+        enableReminderOnDay: state.enableReminderOnDay,
+        isActive: state.isActive
+      });
+      showSnackbar('Şablon güncellendi', 'success');
+    } catch (err) {
+      showSnackbar(err instanceof Error ? err.message : 'Güncelleme başarısız', 'error');
+    }
+  };
+
   // Şablonları ayır
   const defaultTemplates = templates.filter(t => t.isDefault === true);
   const customStudentTemplates = templates.filter(t => t.targetType === 'COMPANY_STUDENT' && t.isDefault !== true);
@@ -165,63 +210,89 @@ const SettingsPage: React.FC = () => {
                       <TableHead>
                         <TableRow sx={{ bgcolor: 'grey.50' }}>
                           <TableCell><strong>Şablon Adı</strong></TableCell>
-                          <TableCell align="center"><strong>Hatırlatma (Gün Önce)</strong></TableCell>
-                          <TableCell align="center"><strong>Sınav Günü Hatırlat (Saat)</strong></TableCell>
-                          <TableCell align="center"><strong>Durum</strong></TableCell>
+                          <TableCell align="center"><strong>Gün Önce Hatırlat</strong></TableCell>
+                          <TableCell align="center"><strong>Gününde Hatırlat</strong></TableCell>
+                          <TableCell align="center"><strong>Bildirim Durumu</strong></TableCell>
+                          <TableCell align="center"><strong>İşlem</strong></TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {defaultTemplates.map((template) => (
-                          <TableRow key={template.id} hover>
-                            <TableCell>
-                              <Box>
-                                <Typography variant="body2" fontWeight={600}>{template.name}</Typography>
-                                <Typography variant="caption" color="text.secondary">{template.title}</Typography>
-                              </Box>
-                            </TableCell>
-                            <TableCell align="center">
-                              <TextField
-                                type="number"
-                                size="small"
-                                defaultValue={template.reminderDaysBefore || ''}
-                                onChange={(e) => {
-                                  // Backend'e gönderilecek
-                                  console.log('Reminder days:', e.target.value);
-                                }}
-                                inputProps={{ min: 0, max: 30, style: { textAlign: 'center' } }}
-                                sx={{ width: 80 }}
-                                placeholder="-"
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              <TextField
-                                type="time"
-                                size="small"
-                                defaultValue={template.reminderTime || ''}
-                                onChange={(e) => {
-                                  // Backend'e gönderilecek
-                                  console.log('Reminder time:', e.target.value);
-                                }}
-                                inputProps={{ style: { textAlign: 'center' } }}
-                                sx={{ width: 120 }}
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-                                <Switch
-                                  checked={template.isActive}
-                                  onChange={() => toggleActive(template.id).then(() => {
-                                    showSnackbar(`Şablon ${!template.isActive ? 'aktif' : 'pasif'} hale getirildi`, 'success');
-                                  })}
+                        {defaultTemplates.map((template) => {
+                          const state = defaultTemplateStates[template.id] || {
+                            reminderDaysBefore: template.reminderDaysBefore,
+                            reminderTime: template.reminderTime,
+                            enableReminderOnDay: template.enableReminderOnDay || false,
+                            isActive: template.isActive
+                          };
+                          
+                          return (
+                            <TableRow key={template.id} hover>
+                              <TableCell>
+                                <Box>
+                                  <Typography variant="body2" fontWeight={600}>{template.name}</Typography>
+                                  <Typography variant="caption" color="text.secondary">{template.title}</Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell align="center">
+                                <TextField
+                                  type="number"
                                   size="small"
+                                  value={state.reminderDaysBefore ?? ''}
+                                  onChange={(e) => updateDefaultTemplateState(template.id, 'reminderDaysBefore', parseInt(e.target.value) || null)}
+                                  inputProps={{ min: 0, max: 30, style: { textAlign: 'center' } }}
+                                  sx={{ width: 80 }}
+                                  placeholder="-"
                                 />
-                                <Typography variant="caption" color="text.secondary">
-                                  {template.isActive ? 'Aktif' : 'Pasif'}
-                                </Typography>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                              </TableCell>
+                              <TableCell align="center">
+                                <Box display="flex" alignItems="center" justifyContent="center" gap={1} flexDirection="column">
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={state.enableReminderOnDay}
+                                        onChange={(e) => updateDefaultTemplateState(template.id, 'enableReminderOnDay', e.target.checked)}
+                                      />
+                                    }
+                                    label={<Typography variant="caption">{state.enableReminderOnDay ? 'Aktif' : 'Pasif'}</Typography>}
+                                  />
+                                  {state.enableReminderOnDay && (
+                                    <TextField
+                                      type="time"
+                                      size="small"
+                                      value={state.reminderTime || ''}
+                                      onChange={(e) => updateDefaultTemplateState(template.id, 'reminderTime', e.target.value)}
+                                      inputProps={{ style: { textAlign: 'center' } }}
+                                      sx={{ width: 120 }}
+                                    />
+                                  )}
+                                </Box>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+                                  <Switch
+                                    checked={state.isActive}
+                                    onChange={(e) => updateDefaultTemplateState(template.id, 'isActive', e.target.checked)}
+                                    size="small"
+                                  />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {state.isActive ? 'Aktif' : 'Pasif'}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() => saveDefaultTemplate(template.id)}
+                                  startIcon={<SaveIcon />}
+                                >
+                                  Kaydet
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -230,7 +301,7 @@ const SettingsPage: React.FC = () => {
                   {settings && (
                     <Paper elevation={0} sx={{ mt: 3, p: 3, border: '1px solid', borderColor: 'divider' }}>
                       <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                        Genel Bildirim Ayarları
+                        Genel Otomatik Bildirimler
                       </Typography>
                       <Typography variant="body2" color="text.secondary" mb={2}>
                         Tüm otomatik bildirimleri açıp kapatabilirsiniz
