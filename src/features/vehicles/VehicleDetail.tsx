@@ -20,6 +20,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Menu,
+  MenuItem,
+  IconButton,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -29,6 +32,7 @@ import {
   Build as BuildIcon,
   LocalGasStation as GasIcon,
   Person as PersonIcon,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { vehicleAPI } from '../../api/vehicles';
@@ -70,6 +74,7 @@ const VehicleDetail: React.FC = () => {
   const [unassignModalOpen, setUnassignModalOpen] = useState(false);
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [fuelModalOpen, setFuelModalOpen] = useState(false);
+  const [statusMenuAnchor, setStatusMenuAnchor] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
     loadVehicle();
@@ -140,6 +145,18 @@ const VehicleDetail: React.FC = () => {
     } catch (error: any) {
       showSnackbar(error.response?.data?.message || 'Yakıt kaydı eklenemedi', 'error');
       throw error;
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!id || !vehicle) return;
+    try {
+      await vehicleAPI.update(id, { status: newStatus });
+      showSnackbar('Araç durumu güncellendi', 'success');
+      loadVehicle();
+      setStatusMenuAnchor(null);
+    } catch (error: any) {
+      showSnackbar(error.response?.data?.message || 'Durum değişikliği başarısız', 'error');
     }
   };
 
@@ -248,6 +265,13 @@ const VehicleDetail: React.FC = () => {
               Zimmeti Kaldır
             </Button>
           )}
+          <Button
+            variant="outlined"
+            startIcon={<BuildIcon />}
+            onClick={(e) => setStatusMenuAnchor(e.currentTarget)}
+          >
+            Durum Değiştir
+          </Button>
         </Box>
       </Box>
 
@@ -635,11 +659,9 @@ const VehicleDetail: React.FC = () => {
                   <TableRow>
                     <TableCell>Tarih</TableCell>
                     <TableCell>KM</TableCell>
-                    <TableCell>Litre</TableCell>
-                    <TableCell>Birim Fiyat</TableCell>
                     <TableCell>Toplam</TableCell>
-                    <TableCell>Tüketim (km/lt)</TableCell>
                     <TableCell>İstasyon</TableCell>
+                    <TableCell>Notlar</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -647,11 +669,9 @@ const VehicleDetail: React.FC = () => {
                     <TableRow key={fuel.id}>
                       <TableCell>{new Date(fuel.fuelDate).toLocaleDateString('tr-TR')}</TableCell>
                       <TableCell>{fuel.currentKm?.toLocaleString('tr-TR')}</TableCell>
-                      <TableCell>{fuel.liters ? Number(fuel.liters).toFixed(2) : '-'} L</TableCell>
-                      <TableCell>{fuel.pricePerLiter ? `${Number(fuel.pricePerLiter).toFixed(2)} ₺` : '-'}</TableCell>
                       <TableCell>{fuel.cost ? `${Number(fuel.cost).toFixed(2)} ₺` : '-'}</TableCell>
-                      <TableCell>{fuel.consumption ? Number(fuel.consumption).toFixed(2) : '-'}</TableCell>
                       <TableCell>{fuel.station || '-'}</TableCell>
+                      <TableCell>{fuel.notes || '-'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -692,6 +712,40 @@ const VehicleDetail: React.FC = () => {
         onAdd={handleAddFuel}
         currentKm={vehicle.currentKm}
       />
+
+      {/* Durum Değiştir Menüsü */}
+      <Menu
+        anchorEl={statusMenuAnchor}
+        open={Boolean(statusMenuAnchor)}
+        onClose={() => setStatusMenuAnchor(null)}
+      >
+        {vehicle.status !== 'ASSIGNED' && (
+          <MenuItem 
+            onClick={() => handleStatusChange('AVAILABLE')}
+            selected={vehicle.status === 'AVAILABLE'}
+          >
+            Müsait
+          </MenuItem>
+        )}
+        <MenuItem 
+          onClick={() => handleStatusChange('MAINTENANCE')}
+          selected={vehicle.status === 'MAINTENANCE'}
+        >
+          Bakımda
+        </MenuItem>
+        <MenuItem 
+          onClick={() => handleStatusChange('REPAIR')}
+          selected={vehicle.status === 'REPAIR'}
+        >
+          Tamirde
+        </MenuItem>
+        <MenuItem 
+          onClick={() => handleStatusChange('INACTIVE')}
+          selected={vehicle.status === 'INACTIVE'}
+        >
+          Hizmet Dışı
+        </MenuItem>
+      </Menu>
 
       {/* Snackbar */}
       <Snackbar

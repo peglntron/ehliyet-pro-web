@@ -20,7 +20,8 @@ import {
   AccountBalance as BankIcon,
   Add as AddIcon,
   CardMembership as LicenseIcon,
-  KeyboardDoubleArrowLeftOutlined
+  KeyboardDoubleArrowLeftOutlined,
+  Notifications as NotificationsIcon
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCompanyById, addCompanyPhone, addCompanyIban, deleteCompanyPhone, deleteCompanyIban, updateCompany } from './api/useCompanies';
@@ -483,6 +484,12 @@ const CompanyDetail: React.FC = () => {
                     iconPosition="start"
                     sx={{ textTransform: 'none', fontWeight: 600, py: 2 }} 
                   />
+                  <Tab 
+                    label="Bildirim Şablonları" 
+                    icon={<NotificationsIcon />}
+                    iconPosition="start"
+                    sx={{ textTransform: 'none', fontWeight: 600, py: 2 }} 
+                  />
                 </Tabs>
               </Box>
               
@@ -707,6 +714,45 @@ const CompanyDetail: React.FC = () => {
                   </Typography>
                 </Box>
               </TabPanel>
+
+              {/* Bildirim Şablonları Sekmesi */}
+              <TabPanel value={tabValue} index={6}>
+                <Box sx={{ p: 3 }}>
+                  <Typography variant="h6" fontWeight={600} gutterBottom>
+                    Bildirim Şablonları Yönetimi
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mb={3}>
+                    Bu işletme için varsayılan bildirim şablonlarını oluşturabilirsiniz.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                        const response = await fetch(`/api/notification-templates/default/create-for-company/${id}`, {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                          }
+                        });
+
+                        if (!response.ok) throw new Error('Şablonlar oluşturulamadı');
+
+                        const result = await response.json();
+                        if (result.success) {
+                          showSnackbar('Varsayılan bildirim şablonları başarıyla oluşturuldu', 'success');
+                        }
+                      } catch (error) {
+                        showSnackbar('Şablonlar oluşturulurken hata oluştu', 'error');
+                      }
+                    }}
+                  >
+                    Varsayılan Şablonları Oluştur
+                  </Button>
+                </Box>
+              </TabPanel>
             </Paper>
           </>
         )}
@@ -758,7 +804,7 @@ const CompanyDetail: React.FC = () => {
             />
             <TextField
               label="IBAN"
-              placeholder="TR00 0000 0000 0000 0000 0000 0000 00"
+              placeholder="TR08 0001 5001 5800 7319 6131 05"
               fullWidth
               value={ibanForm.iban}
               onChange={(e) => {
@@ -767,10 +813,32 @@ const CompanyDetail: React.FC = () => {
                 if (!value.startsWith('TR')) {
                   value = 'TR' + value.replace(/^TR/i, '');
                 }
-                // Formatla: TR + her 4 karakterde bir boşluk
-                const cleaned = value.replace(/^TR/i, '');
-                const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned;
-                setIbanForm({ ...ibanForm, iban: `TR${formatted}` });
+                // TR'yi çıkar
+                const digits = value.replace(/^TR/i, '');
+                // Formatla: TR + 2 rakam + 4'lü gruplar + son 2 rakam
+                let formatted = 'TR';
+                if (digits.length > 0) {
+                  formatted += digits.substring(0, 2); // İlk 2 rakam
+                  if (digits.length > 2) {
+                    formatted += ' ' + digits.substring(2, 6); // 4 rakam
+                  }
+                  if (digits.length > 6) {
+                    formatted += ' ' + digits.substring(6, 10); // 4 rakam
+                  }
+                  if (digits.length > 10) {
+                    formatted += ' ' + digits.substring(10, 14); // 4 rakam
+                  }
+                  if (digits.length > 14) {
+                    formatted += ' ' + digits.substring(14, 18); // 4 rakam
+                  }
+                  if (digits.length > 18) {
+                    formatted += ' ' + digits.substring(18, 22); // 4 rakam
+                  }
+                  if (digits.length > 22) {
+                    formatted += ' ' + digits.substring(22, 24); // Son 2 rakam
+                  }
+                }
+                setIbanForm({ ...ibanForm, iban: formatted });
               }}
             />
             <TextField

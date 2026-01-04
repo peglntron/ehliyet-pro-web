@@ -11,6 +11,9 @@ export interface NotificationTemplate {
   triggerType: 'MANUAL' | 'AUTO';
   autoTriggerCondition: string | null;
   isActive: boolean;
+  isDefault?: boolean;
+  reminderDaysBefore?: number | null;
+  reminderTime?: string | null;
   createdAt: string;
   updatedAt: string;
 }

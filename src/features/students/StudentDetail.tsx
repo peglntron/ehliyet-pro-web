@@ -448,7 +448,7 @@ const StudentDetail: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/students')}
+            onClick={() => navigate(-1)}
             sx={{
               borderRadius: 2,
               textTransform: 'none',
@@ -457,7 +457,7 @@ const StudentDetail: React.FC = () => {
               py: 1.2
             }}
           >
-            Kursiyer Listesine Dön
+            Geri
           </Button>
         </Paper>
       </Box>
@@ -595,7 +595,7 @@ const StudentDetail: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/students')}
+              onClick={() => navigate(-1)}
               sx={{
                 py: 1.2,
                 px: 2.5,
@@ -605,7 +605,7 @@ const StudentDetail: React.FC = () => {
                 fontSize: '0.95rem',
               }}
             >
-              Listeye Dön
+              Geri
             </Button>
           </Box>
         </Box>

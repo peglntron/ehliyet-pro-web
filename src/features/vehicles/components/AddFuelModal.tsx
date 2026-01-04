@@ -28,7 +28,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
     fuelDate: new Date().toISOString().split('T')[0],
     currentKm: '',
     totalCost: '',
-    receiptNo: '',
+    station: '',
     notes: '',
   });
 
@@ -38,7 +38,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
         fuelDate: new Date().toISOString().split('T')[0],
         currentKm: currentKm.toString(),
         totalCost: '',
-        receiptNo: '',
+        station: '',
         notes: '',
       });
     }
@@ -56,7 +56,7 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
         fuelDate: formData.fuelDate,
         currentKm: formData.currentKm ? parseInt(formData.currentKm) : undefined,
         totalCost: formData.totalCost ? parseFloat(formData.totalCost) : undefined,
-        receiptNo: formData.receiptNo || undefined,
+        station: formData.station || undefined,
         notes: formData.notes || undefined,
       });
       onClose();
@@ -112,9 +112,10 @@ const AddFuelModal: React.FC<AddFuelModalProps> = ({
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Fiş/Fatura No"
-                value={formData.receiptNo}
-                onChange={(e) => setFormData({ ...formData, receiptNo: e.target.value })}
+                label="İstasyon"
+                value={formData.station}
+                onChange={(e) => setFormData({ ...formData, station: e.target.value })}
+                placeholder="Örn: Shell, BP, Opet"
               />
             </Grid>
 
