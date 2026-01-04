@@ -16,6 +16,7 @@ interface StudentPaymentInfoCardProps {
   onAddDebt: () => void; // YENİ: Borç ekleme
   onInstallmentPayment: (installment: Installment) => void;
   onMarkPaymentPaid: (paymentId: string) => void;
+  onDeletePayment: (paymentId: string) => void; // YENİ: Ödeme silme
   formatDate: (date?: string) => string;
   getInstallmentStatusText: (status: string) => string;
   getInstallmentStatusColor: (status: string) => string;
@@ -32,6 +33,7 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
   onAddDebt, // YENİ
   onInstallmentPayment,
   onMarkPaymentPaid,
+  onDeletePayment, // YENİ
   formatDate,
   getInstallmentStatusText,
   getInstallmentStatusColor,
@@ -503,34 +505,58 @@ const StudentPaymentInfoCard: React.FC<StudentPaymentInfoCardProps> = ({
                           />
                         </TableCell>
                         <TableCell>
-                          {payment.type === 'DEBT' && isPending && (
-                            <Button
-                              variant="contained"
-                              size="small"
-                              color="info"
-                              onClick={() => onMarkPaymentPaid(payment.id)}
-                              sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
-                            >
-                              Ödeme Al
-                            </Button>
-                          )}
-                          {payment.type === 'DEBT' && isPaid && (
-                            <Typography variant="body2" color="text.secondary">-</Typography>
-                          )}
-                          {payment.type !== 'DEBT' && isPending && (
-                            <Button
-                              variant="contained"
-                              size="small"
-                              color="success"
-                              onClick={() => onMarkPaymentPaid(payment.id)}
-                              sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
-                            >
-                              Ödeme Al
-                            </Button>
-                          )}
-                          {payment.type !== 'DEBT' && isPaid && (
-                            <Typography variant="body2" color="text.secondary">-</Typography>
-                          )}
+                          <Box sx={{ display: 'flex', gap: 1 }}>
+                            {payment.type === 'DEBT' && isPending && (
+                              <>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  color="info"
+                                  onClick={() => onMarkPaymentPaid(payment.id)}
+                                  sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                                >
+                                  Ödeme Al
+                                </Button>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  color="error"
+                                  onClick={() => onDeletePayment(payment.id)}
+                                  sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
+                                >
+                                  Sil
+                                </Button>
+                              </>
+                            )}
+                            {payment.type === 'DEBT' && isPaid && (
+                              <Typography variant="body2" color="text.secondary">-</Typography>
+                            )}
+                            {payment.type !== 'DEBT' && isPending && (
+                              <>
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  color="success"
+                                  onClick={() => onMarkPaymentPaid(payment.id)}
+                                  sx={{ textTransform: 'none', minWidth: 100, px: 2 }}
+                                >
+                                  Ödeme Al
+                                </Button>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  color="error"
+                                  onClick={() => onDeletePayment(payment.id)}
+                                  sx={{ textTransform: 'none', minWidth: 80, px: 2 }}
+                                >
+                                  Sil
+                                </Button>
+                              </>
+                            )}
+                            {payment.type !== 'DEBT' && isPaid && (
+                              <Typography variant="body2" color="text.secondary">-</Typography>
+                            )}
+                          </Box>
                         </TableCell>
                       </TableRow>
                       </React.Fragment>

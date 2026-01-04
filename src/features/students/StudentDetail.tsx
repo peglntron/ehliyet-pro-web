@@ -416,6 +416,45 @@ const StudentDetail: React.FC = () => {
     setSnackbarOpen(true);
   };
   
+  // Ödeme kaydını sil (sadece PENDING olanlar)
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!window.confirm('Bu ödeme kaydını silmek istediğinizden emin misiniz?')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      const response = await fetch(`${API_URL}/api/payments/${paymentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Ödeme kaydı silinemedi');
+      }
+      
+      // Başarılı - öğrenci verisini yenile
+      if (id) {
+        const updatedStudent = await getStudentById(id);
+        setStudent(updatedStudent);
+      }
+      
+      setSnackbarMessage('Ödeme kaydı başarıyla silindi!');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error: any) {
+      setSnackbarMessage(error.message || 'Ödeme kaydı silinirken hata oluştu');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+  
   if (!student && !loading) {
     return (
       <Box sx={{ 
@@ -702,6 +741,7 @@ const StudentDetail: React.FC = () => {
               }}
               onInstallmentPayment={handleInstallmentPayment}
               onMarkPaymentPaid={handleMarkPaymentPaid}
+              onDeletePayment={handleDeletePayment}
               formatDate={formatDate}
               getInstallmentStatusText={getInstallmentStatusText}
               getInstallmentStatusColor={getInstallmentStatusColor}
