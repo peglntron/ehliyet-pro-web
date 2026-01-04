@@ -89,7 +89,8 @@ const SettingsPage: React.FC = () => {
           reminderDaysBefore: template.reminderDaysBefore,
           reminderTime: template.reminderTime,
           enableReminderOnDay: template.enableReminderOnDay || false,
-          isActive: template.isActive
+          isActive: template.isActive,
+          hasChanges: false
         };
       });
       setDefaultTemplateStates(states);
@@ -155,7 +156,7 @@ const SettingsPage: React.FC = () => {
   const updateDefaultTemplateState = (id: string, field: string, value: any) => {
     setDefaultTemplateStates(prev => ({
       ...prev,
-      [id]: { ...prev[id], [field]: value }
+      [id]: { ...prev[id], [field]: value, hasChanges: true }
     }));
   };
 
@@ -172,6 +173,11 @@ const SettingsPage: React.FC = () => {
         isActive: state.isActive
       });
       showSnackbar('Şablon güncellendi', 'success');
+      // Değişiklik bayrağını temizle
+      setDefaultTemplateStates(prev => ({
+        ...prev,
+        [id]: { ...prev[id], hasChanges: false }
+      }));
     } catch (err) {
       showSnackbar(err instanceof Error ? err.message : 'Güncelleme başarısız', 'error');
     }
@@ -198,151 +204,45 @@ const SettingsPage: React.FC = () => {
             <Alert severity="error">{error}</Alert>
           ) : (
             <Box>
-              {/* Varsayılan Şablonlar Tablosu */}
-              {defaultTemplates.length > 0 && (
-                <Box mb={4}>
-                  <Typography variant="h6" gutterBottom>Varsayılan Bildirim Şablonları</Typography>
-                  <Typography variant="body2" color="text.secondary" mb={2}>
-                    Sistem tarafından otomatik oluşturulan şablonlar. Sadece aktif/pasif durumu ve hatırlatma ayarları değiştirilebilir.
-                  </Typography>
-                  <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-                    <Table>
-                      <TableHead>
-                        <TableRow sx={{ bgcolor: 'grey.50' }}>
-                          <TableCell><strong>Şablon Adı</strong></TableCell>
-                          <TableCell align="center"><strong>Gün Önce Hatırlat</strong></TableCell>
-                          <TableCell align="center"><strong>Gününde Hatırlat</strong></TableCell>
-                          <TableCell align="center"><strong>Bildirim Durumu</strong></TableCell>
-                          <TableCell align="center"><strong>İşlem</strong></TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {defaultTemplates.map((template) => {
-                          const state = defaultTemplateStates[template.id] || {
-                            reminderDaysBefore: template.reminderDaysBefore,
-                            reminderTime: template.reminderTime,
-                            enableReminderOnDay: template.enableReminderOnDay || false,
-                            isActive: template.isActive
-                          };
-                          
-                          return (
-                            <TableRow key={template.id} hover>
-                              <TableCell>
-                                <Box>
-                                  <Typography variant="body2" fontWeight={600}>{template.name}</Typography>
-                                  <Typography variant="caption" color="text.secondary">{template.title}</Typography>
-                                </Box>
-                              </TableCell>
-                              <TableCell align="center">
-                                <TextField
-                                  type="number"
-                                  size="small"
-                                  value={state.reminderDaysBefore ?? ''}
-                                  onChange={(e) => updateDefaultTemplateState(template.id, 'reminderDaysBefore', parseInt(e.target.value) || null)}
-                                  inputProps={{ min: 0, max: 30, style: { textAlign: 'center' } }}
-                                  sx={{ width: 80 }}
-                                  placeholder="-"
-                                />
-                              </TableCell>
-                              <TableCell align="center">
-                                <Box display="flex" alignItems="center" justifyContent="center" gap={1} flexDirection="column">
-                                  <FormControlLabel
-                                    control={
-                                      <Switch
-                                        size="small"
-                                        checked={state.enableReminderOnDay}
-                                        onChange={(e) => updateDefaultTemplateState(template.id, 'enableReminderOnDay', e.target.checked)}
-                                      />
-                                    }
-                                    label={<Typography variant="caption">{state.enableReminderOnDay ? 'Aktif' : 'Pasif'}</Typography>}
-                                  />
-                                  {state.enableReminderOnDay && (
-                                    <TextField
-                                      type="time"
-                                      size="small"
-                                      value={state.reminderTime || ''}
-                                      onChange={(e) => updateDefaultTemplateState(template.id, 'reminderTime', e.target.value)}
-                                      inputProps={{ style: { textAlign: 'center' } }}
-                                      sx={{ width: 120 }}
-                                    />
-                                  )}
-                                </Box>
-                              </TableCell>
-                              <TableCell align="center">
-                                <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
-                                  <Switch
-                                    checked={state.isActive}
-                                    onChange={(e) => updateDefaultTemplateState(template.id, 'isActive', e.target.checked)}
-                                    size="small"
-                                  />
-                                  <Typography variant="caption" color="text.secondary">
-                                    {state.isActive ? 'Aktif' : 'Pasif'}
-                                  </Typography>
-                                </Box>
-                              </TableCell>
-                              <TableCell align="center">
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() => saveDefaultTemplate(template.id)}
-                                  startIcon={<SaveIcon />}
-                                >
-                                  Kaydet
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-
-                  {/* Genel Bildirim Ayarları */}
-                  {settings && (
-                    <Paper elevation={0} sx={{ mt: 3, p: 3, border: '1px solid', borderColor: 'divider' }}>
-                      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                        Genel Otomatik Bildirimler
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" mb={2}>
-                        Tüm otomatik bildirimleri açıp kapatabilirsiniz
-                      </Typography>
-                      <Box display="flex" alignItems="center" justifyContent="space-between" p={2}
-                        sx={{ bgcolor: 'grey.50', borderRadius: 1 }}>
-                        <Box>
-                          <Typography variant="body2" fontWeight={500}>Otomatik Bildirimler</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Tüm otomatik bildirimleri aktif/pasif et
-                          </Typography>
-                        </Box>
-                        <Switch
-                          checked={settings.autoNotificationsEnabled}
-                          onChange={(e) => updateSettings({ autoNotificationsEnabled: e.target.checked }).then(() => {
-                            showSnackbar('Otomatik bildirimler ' + (e.target.checked ? 'aktif' : 'pasif') + ' edildi', 'success');
-                          })}
-                        />
-                      </Box>
-                    </Paper>
-                  )}
-                </Box>
-              )}
-
-              {/* Özel Şablonlar */}
+              {/* Özel Şablonlar - Üstte */}
               {(customStudentTemplates.length > 0 || customInstructorTemplates.length > 0) && (
-                <Box>
-                  <Divider sx={{ my: 4 }} />
-                  <Typography variant="h6" gutterBottom>Özel Bildirim Şablonları</Typography>
-                  <Typography variant="body2" color="text.secondary" mb={3}>
-                    Kurumunuz tarafından oluşturulan özel bildirim şablonları.
-                  </Typography>
-                  <Box display="flex" gap={4}>
-                    <Box flex={1}>
-                      <Box display="flex" justifyContent="space-between" mb={2}>
-                        <Typography variant="subtitle1" fontWeight={600}>Öğrenci Şablonları ({customStudentTemplates.length})</Typography>
-                        <Button startIcon={<AddIcon />} variant="outlined" size="small" onClick={() => {
+                <Box mb={4}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Box>
+                      <Typography variant="h6">Tanımlı Özel Şablonlar</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Kurumunuz tarafından oluşturulan özel bildirim şablonları.
+                      </Typography>
+                    </Box>
+                    <Box display="flex" gap={1}>
+                      <Button 
+                        startIcon={<AddIcon />} 
+                        variant="contained" 
+                        onClick={() => {
                           setEditingTemplate({ targetType: 'COMPANY_STUDENT', name: '', title: '', content: '', triggerType: 'MANUAL' });
                           setEditModalOpen(true);
-                        }}>Yeni</Button>
-                      </Box>
+                        }}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Öğrenci Şablonu Ekle
+                      </Button>
+                      <Button 
+                        startIcon={<AddIcon />} 
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => {
+                          setEditingTemplate({ targetType: 'INSTRUCTOR', name: '', title: '', content: '', triggerType: 'MANUAL' });
+                          setEditModalOpen(true);
+                        }}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Eğitmen Şablonu Ekle
+                      </Button>
+                    </Box>
+                  </Box>
+                  <Box display="flex" gap={4}>
+                    <Box flex={1}>
+                      <Typography variant="subtitle1" fontWeight={600} mb={2}>Öğrenci Şablonları ({customStudentTemplates.length})</Typography>
                       <Box display="flex" flexDirection="column" gap={1.5}>
                         {customStudentTemplates.map((t) => (
                           <Card key={t.id} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
@@ -399,13 +299,7 @@ const SettingsPage: React.FC = () => {
                     </Box>
                     <Divider orientation="vertical" flexItem />
                     <Box flex={1}>
-                      <Box display="flex" justifyContent="space-between" mb={2}>
-                        <Typography variant="subtitle1" fontWeight={600}>Eğitmen Şablonları ({customInstructorTemplates.length})</Typography>
-                        <Button startIcon={<AddIcon />} variant="outlined" size="small" onClick={() => {
-                          setEditingTemplate({ targetType: 'INSTRUCTOR', name: '', title: '', content: '', triggerType: 'MANUAL' });
-                          setEditModalOpen(true);
-                        }}>Yeni</Button>
-                      </Box>
+                      <Typography variant="subtitle1" fontWeight={600} mb={2}>Eğitmen Şablonları ({customInstructorTemplates.length})</Typography>
                       <Box display="flex" flexDirection="column" gap={1.5}>
                         {customInstructorTemplates.map((t) => (
                           <Card key={t.id} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
@@ -461,12 +355,184 @@ const SettingsPage: React.FC = () => {
                       </Box>
                     </Box>
                   </Box>
+                  <Divider sx={{ my: 4 }} />
                 </Box>
               )}
 
-              {/* Şablon yoksa */}
-              {templates.length === 0 && (
-                <Alert severity="info">Henüz şablon oluşturulmamış.</Alert>
+              {/* Yeni Şablon Ekleme Butonu - Şablon yoksa */}
+              {customStudentTemplates.length === 0 && customInstructorTemplates.length === 0 && (
+                <Box mb={4} textAlign="center" py={3}>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    Henüz özel şablon eklenmemiş. Yeni şablon eklemek için aşağıdaki butonları kullanabilirsiniz.
+                  </Typography>
+                  <Box display="flex" gap={2} justifyContent="center">
+                    <Button 
+                      startIcon={<AddIcon />} 
+                      variant="contained" 
+                      onClick={() => {
+                        setEditingTemplate({ targetType: 'COMPANY_STUDENT', name: '', title: '', content: '', triggerType: 'MANUAL' });
+                        setEditModalOpen(true);
+                      }}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Öğrenci Şablonu Ekle
+                    </Button>
+                    <Button 
+                      startIcon={<AddIcon />} 
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => {
+                        setEditingTemplate({ targetType: 'INSTRUCTOR', name: '', title: '', content: '', triggerType: 'MANUAL' });
+                        setEditModalOpen(true);
+                      }}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Eğitmen Şablonu Ekle
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+
+              {/* Varsayılan Şablonlar Tablosu */}
+              {defaultTemplates.length > 0 && (
+                <Box mb={4}>
+                  <Typography variant="h6" gutterBottom>Varsayılan Bildirim Şablonları</Typography>
+                  <Typography variant="body2" color="text.secondary" mb={2}>
+                    Sistem tarafından otomatik oluşturulan şablonlar. Sadece aktif/pasif durumu ve hatırlatma ayarları değiştirilebilir.
+                  </Typography>
+                  <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                    <Table>
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: 'grey.50' }}>
+                          <TableCell><strong>Hedef</strong></TableCell>
+                          <TableCell><strong>Şablon Adı</strong></TableCell>
+                          <TableCell align="center"><strong>Gün Önce Hatırlat</strong></TableCell>
+                          <TableCell align="center"><strong>Gününde Hatırlat</strong></TableCell>
+                          <TableCell align="center"><strong>Bildirim Durumu</strong></TableCell>
+                          <TableCell align="center"><strong>İşlem</strong></TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {defaultTemplates.map((template) => {
+                          const state = defaultTemplateStates[template.id] || {
+                            reminderDaysBefore: template.reminderDaysBefore,
+                            reminderTime: template.reminderTime,
+                            enableReminderOnDay: template.enableReminderOnDay || false,
+                            isActive: template.isActive,
+                            hasChanges: false
+                          };
+                          
+                          return (
+                            <TableRow key={template.id} hover>
+                              <TableCell>
+                                <Chip 
+                                  label={template.targetType === 'COMPANY_STUDENT' ? 'Öğrenci' : 'Eğitmen'}
+                                  size="small"
+                                  color={template.targetType === 'COMPANY_STUDENT' ? 'primary' : 'secondary'}
+                                  sx={{ fontWeight: 600 }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Box>
+                                  <Typography variant="body2" fontWeight={600}>{template.name}</Typography>
+                                  <Typography variant="caption" color="text.secondary">{template.title}</Typography>
+                                </Box>
+                              </TableCell>
+                              </TableCell>
+                              <TableCell align="center">
+                                <TextField
+                                  type="number"
+                                  size="small"
+                                  value={state.reminderDaysBefore ?? ''}
+                                  onChange={(e) => updateDefaultTemplateState(template.id, 'reminderDaysBefore', parseInt(e.target.value) || null)}
+                                  inputProps={{ min: 0, max: 30, style: { textAlign: 'center' } }}
+                                  sx={{ width: 80 }}
+                                  placeholder="-"
+                                />
+                              </TableCell>
+                              <TableCell align="center">
+                                <Box display="flex" alignItems="center" justifyContent="center" gap={1} flexDirection="column">
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={state.enableReminderOnDay}
+                                        onChange={(e) => updateDefaultTemplateState(template.id, 'enableReminderOnDay', e.target.checked)}
+                                      />
+                                    }
+                                    label={<Typography variant="caption">{state.enableReminderOnDay ? 'Aktif' : 'Pasif'}</Typography>}
+                                  />
+                                  {state.enableReminderOnDay && (
+                                    <TextField
+                                      type="time"
+                                      size="small"
+                                      value={state.reminderTime || ''}
+                                      onChange={(e) => updateDefaultTemplateState(template.id, 'reminderTime', e.target.value)}
+                                      inputProps={{ style: { textAlign: 'center' } }}
+                                      sx={{ width: 120 }}
+                                    />
+                                  )}
+                                </Box>
+                              </TableCell>
+                              <TableCell align="center">
+                                <Box display="flex" alignItems="center" justifyContent="center" gap={1}>
+                                  <Switch
+                                    checked={state.isActive}
+                                    onChange={(e) => updateDefaultTemplateState(template.id, 'isActive', e.target.checked)}
+                                    size="small"
+                                  />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {state.isActive ? 'Aktif' : 'Pasif'}
+                                  </Typography>
+                                </Box>
+                              </TableCell>
+                              <TableCell align="center">
+                                {state.hasChanges && (
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    onClick={() => saveDefaultTemplate(template.id)}
+                                    startIcon={<SaveIcon />}
+                                    sx={{ textTransform: 'none' }}
+                                  >
+                                    Kaydet
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
+                  {/* Genel Bildirim Ayarları */}
+                  {settings && (
+                    <Paper elevation={0} sx={{ mt: 3, p: 3, border: '1px solid', borderColor: 'divider' }}>
+                      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                        Genel Otomatik Bildirimler
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" mb={2}>
+                        Tüm otomatik bildirimleri açıp kapatabilirsiniz
+                      </Typography>
+                      <Box display="flex" alignItems="center" justifyContent="space-between" p={2}
+                        sx={{ bgcolor: 'grey.50', borderRadius: 1 }}>
+                        <Box>
+                          <Typography variant="body2" fontWeight={500}>Otomatik Bildirimler</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Tüm otomatik bildirimleri aktif/pasif et
+                          </Typography>
+                        </Box>
+                        <Switch
+                          checked={settings.autoNotificationsEnabled}
+                          onChange={(e) => updateSettings({ autoNotificationsEnabled: e.target.checked }).then(() => {
+                            showSnackbar('Otomatik bildirimler ' + (e.target.checked ? 'aktif' : 'pasif') + ' edildi', 'success');
+                          })}
+                        />
+                      </Box>
+                    </Paper>
+                  )}
+                </Box>
               )}
             </Box>
           )}
