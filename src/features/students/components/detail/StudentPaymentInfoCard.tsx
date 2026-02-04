@@ -22,7 +22,7 @@ interface StudentPaymentInfoCardProps {
   getInstallmentStatusColor: (status: string) => string;
   getPaymentStatusInfo: (status: string) => { text: string; color: string };
   getPaymentMethodText: (method: string) => string;
-}
+} 
 
 // Yardımcı fonksiyon: Önceki taksitler ödendi mi kontrol et
 const canPayInstallment = (installment: Installment | Payment, allPayments: Payment[]): boolean => {

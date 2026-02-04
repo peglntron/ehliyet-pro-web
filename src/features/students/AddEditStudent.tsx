@@ -203,7 +203,7 @@ const AddEditStudent: React.FC = () => {
         notes: formData.notes
       };
 
-      console.log('✅ Backend\'e gönderilen veri:', studentData);
+      console.log(' Backend\'e gönderilen veri:', studentData);
 
       if (isEditMode && id) {
         // Güncelleme

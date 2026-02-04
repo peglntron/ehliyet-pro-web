@@ -27,7 +27,6 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
   remainingAmount,
   mode = 'payment' // Varsayılan ödeme
 }) => {
-  const [tabValue, setTabValue] = useState(mode === 'debt' ? 1 : 0); // 0: Ödeme Ekle, 1: Borç Ekle
   const { settings: companySettings, fetchSettings } = useCompanySettings();
   
   const [formData, setFormData] = useState({
@@ -51,11 +50,6 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       fetchSettings();
     }
   }, [open]);
-  
-  // mode değiştiğinde tab'ı güncelle
-  React.useEffect(() => {
-    setTabValue(mode === 'debt' ? 1 : 0);
-  }, [mode, open]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
     const { name, value } = e.target;
@@ -102,14 +96,6 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       newErrors.amount = 'Geçerli bir tutar girin';
     } else if (Number(formData.amount) <= 0) {
       newErrors.amount = 'Tutar 0\'dan büyük olmalıdır';
-    } else if (tabValue === 0 && Number(formData.amount) > remainingAmount && remainingAmount > 0) {
-      // Sadece ödeme eklerken kalan tutardan büyük olamaz kontrolü
-      newErrors.amount = `Tutar kalan tutardan (${remainingAmount} ₺) büyük olamaz`;
-    }
-    
-    // Tarih kontrolü - Sadece ödeme eklerken
-    if (tabValue === 0 && !formData.date) {
-      newErrors.date = 'Tarih gereklidir';
     }
     
     setErrors(newErrors);
@@ -126,33 +112,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
       const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
       
-      if (tabValue === 0) {
-        // Ödeme Ekle
-        const response = await fetch(`${API_URL}/api/payments/students/${student.id}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            amount: Number(formData.amount),
-            method: formData.method.toUpperCase(),
-            status: 'PAID', // Ödeme alındı
-            type: 'PAYMENT', // Normal ödeme
-            description: formData.description || 'Manuel ödeme',
-            paymentDate: formData.date
-          })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Ödeme eklenirken hata oluştu');
-        }
-
-        const result = await response.json();
-        onSuccess(result.data);
-      } else {
-        // Borç Ekle
+      // Borç Ekle
         if (formData.isInstallment && Number(formData.installmentCount) > 1) {
           // Taksitli Borç - Her taksit için ayrı DEBT kaydı oluştur
           const installmentCount = Number(formData.installmentCount);
@@ -274,21 +234,12 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
         pb: 1
       }}>
         <Box component="span" sx={{ fontWeight: 600, fontSize: '1.25rem' }}>
-          {tabValue === 0 ? 'Ödeme İşlemleri' : 'Ödeme İşlemleri'}
+          Borç Ekle
         </Box>
         <IconButton onClick={onClose} size="small">
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
-      
-      <Tabs
-        value={tabValue}
-        onChange={(_, newValue) => setTabValue(newValue)}
-        sx={{ borderBottom: 1, borderColor: 'divider', px: 3 }}
-      >
-        <Tab label="Ödeme Ekle" />
-        <Tab label="Borç Ekle" />
-      </Tabs>
       
       <DialogContent>
         {errorMessage && (
@@ -302,110 +253,13 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
             <Typography variant="body2">
               <strong>Kursiyer:</strong> {student?.name} {student?.surname}
             </Typography>
-            {tabValue === 0 ? (
-              remainingAmount > 0 ? (
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  <strong>Kalan Tutar:</strong> {remainingAmount.toLocaleString('tr-TR')} ₺
-                </Typography>
-              ) : (
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  <strong>Ödemeler Tamamlandı:</strong> Tüm ödemeler yapılmış durumda.
-                </Typography>
-              )
-            ) : (
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                <strong>Mevcut Toplam Borç:</strong> {Number(student?.totalPayment || 0).toLocaleString('tr-TR')} ₺
-              </Typography>
-            )}
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              <strong>Mevcut Toplam Borç:</strong> {Number(student?.totalPayment || 0).toLocaleString('tr-TR')} ₺
+            </Typography>
           </Alert>
         </Box>
         
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {tabValue === 0 ? (
-            // Ödeme Ekle Formu
-            <>
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                <TextField
-                  fullWidth
-                  label="Tutar (₺)"
-                  name="amount"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  error={!!errors.amount}
-                  helperText={errors.amount}
-                  InputProps={{
-                    sx: { borderRadius: 2 }
-                  }}
-                />
-                
-                <TextField
-                  fullWidth
-                  label="Tarih"
-                  name="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  error={!!errors.date}
-                  helperText={errors.date}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  InputProps={{
-                    sx: { borderRadius: 2 }
-                  }}
-                />
-              </Box>
-              
-              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                <FormControl fullWidth>
-                  <InputLabel id="payment-method-label">Ödeme Yöntemi</InputLabel>
-                  <Select
-                    labelId="payment-method-label"
-                    name="method"
-                    value={formData.method}
-                    label="Ödeme Yöntemi"
-                    onChange={handleSelectChange}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    <MenuItem value="cash">Nakit</MenuItem>
-                    <MenuItem value="credit">Kredi Kartı</MenuItem>
-                    <MenuItem value="bank">Banka Havalesi</MenuItem>
-                  </Select>
-                </FormControl>
-                
-                <FormControl fullWidth>
-                  <InputLabel id="payment-status-label">Durum</InputLabel>
-                  <Select
-                    labelId="payment-status-label"
-                    name="status"
-                value={formData.status}
-                label="Durum"
-                onChange={handleSelectChange}
-                sx={{ borderRadius: 2 }}
-              >
-                <MenuItem value="paid">Ödendi</MenuItem>
-                <MenuItem value="pending">Beklemede</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-          
-          <TextField
-            fullWidth
-            label="Açıklama"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            multiline
-            rows={2}
-            placeholder="Ödeme hakkında not ekleyin (opsiyonel)"
-            InputProps={{
-              sx: { borderRadius: 2 }
-            }}
-          />
-        </>
-      ) : (
-        // Borç Ekle Formu
-        <>
           {/* Hızlı Seçim Butonları */}
           <Box sx={{ mb: 2 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 500 }}>
@@ -616,8 +470,6 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
               </Typography>
             </Alert>
           )}
-        </>
-      )}
         </Box>
       </DialogContent>
       
@@ -650,7 +502,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
           }}
           startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
         >
-          {loading ? (tabValue === 0 ? 'Ekleniyor...' : 'Kaydediliyor...') : (tabValue === 0 ? 'Ödeme Ekle' : 'Borç Ekle')}
+          {loading ? 'Kaydediliyor...' : 'Borç Ekle'}
         </Button>
       </DialogActions>
     </Dialog>

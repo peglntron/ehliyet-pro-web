@@ -15,7 +15,7 @@ export const getInstructorStatsForCurrentMonth = async (): Promise<InstructorSta
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
     
-    console.log('📅 Fetching matchings for:', {
+    console.log('� Fetching matchings for:', {
       currentMonth: { start: startOfMonth.toISOString(), end: endOfMonth.toISOString() },
       lastMonth: { start: startOfLastMonth.toISOString(), end: endOfLastMonth.toISOString() }
     });
@@ -40,7 +40,7 @@ export const getInstructorStatsForCurrentMonth = async (): Promise<InstructorSta
       return createdDate >= startOfLastMonth && createdDate <= endOfLastMonth;
     });
     
-    console.log('📊 Matchings:', {
+    console.log('Matchings:', {
       thisMonth: thisMonthMatchings.length,
       lastMonth: lastMonthMatchings.length
     });
@@ -146,7 +146,7 @@ export const getInstructorStatsForCurrentMonth = async (): Promise<InstructorSta
       });
     });
     
-    console.log('📈 Last month stats:', Array.from(lastMonthInstructorStats.entries()));
+    console.log('� Last month stats:', Array.from(lastMonthInstructorStats.entries()));
     
     // Bu ay için istatistikleri hesapla
     const stats: InstructorStat[] = [];
@@ -205,7 +205,7 @@ export const getInstructorStatsForCurrentMonth = async (): Promise<InstructorSta
       stat.rank = index + 1;
     });
     
-    console.log('📈 Monthly stats with trends:', stats.map(s => ({
+    console.log('� Monthly stats with trends:', stats.map(s => ({
       name: s.name,
       current: s.successRate,
       previous: s.previousSuccessRate,

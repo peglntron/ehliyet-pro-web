@@ -77,26 +77,26 @@ const StudentInstructorMatching: React.FC = () => {
   
   // Öğrencileri yükle (PENDING/APPLIED matching'lerde olmayanlar)
   useEffect(() => {
-    console.log('🔄 [useEffect-STUDENTS] TETİKLENDİ - licenseTypes:', matchingRequest.licenseTypes);
+    console.log(' [useEffect-STUDENTS] TETİKLENDİ - licenseTypes:', matchingRequest.licenseTypes);
     
     const loadStudents = async () => {
       try {
-        console.log('📡 [useEffect-STUDENTS] API çağrısı başlıyor...');
+        console.log('� [useEffect-STUDENTS] API çağrısı başlıyor...');
         // ℹ️ prioritizeFirst: false - Tüm öğrencileri getir, filtreleme algoritmada yapılacak
         const data = await getEligibleStudents(
           matchingRequest.licenseTypes,
           false, // Backend'de filtreleme yok, sadece eşleştirme algoritmasında kullanılacak
           []
         );
-        console.log('✅ [useEffect-STUDENTS] Uygun öğrenciler yüklendi:', data.length, 'öğrenci');
+        console.log(' [useEffect-STUDENTS] Uygun öğrenciler yüklendi:', data.length, 'öğrenci');
         
         // 🔥 BATCH: Tüm state değişikliklerini birlikte yap
-        console.log('🔧 [BATCH] Stateler güncelleniyor...');
+        console.log('� [BATCH] Stateler güncelleniyor...');
         setStudents(data);
         setStudentsLoading(false);
-        console.log('✅ [BATCH] Tamamlandı!');
+        console.log(' [BATCH] Tamamlandı!');
       } catch (error) {
-        console.error('❌ [useEffect-STUDENTS] Hata:', error);
+        console.error(' [useEffect-STUDENTS] Hata:', error);
         setStudentsLoading(false);
       }
     };
@@ -114,7 +114,7 @@ const StudentInstructorMatching: React.FC = () => {
   
   // Eğitmenler yüklendiğinde tümünü otomatik seç
   useEffect(() => {
-    console.log('🔄 [useEffect-INSTRUCTORS] TETİKLENDİ - licenseTypes:', matchingRequest.licenseTypes, 'count:', instructors.length);
+    console.log(' [useEffect-INSTRUCTORS] TETİKLENDİ - licenseTypes:', matchingRequest.licenseTypes, 'count:', instructors.length);
     
     if (instructors.length > 0 && !instructorsLoading) {
       const eligibleInstructors = instructors
@@ -124,13 +124,13 @@ const StudentInstructorMatching: React.FC = () => {
         )
         .map(i => i.id);
       
-      console.log('👥 [useEffect-INSTRUCTORS] Uygun eğitmenler:', eligibleInstructors.length);
+      console.log('� [useEffect-INSTRUCTORS] Uygun eğitmenler:', eligibleInstructors.length);
       
       if (eligibleInstructors.length > 0) {
         // 🔥 BATCH: 2 state birlikte (React otomatik batch yapar)
         setSelectedInstructorIds(new Set(eligibleInstructors));
         setIsAllInstructorsSelected(true);
-        console.log('✅ [BATCH-INSTRUCTORS] 2 state birlikte değişti!');
+        console.log(' [BATCH-INSTRUCTORS] 2 state birlikte değişti!');
       }
     }
   }, [instructors, instructorsLoading, matchingRequest.licenseTypes]);
@@ -184,7 +184,7 @@ const StudentInstructorMatching: React.FC = () => {
       })
       .map(s => s.id);
     
-    console.log('✅ Tümünü seç:', allIds.length, 'öğrenci seçildi');
+    console.log(' Tümünü seç:', allIds.length, 'öğrenci seçildi');
     setSelectedStudentIds(new Set(allIds));
     setIsAllStudentsSelected(true);
   };
@@ -203,7 +203,7 @@ const StudentInstructorMatching: React.FC = () => {
       )
       .map(i => i.id);
     
-    console.log('✅ Tümünü seç (eğitmenler):', allIds.length, 'eğitmen seçildi');
+    console.log(' Tümünü seç (eğitmenler):', allIds.length, 'eğitmen seçildi');
     setSelectedInstructorIds(new Set(allIds));
     setIsAllInstructorsSelected(true);
   };

@@ -61,14 +61,14 @@ export const getInstructorStatsByMatching = async (
   try {
     const response = await apiClient.get(`/matching/${matchingId}`);
     
-    console.log('🔍 API Response:', response);
+    console.log('API Response:', response);
     
     if (response.success && response.data) {
       const matching = response.data;
       // Backend'den gelen results array'i (MatchingResult modeli)
       const results = matching.results || [];
       
-      console.log('📊 Matching Results:', results);
+      console.log('Matching Results:', results);
       
       // Eğitmenlere göre grupla
       const instructorMap = new Map<string, {
@@ -92,7 +92,7 @@ export const getInstructorStatsByMatching = async (
         instructorMap.get(instructorId)?.students.push(result);
       });
       
-      console.log('👥 Instructor Map:', Array.from(instructorMap.entries()));
+      console.log('� Instructor Map:', Array.from(instructorMap.entries()));
       
       // İstatistikleri hesapla
       const stats: InstructorStat[] = [];
@@ -101,7 +101,7 @@ export const getInstructorStatsByMatching = async (
       instructorMap.forEach((data, instructorId) => {
         const totalStudents = data.students.length;
         
-        console.log(`📝 Calculating stats for ${data.name}:`, {
+        console.log(`Calculating stats for ${data.name}:`, {
           totalStudents,
           students: data.students.map(s => ({
             id: s.studentId,
@@ -136,7 +136,7 @@ export const getInstructorStatsByMatching = async (
         // Bunun yerine başarı oranını kullanıyoruz veya 0 veriyoruz
         const averageScore = successRate; // Başarı oranını puan olarak göster
         
-        console.log(`✅ Stats for ${data.name}:`, {
+        console.log(`Stats for ${data.name}:`, {
           totalStudents,
           passedStudents,
           failedStudents,
@@ -166,7 +166,7 @@ export const getInstructorStatsByMatching = async (
         stat.rank = index + 1;
       });
       
-      console.log('📈 Final Stats:', stats);
+      console.log('� Final Stats:', stats);
       
       return stats;
     }

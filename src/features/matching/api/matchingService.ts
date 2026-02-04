@@ -539,10 +539,10 @@ export const getEligibleStudents = async (
       throw new Error(result.message || 'Uygun öğrenciler getirilirken hata oluştu');
     }
 
-    console.log('✅ [FRONTEND] Uygun öğrenciler alındı:', result.data.length);
+    console.log(' [FRONTEND] Uygun öğrenciler alındı:', result.data.length);
     return result.data;
   } catch (error) {
-    console.error('❌ [FRONTEND] Uygun öğrenciler getirilirken hata:', error);
+    console.error(' [FRONTEND] Uygun öğrenciler getirilirken hata:', error);
     throw error;
   }
 };
